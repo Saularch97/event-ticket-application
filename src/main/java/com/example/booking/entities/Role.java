@@ -36,10 +36,10 @@ public class Role {
     }
 
     public enum Values {
-        ADMIN(2L),
-        BASIC(1L);
+        BASIC(1L),
+        ADMIN(2L);
 
-        long roleId;
+        final long roleId;
 
         Values(long roleId) {
             this.roleId = roleId;

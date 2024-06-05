@@ -26,6 +26,8 @@ public class Ticket {
     @Column(name = "ticket_id")
     private UUID ticketId;
 
+
+    // TODO olhar, pois cada ingresso é único, então 1 : 1
     @ManyToOne(cascade = CascadeType.ALL)
     private User ticketOwner;
     private String ticketName;
