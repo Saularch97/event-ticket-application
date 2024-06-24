@@ -33,7 +33,7 @@ public class AdminUserConfig implements CommandLineRunner {
 
         var userAdmin = userRepository.findByUserName("admin");
 
-        // TODO verifify
+        // TODO verifify why i need to use upper case in the scopes
         userAdmin.ifPresentOrElse(
                 (user) -> {
                     System.out.println("admin already exists");

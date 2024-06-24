@@ -17,6 +17,7 @@ Some useful commands:
 `\c` --> connect to a database
 `\dt` --> list tables available
 
+[//]: # TODO retirar doc falando sobre PGADMIN()
 To access the database via PgAdmin:
 - Access pg admin in this link(docker must be running) [link](http://localhost:5050/)
 - Register a server
