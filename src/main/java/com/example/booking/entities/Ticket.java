@@ -36,9 +36,6 @@ public class Ticket {
     private LocalDateTime eventDate;
     private Double ticketPrice;
 
-//    @OneToOne(mappedBy = "ticket")
-//    private TicketOrder ticketOrder;
-
     public UUID getTicketId() {
         return ticketId;
     }

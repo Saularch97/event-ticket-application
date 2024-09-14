@@ -92,6 +92,7 @@ public class TicketController {
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
         ).map(ticket ->
                 new TicketItemDto(
+                        ticket.getTicketId(),
                         ticket.getTicketName(),
                         ticket.getTicketPrice(),
                         ticket.getEventDate().toString(),

@@ -1,10 +1,11 @@
 package com.example.booking.entities;
 
 import com.example.booking.controller.dto.LoginRequest;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,11 +16,13 @@ public class User {
     public User() {
     }
 
-    public User(UUID userId, String userName, String password, Set<Role> roles) {
+    public User(UUID userId, String userName, String password, Set<Role> roles, Set<Ticket> userTickets, Set<Order> orders) {
         this.userId = userId;
         this.userName = userName;
         this.password = password;
         this.roles = roles;
+        this.userTickets = userTickets;
+        this.orders = orders;
     }
 
     @Id
@@ -31,9 +34,13 @@ public class User {
     private String userName;
     private String password;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "ticketOwner", fetch = FetchType.LAZY)
+    private Set<Ticket> userTickets = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "ticketOwner")
-    private List<Ticket> userTickets;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<Order> orders = new HashSet<>();
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(
