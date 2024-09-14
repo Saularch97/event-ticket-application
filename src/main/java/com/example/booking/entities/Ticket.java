@@ -27,14 +27,17 @@ public class Ticket {
     private UUID ticketId;
 
 
-    // TODO olhar, pois cada ingresso é único, então 1 : 1
     @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="user_id")
     private User ticketOwner;
     private String ticketName;
 
     private String eventLocation;
     private LocalDateTime eventDate;
     private Double ticketPrice;
+
+//    @OneToOne(mappedBy = "ticket")
+//    private TicketOrder ticketOrder;
 
     public UUID getTicketId() {
         return ticketId;

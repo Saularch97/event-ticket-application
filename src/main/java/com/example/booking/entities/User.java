@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name="tb_users")
+@Table(name = "tb_users")
 public class User {
 
     public User() {
@@ -32,7 +32,7 @@ public class User {
     private String password;
 
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "ticketOwner")
     private List<Ticket> userTickets;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
