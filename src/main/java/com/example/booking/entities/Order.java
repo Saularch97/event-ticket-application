@@ -2,9 +2,7 @@ package com.example.booking.entities;
 
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "tb_orders")
@@ -13,7 +11,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(UUID orderId, Double orderPrice, Set<Ticket> tickets, User user) {
+    public Order(UUID orderId, Double orderPrice, List<Ticket> tickets, User user) {
         this.orderId = orderId;
         this.orderPrice = orderPrice;
         this.tickets = tickets;
@@ -21,7 +19,7 @@ public class Order {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_id")
     private UUID orderId;
     private Double orderPrice;
@@ -32,12 +30,14 @@ public class Order {
             joinColumns = @JoinColumn(name="order_id"),
             inverseJoinColumns = @JoinColumn(name = "ticket_id")
     )
-    private Set<Ticket> tickets = new HashSet<>();
+    private List<Ticket> tickets = new ArrayList<>();
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
 
+    // TODO ter uma lista de TicketOrder será oneToMany
+    
     public UUID getOrderId() {
         return orderId;
     }
@@ -54,11 +54,11 @@ public class Order {
         this.orderPrice = orderPrice;
     }
 
-    public Set<Ticket> getTickets() {
+    public List<Ticket> getTickets() {
         return tickets;
     }
 
-    public void setTickets(Set<Ticket> tickets) {
+    public void setTickets(List<Ticket> tickets) {
         this.tickets = tickets;
     }
 
@@ -71,7 +71,7 @@ public class Order {
     }
 
 
-    public Double calculateOrderPrice(Set<Ticket> tickets) {
+    public Double calculateOrderPrice(List<Ticket> tickets) {
 
         Double totalPrice = 0.0;
 

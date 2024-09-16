@@ -17,16 +17,10 @@ Some useful commands:
 `\c` --> connect to a database
 `\dt` --> list tables available
 
-[//]: # TODO retirar doc falando sobre PGADMIN()
-To access the database via PgAdmin:
-- Access pg admin in this link(docker must be running) [link](http://localhost:5050/)
-- Register a server
-  ![img.png](img.png)
-  - Then go to connection
-  ![img_1.png](img_1.png)
-  - You need to fill those 
-    - To get the Host name/address you need to:
-      - Run `docker ps`
-      - Get the port with `docker inspect <ID_FROM_PG_ADMIN_CONTAINER> | grep IPAddress`
-  ![img_2.png](img_2.png)
-      
+Diagram:
+![img_4.png](img_4.png)
+
+TODO:
+-
+
+- [ ] Refatorar para ter evento, e neste evento ter ingressos, por exemplo, eu tenho o evento X e tenho os ingressos para esse evento sendo emitidos/criados

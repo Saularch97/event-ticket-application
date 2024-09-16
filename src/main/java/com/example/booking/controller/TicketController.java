@@ -1,11 +1,11 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.CreateTicketDto;
-import com.example.booking.controller.dto.TicketItemDto;
-import com.example.booking.controller.dto.TicketsDto;
+import com.example.booking.controller.dto.*;
+import com.example.booking.entities.Event;
 import com.example.booking.entities.Role;
 import com.example.booking.entities.Ticket;
 import com.example.booking.entities.User;
+import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
@@ -16,9 +16,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,31 +24,30 @@ public class TicketController {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final EventRepository eventRepository;
 
-    public TicketController(TicketRepository ticketRepository, UserRepository userRepository) {
+    public TicketController(TicketRepository ticketRepository, UserRepository userRepository, EventRepository eventRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.eventRepository = eventRepository;
     }
 
-    @PostMapping("/tickets")
-    public ResponseEntity<Void> createTicket(
-            @RequestBody CreateTicketDto dto,
+    @PostMapping("/ticket")
+    public ResponseEntity<Void> orderTicket(
+            @RequestBody OrderTicketDto dto,
             JwtAuthenticationToken token
     ) throws Exception {
-        // we pass the token name as the id in the login controller
+
         Optional<User> user = userRepository.findById(UUID.fromString(token.getName()));
         if (user.isEmpty()) throw new Exception("User not exists!");
 
+        Optional<Event> event = eventRepository.findById(dto.eventId());
+        if (event.isEmpty()) throw new Exception("Event not exists!");
+
         var ticket = new Ticket();
         ticket.setTicketOwner(user.get());
-        ticket.setTicketName(dto.ticketName());
         ticket.setTicketPrice(dto.ticketPrice());
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-        LocalDate date = LocalDate.parse(dto.ticketDate(), formatter);
-        LocalDateTime dateTime = date.atTime(dto.eventHour(), dto.eventMinute());
-        ticket.setEventDate(dateTime);
-        ticket.setEventLocation(dto.eventLocation());
+        ticket.setEvent(event.get());
 
         ticketRepository.save(ticket);
 
@@ -59,7 +55,7 @@ public class TicketController {
     }
 
     @DeleteMapping("/tickets/{id}")
-    public ResponseEntity<Void> deleteTicket(@PathVariable("id") UUID ticketId,
+    public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
                                              JwtAuthenticationToken token) throws Exception {
 
         var user = userRepository.findById(UUID.fromString(token.getName()))
@@ -69,6 +65,7 @@ public class TicketController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 
+        // Transferir lógica para criar evento
         var isAdmin = user.getRoles()
                 .stream()
                 .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
@@ -93,11 +90,19 @@ public class TicketController {
         ).map(ticket ->
                 new TicketItemDto(
                         ticket.getTicketId(),
-                        ticket.getTicketName(),
+                        new EventItemDto(
+                                ticket.getEvent().getEventId(),
+                                ticket.getEvent().getEventName(),
+                                ticket.getEvent().getEventDate(),
+                                ticket.getEvent().getEventDate().getHour(),
+                                ticket.getEvent().getEventDate().getMinute()
+                        ),
                         ticket.getTicketPrice(),
-                        ticket.getEventDate().toString(),
-                        ticket.getEventDate().getHour(),
-                        ticket.getEventDate().getMinute())
+                        new UserDto(
+                                ticket.getTicketOwner().getUserId(),
+                                ticket.getTicketOwner().getUserName()
+                        )
+                )
         );
 
         return ResponseEntity.ok(new TicketsDto(
