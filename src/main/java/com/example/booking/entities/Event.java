@@ -16,7 +16,8 @@ public class Event {
     private String eventLocation;
     private String eventName;
     private LocalDateTime eventDate;
-    @OneToMany
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", fetch = FetchType.LAZY)
     private Set<Ticket> tickets;
     @ManyToOne
     @JoinColumn(name = "user_id")

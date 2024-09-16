@@ -46,8 +46,9 @@ public class TicketController {
 
         var ticket = new Ticket();
         ticket.setTicketOwner(user.get());
-        ticket.setTicketPrice(dto.ticketPrice());
         ticket.setEvent(event.get());
+        // TODO sobre o preço mudar para o evento, pois a url de compra será "publica" já de evento não, isso pode deixar vulnerável para outros fazerem compras
+        ticket.setTicketPrice(dto.ticketPrice());
 
         ticketRepository.save(ticket);
 
@@ -56,7 +57,7 @@ public class TicketController {
 
     @DeleteMapping("/tickets/{id}")
     public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
-                                             JwtAuthenticationToken token) throws Exception {
+                                                  JwtAuthenticationToken token) throws Exception {
 
         var user = userRepository.findById(UUID.fromString(token.getName()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -86,7 +87,7 @@ public class TicketController {
 
         // page does not work if you use id as properties
         var tickets = ticketRepository.findAll(
-                PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
+                PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketPrice")
         ).map(ticket ->
                 new TicketItemDto(
                         ticket.getTicketId(),
@@ -108,5 +109,38 @@ public class TicketController {
         return ResponseEntity.ok(new TicketsDto(
                 tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements())
         );
+    }
+
+    @GetMapping("/userTickets")
+    public ResponseEntity<TicketsDto> listAllUserTickets(
+            JwtAuthenticationToken token,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
+
+        Optional<User> user = userRepository.findById(UUID.fromString(token.getName()));
+
+        if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketPrice");
+
+        var tickets = ticketRepository.findAllTicketsByUserId(UUID.fromString(token.getName()), pageRequest)
+                .map(ticket ->
+                    new TicketItemDto(
+                        ticket.getTicketId(),
+                        new EventItemDto(
+                                ticket.getEvent().getEventId(),
+                                ticket.getEvent().getEventName(),
+                                ticket.getEvent().getEventDate(),
+                                ticket.getEvent().getEventDate().getHour(),
+                                ticket.getEvent().getEventDate().getMinute()
+                        ),
+                        ticket.getTicketPrice(),
+                        new UserDto(
+                                ticket.getTicketOwner().getUserId(),
+                                ticket.getTicketOwner().getUserName()
+                        )
+                    ));
+
+        return ResponseEntity.ok(new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements()));
     }
 }

@@ -2,7 +2,6 @@ package com.example.booking.entities;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -22,6 +21,18 @@ public class Ticket {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User ticketOwner;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "order_id")
+    private Order order;
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 
     public Ticket(UUID ticketId, Event event, Double ticketPrice, User ticketOwner) {
         this.ticketId = ticketId;

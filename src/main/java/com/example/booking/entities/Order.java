@@ -24,20 +24,13 @@ public class Order {
     private UUID orderId;
     private Double orderPrice;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinTable(
-            name="tb_order_tickets",
-            joinColumns = @JoinColumn(name="order_id"),
-            inverseJoinColumns = @JoinColumn(name = "ticket_id")
-    )
+    @OneToMany(cascade = CascadeType.ALL, mappedBy="order", fetch = FetchType.LAZY)
     private List<Ticket> tickets = new ArrayList<>();
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private User user;
 
-    // TODO ter uma lista de TicketOrder será oneToMany
-    
     public UUID getOrderId() {
         return orderId;
     }
