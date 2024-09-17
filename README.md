@@ -18,7 +18,7 @@ Some useful commands:
 `\dt` --> list tables available
 
 Diagram:
-![img_4.png](img_4.png)
+![img.png](img.png)
 
 TODO:
 -

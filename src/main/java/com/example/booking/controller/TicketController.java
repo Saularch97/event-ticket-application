@@ -8,6 +8,7 @@ import com.example.booking.entities.User;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.util.UriUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,7 +35,7 @@ public class TicketController {
     }
 
     @PostMapping("/ticket")
-    public ResponseEntity<Void> orderTicket(
+    public ResponseEntity<TicketItemDto> orderTicket(
             @RequestBody OrderTicketDto dto,
             JwtAuthenticationToken token
     ) throws Exception {
@@ -47,12 +49,12 @@ public class TicketController {
         var ticket = new Ticket();
         ticket.setTicketOwner(user.get());
         ticket.setEvent(event.get());
-        // TODO sobre o preço mudar para o evento, pois a url de compra será "publica" já de evento não, isso pode deixar vulnerável para outros fazerem compras
-        ticket.setTicketPrice(dto.ticketPrice());
 
-        ticketRepository.save(ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
 
-        return ResponseEntity.ok().build();
+        URI location = UriUtil.getUriLocation("ticketId", savedTicket.getTicketId());
+
+        return ResponseEntity.created(location).body(savedTicket.toTicketItemDto());
     }
 
     @DeleteMapping("/tickets/{id}")
@@ -87,24 +89,8 @@ public class TicketController {
 
         // page does not work if you use id as properties
         var tickets = ticketRepository.findAll(
-                PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketPrice")
-        ).map(ticket ->
-                new TicketItemDto(
-                        ticket.getTicketId(),
-                        new EventItemDto(
-                                ticket.getEvent().getEventId(),
-                                ticket.getEvent().getEventName(),
-                                ticket.getEvent().getEventDate(),
-                                ticket.getEvent().getEventDate().getHour(),
-                                ticket.getEvent().getEventDate().getMinute()
-                        ),
-                        ticket.getTicketPrice(),
-                        new UserDto(
-                                ticket.getTicketOwner().getUserId(),
-                                ticket.getTicketOwner().getUserName()
-                        )
-                )
-        );
+                PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId")
+        ).map(Ticket::toTicketItemDto);
 
         return ResponseEntity.ok(new TicketsDto(
                 tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements())
@@ -121,25 +107,11 @@ public class TicketController {
 
         if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketPrice");
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
 
-        var tickets = ticketRepository.findAllTicketsByUserId(UUID.fromString(token.getName()), pageRequest)
-                .map(ticket ->
-                    new TicketItemDto(
-                        ticket.getTicketId(),
-                        new EventItemDto(
-                                ticket.getEvent().getEventId(),
-                                ticket.getEvent().getEventName(),
-                                ticket.getEvent().getEventDate(),
-                                ticket.getEvent().getEventDate().getHour(),
-                                ticket.getEvent().getEventDate().getMinute()
-                        ),
-                        ticket.getTicketPrice(),
-                        new UserDto(
-                                ticket.getTicketOwner().getUserId(),
-                                ticket.getTicketOwner().getUserName()
-                        )
-                    ));
+        var tickets = ticketRepository
+                .findAllTicketsByUserId(UUID.fromString(token.getName()), pageRequest)
+                .map(Ticket::toTicketItemDto);
 
         return ResponseEntity.ok(new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements()));
     }

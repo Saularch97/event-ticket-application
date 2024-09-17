@@ -5,6 +5,7 @@ import com.example.booking.entities.Event;
 import com.example.booking.entities.Role;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.util.UriUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +32,7 @@ public class EventController {
     }
 
     @PostMapping("/events")
-    public ResponseEntity<Void> createEvent(
+    public ResponseEntity<EventItemDto> createEvent(
             @RequestBody CreateEventDto dto,
             JwtAuthenticationToken token
     ) throws Exception {
@@ -49,6 +51,7 @@ public class EventController {
         var event = new Event();
         event.setEventOwner(user);
         event.setEventName(dto.eventName());
+        event.setEventPrice(dto.eventPrice());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate date = LocalDate.parse(dto.eventDate(), formatter);
@@ -56,9 +59,20 @@ public class EventController {
         event.setEventDate(dateTime);
         event.setEventLocation(dto.eventLocation());
 
-        eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
 
-        return ResponseEntity.ok().build();
+        EventItemDto eventItemDto = new EventItemDto(
+                savedEvent.getEventId(),
+                savedEvent.getEventName(),
+                savedEvent.getEventDate(),
+                savedEvent.getEventDate().getHour(),
+                savedEvent.getEventDate().getMinute(),
+                savedEvent.getEventPrice()
+        );
+
+        URI location = UriUtil.getUriLocation("eventId", savedEvent.getEventId());
+
+        return ResponseEntity.created(location).body(eventItemDto);
     }
 
     @DeleteMapping("/events/{id}")
@@ -88,7 +102,6 @@ public class EventController {
     public ResponseEntity<EventsDto> listAllEvents(@RequestParam(value = "page", defaultValue = "0") int page,
                                                      @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-
         // page does not work if you use id as properties
         var events = eventRepository.findAll(
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
@@ -98,7 +111,8 @@ public class EventController {
                         event.getEventName(),
                         event.getEventDate(),
                         event.getEventDate().getHour(),
-                        event.getEventDate().getMinute()
+                        event.getEventDate().getMinute(),
+                        event.getEventPrice()
                 )
         );
 

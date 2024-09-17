@@ -1,5 +1,7 @@
 package com.example.booking.entities;
 
+import com.example.booking.controller.dto.TicketItemDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.UUID;
@@ -13,16 +15,18 @@ public class Ticket {
     @Column(name = "ticket_id")
     private UUID ticketId;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "event_id")
     private Event event;
-    private Double ticketPrice;
 
-    @ManyToOne
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User ticketOwner;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
     private Order order;
 
@@ -34,10 +38,10 @@ public class Ticket {
         this.order = order;
     }
 
-    public Ticket(UUID ticketId, Event event, Double ticketPrice, User ticketOwner) {
+    public Ticket(UUID ticketId, Event event, User ticketOwner) {
         this.ticketId = ticketId;
         this.event = event;
-        this.ticketPrice = ticketPrice;
+
         this.ticketOwner = ticketOwner;
     }
 
@@ -68,11 +72,11 @@ public class Ticket {
         this.ticketId = ticketId;
     }
 
-    public Double getTicketPrice() {
-        return ticketPrice;
-    }
-
-    public void setTicketPrice(Double ticketPrice) {
-        this.ticketPrice = ticketPrice;
+    public TicketItemDto toTicketItemDto() {
+        return new TicketItemDto(
+                ticketId,
+                event.toEventItemDto(),
+                ticketOwner.toUserDto()
+        );
     }
 }

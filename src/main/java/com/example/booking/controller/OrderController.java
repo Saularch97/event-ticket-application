@@ -8,6 +8,7 @@ import com.example.booking.repository.TicketOrderRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.util.UriUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 public class OrderController {
@@ -33,7 +32,9 @@ public class OrderController {
         this.userRepository = userRepository;
         this.ticketRepository = ticketRepository;
     }
+
     // TODO no futuro deixar a intenção de compra order cacheada no redis
+    @Transactional
     @PostMapping("/order")
     public ResponseEntity<OrderItemDto> createNewOrder(
             @RequestBody CreateNewOrderDto dto,
@@ -42,9 +43,8 @@ public class OrderController {
         Optional<User> user = userRepository.findById(UUID.fromString(token.getName()));
         if (user.isEmpty()) throw new Exception("User not exists!");
 
-        List<Ticket> tickets = new ArrayList<>();
+        Set<Ticket> tickets = new HashSet<>();
 
-        // TODO adicionar lógica para não ter id`s repetidos
         for (UUID ticketId : dto.ticketIds()) {
             var ticket = ticketRepository.findById(ticketId);
             if (ticket.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -54,8 +54,15 @@ public class OrderController {
         }
 
         var ticketOrder = new Order();
-        ticketOrder.setTickets(tickets);
-        ticketOrder.setOrderPrice(ticketOrder.calculateOrderPrice(ticketOrder.getTickets()));
+        ticketOrder.setTickets(new HashSet<>(tickets));
+
+        var orderPrice = 0.0;
+
+        for (Ticket ticket : tickets) {
+            orderPrice += ticket.getEvent().getEventPrice();
+        }
+
+        ticketOrder.setOrderPrice(orderPrice);
         ticketOrder.setUser(user.get());
 
         Order savedOrder = ticketOrderRepository.save(ticketOrder);
@@ -65,35 +72,9 @@ public class OrderController {
             ticketRepository.save(ticket);
         }
 
-        OrderItemDto orderItemDto = new OrderItemDto(
-                savedOrder.getOrderId(),
-                savedOrder.getOrderPrice(),
-                savedOrder.getTickets().stream().map(ticket ->
-                        new TicketItemDto(
-                                ticket.getTicketId(),
-                                new EventItemDto(
-                                        ticket.getEvent().getEventId(),
-                                        ticket.getEvent().getEventName(),
-                                        ticket.getEvent().getEventDate(),
-                                        ticket.getEvent().getEventDate().getHour(),
-                                        ticket.getEvent().getEventDate().getMinute()
-                                ),
-                                ticket.getTicketPrice(),
-                                new UserDto(
-                                        ticket.getTicketOwner().getUserId(),
-                                        ticket.getTicketOwner().getUserName()
-                                )
-                        )
-                ).collect(Collectors.toList()),
-                new UserDto(
-                        savedOrder.getUser().getUserId(),
-                        savedOrder.getUser().getUserName()
-                )
-        );
-
         URI location = UriUtil.getUriLocation("orderId", savedOrder.getOrderId());
 
-        return ResponseEntity.created(location).body(orderItemDto);
+        return ResponseEntity.created(location).body(savedOrder.toOrderItemDto());
     }
 
     @GetMapping("/ordersByUser")
@@ -103,29 +84,9 @@ public class OrderController {
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
 
-        var orders = ticketOrderRepository.findOrderByUserId(UUID.fromString(token.getName()), pageRequest)
-                .map(order -> new OrderItemDto(order.getOrderId(),
-                        order.getOrderPrice(),
-                        order.getTickets().stream().map(ticket ->
-                                new TicketItemDto(
-                                        ticket.getTicketId(),
-                                        new EventItemDto(
-                                                ticket.getEvent().getEventId(),
-                                                ticket.getEvent().getEventName(),
-                                                ticket.getEvent().getEventDate(),
-                                                ticket.getEvent().getEventDate().getHour(),
-                                                ticket.getEvent().getEventDate().getMinute()
-                                        ),
-                                        ticket.getTicketPrice(),
-                                        new UserDto(
-                                                ticket.getTicketOwner().getUserId(),
-                                                ticket.getTicketOwner().getUserName()
-                                        ))
-                        ).collect(Collectors.toList()),
-                        new UserDto(
-                                order.getUser().getUserId(),
-                                order.getUser().getUserName()
-                        )));
+        var orders = ticketOrderRepository
+                .findOrderByUserId(UUID.fromString(token.getName()), pageRequest)
+                .map(Order::toOrderItemDto);
 
         return ResponseEntity.ok(new OrdersDto(orders.getContent(), page, pageSize, orders.getTotalPages(), orders.getTotalElements()));
     }

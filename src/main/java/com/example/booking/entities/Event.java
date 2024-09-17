@@ -1,5 +1,7 @@
 package com.example.booking.entities;
 
+import com.example.booking.controller.dto.EventItemDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,23 +18,28 @@ public class Event {
     private String eventLocation;
     private String eventName;
     private LocalDateTime eventDate;
+    private Double eventPrice;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", fetch = FetchType.LAZY)
     private Set<Ticket> tickets;
-    @ManyToOne
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User eventOwner;
 
     public Event() {
     }
 
-    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner) {
+    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner, Double eventPrice) {
         this.eventId = eventId;
         this.eventLocation = eventLocation;
         this.eventName = eventName;
         this.eventDate = eventDate;
         this.tickets = tickets;
         this.eventOwner = eventOwner;
+        this.eventPrice = eventPrice;
     }
 
     public UUID getEventId() {
@@ -81,5 +88,24 @@ public class Event {
 
     public void setEventOwner(User eventOwner) {
         this.eventOwner = eventOwner;
+    }
+
+    public Double getEventPrice() {
+        return eventPrice;
+    }
+
+    public void setEventPrice(Double eventPrice) {
+        this.eventPrice = eventPrice;
+    }
+
+    public EventItemDto toEventItemDto() {
+        return new EventItemDto(
+                eventId,
+                eventName,
+                eventDate,
+                eventDate.getHour(),
+                eventDate.getMinute(),
+                eventPrice
+        );
     }
 }

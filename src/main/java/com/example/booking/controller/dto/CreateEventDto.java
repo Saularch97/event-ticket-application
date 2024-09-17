@@ -7,6 +7,7 @@ public record CreateEventDto(
         String eventDate,
         int eventHour,
         int eventMinute,
-        String eventLocation
+        String eventLocation,
+        double eventPrice
 ) {
 }

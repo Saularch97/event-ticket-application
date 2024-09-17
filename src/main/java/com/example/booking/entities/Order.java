@@ -1,8 +1,11 @@
 package com.example.booking.entities;
 
+import com.example.booking.controller.dto.OrderItemDto;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tb_orders")
@@ -11,7 +14,7 @@ public class Order {
     public Order() {
     }
 
-    public Order(UUID orderId, Double orderPrice, List<Ticket> tickets, User user) {
+    public Order(UUID orderId, Double orderPrice, Set<Ticket> tickets, User user) {
         this.orderId = orderId;
         this.orderPrice = orderPrice;
         this.tickets = tickets;
@@ -24,10 +27,12 @@ public class Order {
     private UUID orderId;
     private Double orderPrice;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy="order", fetch = FetchType.LAZY)
-    private List<Ticket> tickets = new ArrayList<>();
+    private Set<Ticket> tickets = new HashSet<>();
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -47,11 +52,11 @@ public class Order {
         this.orderPrice = orderPrice;
     }
 
-    public List<Ticket> getTickets() {
+    public Set<Ticket> getTickets() {
         return tickets;
     }
 
-    public void setTickets(List<Ticket> tickets) {
+    public void setTickets(Set<Ticket> tickets) {
         this.tickets = tickets;
     }
 
@@ -63,16 +68,13 @@ public class Order {
         this.user = user;
     }
 
-
-    public Double calculateOrderPrice(List<Ticket> tickets) {
-
-        Double totalPrice = 0.0;
-
-        for (Ticket t : tickets) {
-            totalPrice += t.getTicketPrice();
-        }
-
-        return totalPrice;
+    public OrderItemDto toOrderItemDto() {
+        return new OrderItemDto(
+                orderId,
+                orderPrice,
+                tickets.stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
+                user.toUserDto()
+        );
     }
 }
 
