@@ -21,6 +21,11 @@ Diagram:
 ![img.png](img.png)
 
 TODO:
--
+- [ ] adicionar método pagamento(Stripe por exemplo)
+- [ ] adicionar cache no redis para intenção de compra
+- [ ] adicionar qrcode para ingresso
+- [ ] adicionar testes na aplicação (unitários e integração)
+- [ ] fazer deploy(flyio)
+- [ ] adicionar CI(Jenkins ou circleCI)
+- [ ] aplicar cleanArch
 
-- [ ] Refatorar para ter evento, e neste evento ter ingressos, por exemplo, eu tenho o evento X e tenho os ingressos para esse evento sendo emitidos/criados

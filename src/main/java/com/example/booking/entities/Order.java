@@ -1,6 +1,6 @@
 package com.example.booking.entities;
 
-import com.example.booking.controller.dto.OrderItemDto;
+import com.example.booking.entities.dto.OrderItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 

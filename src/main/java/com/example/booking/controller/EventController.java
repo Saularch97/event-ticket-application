@@ -1,34 +1,24 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.*;
-import com.example.booking.entities.Event;
-import com.example.booking.entities.Role;
-import com.example.booking.repository.EventRepository;
-import com.example.booking.repository.UserRepository;
+import com.example.booking.entities.dto.CreateEventDto;
+import com.example.booking.entities.dto.EventItemDto;
+import com.example.booking.entities.dto.EventsDto;
+import com.example.booking.services.EventsService;
 import com.example.booking.util.UriUtil;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @RestController
 public class EventController {
 
-    private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final EventsService eventsService;
 
-    public EventController(EventRepository eventRepository, UserRepository userRepository) {
-        this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
+    public EventController(EventsService eventsService) {
+        this.eventsService = eventsService;
     }
 
     @PostMapping("/events")
@@ -37,40 +27,9 @@ public class EventController {
             JwtAuthenticationToken token
     ) throws Exception {
 
-        var user = userRepository.findById(UUID.fromString(token.getName()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var eventItemDto = eventsService.createEvent(dto, token);
 
-        var isAdmin = user.getRoles()
-                .stream()
-                .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
-
-        if (!isAdmin) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        var event = new Event();
-        event.setEventOwner(user);
-        event.setEventName(dto.eventName());
-        event.setEventPrice(dto.eventPrice());
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate date = LocalDate.parse(dto.eventDate(), formatter);
-        LocalDateTime dateTime = date.atTime(dto.eventHour(), dto.eventMinute());
-        event.setEventDate(dateTime);
-        event.setEventLocation(dto.eventLocation());
-
-        Event savedEvent = eventRepository.save(event);
-
-        EventItemDto eventItemDto = new EventItemDto(
-                savedEvent.getEventId(),
-                savedEvent.getEventName(),
-                savedEvent.getEventDate(),
-                savedEvent.getEventDate().getHour(),
-                savedEvent.getEventDate().getMinute(),
-                savedEvent.getEventPrice()
-        );
-
-        URI location = UriUtil.getUriLocation("eventId", savedEvent.getEventId());
+        URI location = UriUtil.getUriLocation("eventId", eventItemDto.eventId());
 
         return ResponseEntity.created(location).body(eventItemDto);
     }
@@ -79,45 +38,14 @@ public class EventController {
     public ResponseEntity<Void> deleteEvent(@PathVariable("id") UUID eventId,
                                              JwtAuthenticationToken token) throws Exception {
 
-        var user = userRepository.findById(UUID.fromString(token.getName()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        var event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        var isAdmin = user.getRoles()
-                .stream()
-                .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
-
-        if (isAdmin || event.getEventOwner().getUserId().equals(UUID.fromString(token.getName()))) {
-            eventRepository.deleteById(eventId);
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
+        eventsService.deleteEvent(eventId, token);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/events")
     public ResponseEntity<EventsDto> listAllEvents(@RequestParam(value = "page", defaultValue = "0") int page,
-                                                     @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
+                                                   @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        // page does not work if you use id as properties
-        var events = eventRepository.findAll(
-                PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
-        ).map(event ->
-                new EventItemDto(
-                        event.getEventId(),
-                        event.getEventName(),
-                        event.getEventDate(),
-                        event.getEventDate().getHour(),
-                        event.getEventDate().getMinute(),
-                        event.getEventPrice()
-                )
-        );
-
-        return ResponseEntity.ok(new EventsDto(
-                events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements())
-        );
+        return ResponseEntity.ok(eventsService.listAllEvents(page, pageSize));
     }
 }

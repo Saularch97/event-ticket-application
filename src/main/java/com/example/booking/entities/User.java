@@ -1,7 +1,7 @@
 package com.example.booking.entities;
 
-import com.example.booking.controller.dto.LoginRequest;
-import com.example.booking.controller.dto.UserDto;
+import com.example.booking.entities.dto.LoginRequest;
+import com.example.booking.entities.dto.UserDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
