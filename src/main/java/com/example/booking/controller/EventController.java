@@ -1,9 +1,9 @@
 package com.example.booking.controller;
 
-import com.example.booking.entities.dto.CreateEventDto;
-import com.example.booking.entities.dto.EventItemDto;
-import com.example.booking.entities.dto.EventsDto;
-import com.example.booking.services.EventsService;
+import com.example.booking.controller.dto.CreateEventDto;
+import com.example.booking.controller.dto.EventItemDto;
+import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -15,10 +15,10 @@ import java.util.UUID;
 @RestController
 public class EventController {
 
-    private final EventsService eventsService;
+    private final EventsServiceImpl eventsServiceImpl;
 
-    public EventController(EventsService eventsService) {
-        this.eventsService = eventsService;
+    public EventController(EventsServiceImpl eventsServiceImpl) {
+        this.eventsServiceImpl = eventsServiceImpl;
     }
 
     @PostMapping("/events")
@@ -27,7 +27,7 @@ public class EventController {
             JwtAuthenticationToken token
     ) throws Exception {
 
-        var eventItemDto = eventsService.createEvent(dto, token);
+        var eventItemDto = eventsServiceImpl.createEvent(dto, token);
 
         URI location = UriUtil.getUriLocation("eventId", eventItemDto.eventId());
 
@@ -38,7 +38,7 @@ public class EventController {
     public ResponseEntity<Void> deleteEvent(@PathVariable("id") UUID eventId,
                                              JwtAuthenticationToken token) throws Exception {
 
-        eventsService.deleteEvent(eventId, token);
+        eventsServiceImpl.deleteEvent(eventId, token);
         return ResponseEntity.ok().build();
     }
 
@@ -46,6 +46,6 @@ public class EventController {
     public ResponseEntity<EventsDto> listAllEvents(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        return ResponseEntity.ok(eventsService.listAllEvents(page, pageSize));
+        return ResponseEntity.ok(eventsServiceImpl.listAllEvents(page, pageSize));
     }
 }

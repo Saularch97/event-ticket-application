@@ -1,15 +1,16 @@
 package com.example.booking.services;
 
-import com.example.booking.entities.dto.OrderTicketDto;
-import com.example.booking.entities.dto.TicketItemDto;
-import com.example.booking.entities.dto.TicketsDto;
-import com.example.booking.entities.Event;
-import com.example.booking.entities.Role;
-import com.example.booking.entities.Ticket;
-import com.example.booking.entities.User;
+import com.example.booking.controller.dto.OrderTicketDto;
+import com.example.booking.controller.dto.TicketItemDto;
+import com.example.booking.controller.dto.TicketsDto;
+import com.example.booking.domain.entities.Event;
+import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.entities.Ticket;
+import com.example.booking.domain.entities.User;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.TicketsService;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,12 +24,12 @@ import java.util.UUID;
 
 @Transactional
 @Service
-public class TicketsService {
+public class TicketsServiceImpl implements TicketsService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public TicketsService(TicketRepository ticketRepository, UserRepository userRepository, EventRepository eventRepository) {
+    public TicketsServiceImpl(TicketRepository ticketRepository, UserRepository userRepository, EventRepository eventRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;

@@ -1,9 +1,9 @@
 package com.example.booking.controller;
 
-import com.example.booking.entities.dto.CreateNewOrderDto;
-import com.example.booking.entities.dto.OrderItemDto;
-import com.example.booking.entities.dto.OrdersDto;
-import com.example.booking.services.OrderService;
+import com.example.booking.controller.dto.CreateNewOrderDto;
+import com.example.booking.controller.dto.OrderItemDto;
+import com.example.booking.controller.dto.OrdersDto;
+import com.example.booking.services.OrderServiceImpl;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +15,10 @@ import java.net.URI;
 @RestController
 public class OrderController {
 
-    private final OrderService orderService;
+    private final OrderServiceImpl orderServiceImpl;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
+    public OrderController(OrderServiceImpl orderServiceImpl) {
+        this.orderServiceImpl = orderServiceImpl;
     }
 
     @Transactional
@@ -28,7 +28,7 @@ public class OrderController {
             JwtAuthenticationToken token
     ) throws Exception {
 
-        var savedOrder = orderService.createNewOrder(dto, token);
+        var savedOrder = orderServiceImpl.createNewOrder(dto, token);
 
         URI location = UriUtil.getUriLocation("orderId", savedOrder.orderId());
 
@@ -40,6 +40,6 @@ public class OrderController {
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
                                                    JwtAuthenticationToken token) throws Exception {
 
-        return ResponseEntity.ok(orderService.getUserOrders(page, pageSize, token));
+        return ResponseEntity.ok(orderServiceImpl.getUserOrders(page, pageSize, token));
     }
 }

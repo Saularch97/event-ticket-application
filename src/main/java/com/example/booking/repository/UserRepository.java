@@ -1,6 +1,6 @@
 package com.example.booking.repository;
 
-import com.example.booking.entities.User;
+import com.example.booking.domain.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

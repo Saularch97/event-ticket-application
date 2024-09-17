@@ -1,6 +1,6 @@
 package com.example.booking.repository;
 
-import com.example.booking.entities.Ticket;
+import com.example.booking.domain.entities.Ticket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

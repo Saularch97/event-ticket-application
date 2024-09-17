@@ -1,12 +1,13 @@
 package com.example.booking.services;
 
-import com.example.booking.entities.dto.CreateEventDto;
-import com.example.booking.entities.dto.EventItemDto;
-import com.example.booking.entities.dto.EventsDto;
-import com.example.booking.entities.Event;
-import com.example.booking.entities.Role;
+import com.example.booking.controller.dto.CreateEventDto;
+import com.example.booking.controller.dto.EventItemDto;
+import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.domain.entities.Event;
+import com.example.booking.domain.entities.Role;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.EventsService;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,12 +23,12 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class EventsService {
+public class EventsServiceImpl implements EventsService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
 
-    public EventsService(EventRepository eventRepository, UserRepository userRepository) {
+    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
     }

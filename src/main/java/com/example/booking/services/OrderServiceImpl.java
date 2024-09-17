@@ -1,14 +1,15 @@
 package com.example.booking.services;
 
-import com.example.booking.entities.dto.CreateNewOrderDto;
-import com.example.booking.entities.dto.OrderItemDto;
-import com.example.booking.entities.dto.OrdersDto;
-import com.example.booking.entities.Order;
-import com.example.booking.entities.Ticket;
-import com.example.booking.entities.User;
+import com.example.booking.controller.dto.CreateNewOrderDto;
+import com.example.booking.controller.dto.OrderItemDto;
+import com.example.booking.controller.dto.OrdersDto;
+import com.example.booking.domain.entities.Order;
+import com.example.booking.domain.entities.Ticket;
+import com.example.booking.domain.entities.User;
 import com.example.booking.repository.TicketOrderRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.OrderService;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,12 +25,12 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class OrderService {
+public class OrderServiceImpl implements OrderService {
     private final TicketOrderRepository ticketOrderRepository;
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
 
-    public OrderService(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository) {
+    public OrderServiceImpl(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository) {
         this.ticketOrderRepository = ticketOrderRepository;
         this.userRepository = userRepository;
         this.ticketRepository = ticketRepository;
@@ -81,5 +82,10 @@ public class OrderService {
                 .map(Order::toOrderItemDto);
 
         return new OrdersDto(orders.getContent(), page, pageSize, orders.getTotalPages(), orders.getTotalElements());
+    }
+
+    @Override
+    public void deleteOrder(UUID orderId) {
+        // TODO implement
     }
 }

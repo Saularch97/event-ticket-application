@@ -1,11 +1,12 @@
 package com.example.booking.services;
 
-import com.example.booking.entities.dto.CreateUserDto;
-import com.example.booking.entities.dto.UserDto;
-import com.example.booking.entities.Role;
-import com.example.booking.entities.User;
+import com.example.booking.controller.dto.CreateUserDto;
+import com.example.booking.controller.dto.UserDto;
+import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.entities.User;
 import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,13 +19,13 @@ import java.util.stream.Collectors;
 
 @Transactional
 @Service
-public class UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository repository, RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository repository, RoleRepository roleRepository, BCryptPasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;

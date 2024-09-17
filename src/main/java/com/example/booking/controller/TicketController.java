@@ -1,11 +1,11 @@
 package com.example.booking.controller;
 
-import com.example.booking.entities.Ticket;
-import com.example.booking.entities.dto.OrderTicketDto;
-import com.example.booking.entities.dto.TicketItemDto;
-import com.example.booking.entities.dto.TicketsDto;
+import com.example.booking.domain.entities.Ticket;
+import com.example.booking.controller.dto.OrderTicketDto;
+import com.example.booking.controller.dto.TicketItemDto;
+import com.example.booking.controller.dto.TicketsDto;
 import com.example.booking.repository.TicketRepository;
-import com.example.booking.services.TicketsService;
+import com.example.booking.services.TicketsServiceImpl;
 import com.example.booking.util.UriUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,11 +20,11 @@ import java.util.UUID;
 public class TicketController {
 
     private final TicketRepository ticketRepository;
-    private final TicketsService ticketsService;
+    private final TicketsServiceImpl ticketsServiceImpl;
 
-    public TicketController(TicketRepository ticketRepository, TicketsService ticketsService) {
+    public TicketController(TicketRepository ticketRepository, TicketsServiceImpl ticketsServiceImpl) {
         this.ticketRepository = ticketRepository;
-        this.ticketsService = ticketsService;
+        this.ticketsServiceImpl = ticketsServiceImpl;
     }
 
     @PostMapping("/ticket")
@@ -33,7 +33,7 @@ public class TicketController {
             JwtAuthenticationToken token
     ) throws Exception {
 
-        var savedTicket = ticketsService.orderTicket(dto, token);
+        var savedTicket = ticketsServiceImpl.orderTicket(dto, token);
 
         URI location = UriUtil.getUriLocation("ticketId", savedTicket.ticketId());
 
@@ -44,7 +44,7 @@ public class TicketController {
     public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
                                                   JwtAuthenticationToken token) throws Exception {
 
-        ticketsService.deleteTicketOrder(ticketId, token);
+        ticketsServiceImpl.deleteTicketOrder(ticketId, token);
 
         return ResponseEntity.ok().build();
     }
@@ -70,7 +70,7 @@ public class TicketController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        var ticketsDto = ticketsService.listAllUserTickets(token, page, pageSize);
+        var ticketsDto = ticketsServiceImpl.listAllUserTickets(token, page, pageSize);
 
         return ResponseEntity.ok(ticketsDto);
     }

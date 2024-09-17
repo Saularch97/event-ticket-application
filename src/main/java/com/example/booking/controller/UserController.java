@@ -1,9 +1,9 @@
 package com.example.booking.controller;
 
-import com.example.booking.entities.dto.CreateUserDto;
-import com.example.booking.entities.dto.UserDto;
+import com.example.booking.controller.dto.CreateUserDto;
+import com.example.booking.controller.dto.UserDto;
 
-import com.example.booking.services.UserService;
+import com.example.booking.services.UserServiceImpl;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
 
@@ -21,15 +21,15 @@ import java.util.List;
 @Transactional
 public class UserController {
 
-    private final UserService userService;
-    public UserController(UserService userService) {
-        this.userService = userService;
+    private final UserServiceImpl userServiceImpl;
+    public UserController(UserServiceImpl userServiceImpl) {
+        this.userServiceImpl = userServiceImpl;
     }
 
     @PostMapping("/users")
     public ResponseEntity<UserDto> newUser(@RequestBody CreateUserDto createUserDto) {
 
-        var savedUser = userService.saveUser(createUserDto);
+        var savedUser = userServiceImpl.saveUser(createUserDto);
 
         URI location = UriUtil.getUriLocation("userId", savedUser.userId());
 
@@ -39,6 +39,6 @@ public class UserController {
     @GetMapping("/users")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public ResponseEntity<List<UserDto>> listAllUsers() {
-        return ResponseEntity.ok(userService.listAllUsers());
+        return ResponseEntity.ok(userServiceImpl.listAllUsers());
     }
 }

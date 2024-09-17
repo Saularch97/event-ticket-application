@@ -1,9 +1,10 @@
 package com.example.booking.services;
 
-import com.example.booking.entities.dto.LoginRequest;
-import com.example.booking.entities.dto.LoginResponse;
-import com.example.booking.entities.Role;
+import com.example.booking.controller.dto.LoginRequest;
+import com.example.booking.controller.dto.LoginResponse;
+import com.example.booking.domain.entities.Role;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.TokenService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,14 +18,14 @@ import java.util.stream.Collectors;
 
 @Transactional
 @Service
-public class TokenService {
+public class TokenServiceImpl implements TokenService {
 
 
     private final JwtEncoder jwtEncoder;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
 
-    public TokenService(JwtEncoder jwtEncoder, UserRepository userRepository, BCryptPasswordEncoder encoder) {
+    public TokenServiceImpl(JwtEncoder jwtEncoder, UserRepository userRepository, BCryptPasswordEncoder encoder) {
         this.jwtEncoder = jwtEncoder;
         this.userRepository = userRepository;
         this.encoder = encoder;

@@ -1,4 +1,4 @@
-package com.example.booking.entities.dto;
+package com.example.booking.controller.dto;
 
 import java.util.UUID;
 

@@ -1,7 +1,7 @@
 package com.example.booking.config;
 
-import com.example.booking.entities.Role;
-import com.example.booking.entities.User;
+import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.entities.User;
 import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
 import jakarta.transaction.Transactional;
