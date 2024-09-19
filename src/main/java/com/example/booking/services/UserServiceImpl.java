@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService {
         var user = new User();
         user.setUserName(createUserDto.username());
         user.setPassword(passwordEncoder.encode(createUserDto.password()));
+        user.setEmail(createUserDto.email());
         user.setRoles(Set.of(basicRole));
 
         return repository.save(user).toUserDto();

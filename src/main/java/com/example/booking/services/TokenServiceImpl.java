@@ -41,8 +41,12 @@ public class TokenServiceImpl implements TokenService {
         var expiresIn = 300L;
         var now = Instant.now();
 
-        // TODO see how admin is being saved
-        var scopes = user.get().getRoles().stream().map(Role::getName).collect(Collectors.joining(" ")).toUpperCase();
+        var scopes = user.get()
+                .getRoles()
+                .stream()
+                .map(Role::getName)
+                .collect(Collectors.joining(" "))
+                .toUpperCase();
 
         var claims = JwtClaimsSet.builder()
                 .issuer("booking")
@@ -50,6 +54,7 @@ public class TokenServiceImpl implements TokenService {
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(expiresIn))
                 .claim("scope", scopes)
+                .claim("email", user.get().getEmail())
                 .build();
 
         var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

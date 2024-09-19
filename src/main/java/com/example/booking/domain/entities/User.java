@@ -14,19 +14,6 @@ import java.util.UUID;
 @Table(name = "tb_users")
 public class User {
 
-    public User() {
-    }
-
-    public User(UUID userId, String userName, String password, Set<Ticket> userTickets, Set<Order> orders, Set<Role> roles, Set<Event> events) {
-        this.userId = userId;
-        this.userName = userName;
-        this.password = password;
-        this.userTickets = userTickets;
-        this.orders = orders;
-        this.roles = roles;
-        this.events = events;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
@@ -37,6 +24,9 @@ public class User {
 
     @Column(unique = true)
     private String password;
+
+    @Column(unique = true)
+    private String email;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "ticketOwner", fetch = FetchType.LAZY)
@@ -58,6 +48,20 @@ public class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "eventOwner", fetch = FetchType.LAZY)
     private Set<Event> events = new HashSet<>();
+
+    public User() {
+    }
+
+    public User(UUID userId, String userName, String password, Set<Ticket> userTickets, Set<Order> orders, Set<Role> roles, Set<Event> events, String email) {
+        this.userId = userId;
+        this.userName = userName;
+        this.password = password;
+        this.userTickets = userTickets;
+        this.orders = orders;
+        this.roles = roles;
+        this.events = events;
+        this.email = email;
+    }
 
     public UUID getUserId() {
         return userId;
@@ -86,6 +90,7 @@ public class User {
     public Set<Role> getRoles() {
         return roles;
     }
+
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
@@ -114,14 +119,23 @@ public class User {
         this.events = events;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
         return passwordEncoder.matches(loginRequest.password(), this.password);
     }
 
     public UserDto toUserDto() {
         return new UserDto(
-              userId,
-              userName
+                userId,
+                userName,
+                email
         );
     }
 }

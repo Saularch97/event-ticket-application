@@ -3,6 +3,7 @@ In order to have the environment configured for this project you will need:
 - Docker (docker desktop for macs)
 - Java version 17
 
+// TODO mudar para goparty!
 
 Steps to run the project in your local machine
 - run the command `docker compose up` (need to have docker desktop running if you are mac user)

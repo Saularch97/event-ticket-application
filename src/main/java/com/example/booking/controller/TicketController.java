@@ -9,6 +9,7 @@ import com.example.booking.services.TicketsServiceImpl;
 import com.example.booking.util.UriUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -35,9 +36,7 @@ public class TicketController {
 
         var savedTicket = ticketsServiceImpl.orderTicket(dto, token);
 
-        URI location = UriUtil.getUriLocation("ticketId", savedTicket.ticketId());
-
-        return ResponseEntity.created(location).body(savedTicket);
+        return new ResponseEntity<>(savedTicket, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/tickets/{id}")
