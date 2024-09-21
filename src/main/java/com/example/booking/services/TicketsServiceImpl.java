@@ -7,6 +7,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.User;
+import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
@@ -61,7 +62,7 @@ public class TicketsServiceImpl implements TicketsService {
 
         var isAdmin = user.getRoles()
                 .stream()
-                .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
+                .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
 
         if (isAdmin || ticket.getTicketOwner().getUserId().equals(UUID.fromString(token.getName()))) {
             ticketRepository.deleteById(ticketId);

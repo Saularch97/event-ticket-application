@@ -4,7 +4,7 @@ import com.example.booking.controller.dto.CreateEventDto;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.domain.entities.Event;
-import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
@@ -39,7 +39,7 @@ public class EventsServiceImpl implements EventsService {
 
         var isAdmin = user.getRoles()
                 .stream()
-                .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
+                .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
 
         if (!isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -70,7 +70,7 @@ public class EventsServiceImpl implements EventsService {
 
         var isAdmin = user.getRoles()
                 .stream()
-                .anyMatch(role -> role.getName().equalsIgnoreCase(Role.Values.ADMIN.name()));
+                .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
 
         if (isAdmin || event.getEventOwner().getUserId().equals(UUID.fromString(token.getName()))) {
             eventRepository.deleteById(eventId);

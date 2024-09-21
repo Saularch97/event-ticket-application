@@ -1,52 +1,41 @@
 package com.example.booking.domain.entities;
 
+
+import com.example.booking.domain.enums.ERole;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tb_roles")
 public class Role {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private ERole name;
+
     public Role() {
+
     }
 
-    public Role(Long roleId, String name) {
-        this.roleId = roleId;
+    public Role(ERole name) {
         this.name = name;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id")
-    private Long roleId;
-    private String name;
-
-    public Long getRoleId() {
-        return roleId;
+    public Integer getId() {
+        return id;
     }
 
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
-    public String getName() {
+    public ERole getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(ERole name) {
         this.name = name;
-    }
-
-    public enum Values {
-        BASIC(1L),
-        ADMIN(2L);
-
-        final long roleId;
-
-        Values(long roleId) {
-            this.roleId = roleId;
-        }
-
-        public long getRoleId() {
-            return roleId;
-        }
     }
 }

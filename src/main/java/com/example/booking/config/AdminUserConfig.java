@@ -2,6 +2,7 @@ package com.example.booking.config;
 
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
+import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -25,11 +26,10 @@ public class AdminUserConfig implements CommandLineRunner {
         this.encoder = encoder;
     }
 
-
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        var roleAdmin = roleRepository.findByName(Role.Values.ADMIN.name().toLowerCase());
+        var roleAdmin = roleRepository.findByName(ERole.ROLE_ADMIN);
 
         var userAdmin = userRepository.findByUserName("admin");
 
@@ -42,7 +42,7 @@ public class AdminUserConfig implements CommandLineRunner {
                     user.setUserName("admin");
                     user.setEmail("admin@admin.com");
                     user.setPassword(encoder.encode("123"));
-                    user.setRoles(Set.of(roleAdmin));
+                    user.setRoles(Set.of(roleAdmin.orElseThrow(() -> new RuntimeException("Error: Role is not found."))));
                     userRepository.save(user);
                 }
         );

@@ -28,4 +28,5 @@ TODO:
 - [ ] adicionar testes na aplicação (unitários e integração)
 - [ ] fazer deploy(flyio)
 - [ ] adicionar CI(Jenkins ou circleCI)
+- [ ] ter logs na aplicação
 

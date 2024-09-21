@@ -63,6 +63,9 @@ public class User {
         this.email = email;
     }
 
+    public User(String username, String email, String password) {
+    }
+
     public UUID getUserId() {
         return userId;
     }
