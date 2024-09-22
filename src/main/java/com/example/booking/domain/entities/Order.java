@@ -68,12 +68,12 @@ public class Order {
         this.user = user;
     }
 
-    public OrderItemDto toOrderItemDto() {
+    public static OrderItemDto toOrderItemDto(Order order) {
         return new OrderItemDto(
-                orderId,
-                orderPrice,
-                tickets.stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
-                user.toUserDto()
+                order.getOrderId(),
+                order.getOrderPrice(),
+                order.getTickets().stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
+                User.toUserDto(order.getUser())
         );
     }
 }

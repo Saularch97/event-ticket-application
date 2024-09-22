@@ -98,14 +98,14 @@ public class Event {
         this.eventPrice = eventPrice;
     }
 
-    public EventItemDto toEventItemDto() {
+    public static EventItemDto toEventItemDto(Event event) {
         return new EventItemDto(
-                eventId,
-                eventName,
-                eventDate,
-                eventDate.getHour(),
-                eventDate.getMinute(),
-                eventPrice
+                event.getEventId(),
+                event.getEventName(),
+                event.getEventDate(),
+                event.getEventDate().getHour(),
+                event.getEventDate().getMinute(),
+                event.getEventPrice()
         );
     }
 }

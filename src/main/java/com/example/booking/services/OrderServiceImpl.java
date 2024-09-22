@@ -70,7 +70,7 @@ public class OrderServiceImpl implements OrderService {
             ticketRepository.save(ticket);
         }
 
-        return savedOrder.toOrderItemDto();
+        return Order.toOrderItemDto(savedOrder);
     }
 
     public OrdersDto getUserOrders(int page, int pageSize, JwtAuthenticationToken token) {

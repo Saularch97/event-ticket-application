@@ -34,7 +34,7 @@ public class EventsServiceImpl implements EventsService {
     }
 
     public EventItemDto createEvent(CreateEventDto dto, JwtAuthenticationToken token) {
-        var user = userRepository.findById(UUID.fromString(token.getName()))
+        var user = userRepository.findById(UUID.fromString(token.toString()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         var isAdmin = user.getRoles()
@@ -58,7 +58,7 @@ public class EventsServiceImpl implements EventsService {
 
         Event savedEvent = eventRepository.save(event);
 
-        return savedEvent.toEventItemDto();
+        return Event.toEventItemDto(savedEvent);
     }
 
     public void deleteEvent(UUID eventId, JwtAuthenticationToken token) {

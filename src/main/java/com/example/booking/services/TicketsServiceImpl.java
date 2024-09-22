@@ -50,7 +50,7 @@ public class TicketsServiceImpl implements TicketsService {
         ticket.setTicketOwner(user.get());
         ticket.setEvent(event.get());
 
-        return ticketRepository.save(ticket).toTicketItemDto();
+        return Ticket.toTicketItemDto(ticket);
     }
 
     public void deleteTicketOrder(UUID ticketId, JwtAuthenticationToken token) {

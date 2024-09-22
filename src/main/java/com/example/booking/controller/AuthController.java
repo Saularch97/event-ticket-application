@@ -21,8 +21,8 @@ import com.example.booking.util.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -69,6 +69,7 @@ public class AuthController {
 
     private final RefreshTokenService refreshTokenService;
 
+    // TODO alterar status pra 201 created
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
@@ -109,9 +110,9 @@ public class AuthController {
         }
 
         // Create new user's account
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
+        User user = new User();
+        user.setUserName(signUpRequest.getUsername());
+        user.setEmail(signUpRequest.getEmail());
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();
@@ -144,9 +145,8 @@ public class AuthController {
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
-
-        return ResponseEntity.ok(new MessageResponseDto("User registered successfully!"));
+        var savedUser = userRepository.save(user);
+        return new ResponseEntity<>(User.toUserDto(savedUser), HttpStatus.CREATED);
     }
 
     @PostMapping("/signout")

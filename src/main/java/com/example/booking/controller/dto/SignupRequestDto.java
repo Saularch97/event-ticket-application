@@ -5,18 +5,18 @@ import java.util.Set;
 import jakarta.validation.constraints.*;
 
 public class SignupRequestDto {
-    @NotBlank
+    @NotBlank(message = "The user name is obrigatory")
     @Size(min = 3, max = 20)
     private String username;
 
-    @NotBlank
+    @NotBlank(message = "The password is obrigatory")
     @Size(max = 50)
-    @Email
+    @Email(message = "The email must be valid!")
     private String email;
 
     private Set<String> role;
 
-    @NotBlank
+    @NotBlank(message = "The user name is obrigatory")
     @Size(min = 6, max = 40)
     private String password;
 

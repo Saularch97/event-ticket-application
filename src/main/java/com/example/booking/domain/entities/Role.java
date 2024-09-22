@@ -1,6 +1,7 @@
 package com.example.booking.domain.entities;
 
 
+import com.example.booking.controller.dto.RoleItemDto;
 import com.example.booking.domain.enums.ERole;
 import jakarta.persistence.*;
 
@@ -37,5 +38,12 @@ public class Role {
 
     public void setName(ERole name) {
         this.name = name;
+    }
+
+    public static RoleItemDto toRoleItemDto(Role role) {
+        return new RoleItemDto(
+                role.getId(),
+                role.getName().name()
+        );
     }
 }
