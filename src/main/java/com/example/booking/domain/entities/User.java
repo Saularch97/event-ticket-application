@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tb_users")
@@ -66,6 +67,7 @@ public class User {
     public User(String username, String email, String password) {
     }
 
+
     public UUID getUserId() {
         return userId;
     }
@@ -90,12 +92,12 @@ public class User {
         this.password = password;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
+    public String getEmail() {
+        return email;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Set<Ticket> getUserTickets() {
@@ -114,6 +116,14 @@ public class User {
         this.orders = orders;
     }
 
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
     public Set<Event> getEvents() {
         return events;
     }
@@ -122,23 +132,16 @@ public class User {
         this.events = events;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
         return passwordEncoder.matches(loginRequest.password(), this.password);
     }
 
-    public UserDto toUserDto() {
+    public static UserDto toUserDto(User user) {
         return new UserDto(
-                userId,
-                userName,
-                email
+                user.getUserId(),
+                user.getUserName(),
+                user.getEmail(),
+                user.getRoles().stream().map(Role::toRoleItemDto).collect(Collectors.toList())
         );
     }
 }

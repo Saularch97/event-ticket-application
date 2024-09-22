@@ -72,11 +72,11 @@ public class Ticket {
         this.ticketId = ticketId;
     }
 
-    public TicketItemDto toTicketItemDto() {
+    public static TicketItemDto toTicketItemDto(Ticket ticket) {
         return new TicketItemDto(
-                ticketId,
-                event.toEventItemDto(),
-                ticketOwner.toUserDto()
+                ticket.getTicketId(),
+                Event.toEventItemDto(ticket.getEvent()),
+                User.toUserDto(ticket.getTicketOwner())
         );
     }
 }

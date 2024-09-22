@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.util.UUID;
 
 public interface EventsService {
-    EventItemDto createEvent(CreateEventDto dto, JwtAuthenticationToken token);
+    EventItemDto createEvent(CreateEventDto dto, String token);
     void deleteEvent(UUID eventId, JwtAuthenticationToken token);
     EventsDto listAllEvents(int page, int pageSize);
 }

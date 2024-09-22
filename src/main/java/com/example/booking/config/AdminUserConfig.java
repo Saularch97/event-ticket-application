@@ -1,6 +1,5 @@
 package com.example.booking.config;
 
-import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.RoleRepository;
@@ -17,13 +16,12 @@ public class AdminUserConfig implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder encoder;
-
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public AdminUserConfig(RoleRepository roleRepository, UserRepository userRepository, BCryptPasswordEncoder encoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
-        this.encoder = encoder;
+        this.passwordEncoder = encoder;
     }
 
     @Override
@@ -41,7 +39,7 @@ public class AdminUserConfig implements CommandLineRunner {
                     var user = new User();
                     user.setUserName("admin");
                     user.setEmail("admin@admin.com");
-                    user.setPassword(encoder.encode("123"));
+                    user.setPassword(passwordEncoder.encode("123"));
                     user.setRoles(Set.of(roleAdmin.orElseThrow(() -> new RuntimeException("Error: Role is not found."))));
                     userRepository.save(user);
                 }

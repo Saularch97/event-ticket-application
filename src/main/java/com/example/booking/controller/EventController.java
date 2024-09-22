@@ -5,6 +5,7 @@ import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class EventController {
     @PostMapping("/events")
     public ResponseEntity<EventItemDto> createEvent(
             @RequestBody CreateEventDto dto,
-            JwtAuthenticationToken token
+            @RequestHeader(name = "Cookie", required = false) String token
     ) throws Exception {
 
         var eventItemDto = eventsServiceImpl.createEvent(dto, token);
