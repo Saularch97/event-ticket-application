@@ -25,7 +25,7 @@ public class OrderController {
     @PostMapping("/order")
     public ResponseEntity<OrderItemDto> createNewOrder(
             @RequestBody CreateNewOrderDto dto,
-            JwtAuthenticationToken token
+            @RequestHeader(name = "Cookie") String token
     ) throws Exception {
 
         var savedOrder = orderServiceImpl.createNewOrder(dto, token);
@@ -38,7 +38,7 @@ public class OrderController {
     @GetMapping("/ordersByUser")
     public ResponseEntity<OrdersDto> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-                                                   JwtAuthenticationToken token) throws Exception {
+                                                   @RequestHeader(name = "Cookie") String token) throws Exception {
 
         return ResponseEntity.ok(orderServiceImpl.getUserOrders(page, pageSize, token));
     }

@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.util.UUID;
 
 public interface OrderService {
-    OrderItemDto createNewOrder(CreateNewOrderDto dto, JwtAuthenticationToken token);
-    OrdersDto getUserOrders(int page, int pageSize, JwtAuthenticationToken token);
+    OrderItemDto createNewOrder(CreateNewOrderDto dto, String token);
+    OrdersDto getUserOrders(int page, int pageSize, String token);
     void deleteOrder(UUID orderId);
 }

@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.util.UUID;
 
 public interface TicketsService {
-    TicketItemDto orderTicket(OrderTicketDto dto, JwtAuthenticationToken token);
-    void deleteTicketOrder(UUID ticketId, JwtAuthenticationToken token);
-    TicketsDto listAllUserTickets(JwtAuthenticationToken token, int page, int pageSize);
+    TicketItemDto orderTicket(OrderTicketDto dto, String token);
+    void deleteTicketOrder(UUID ticketId, String token);
+    TicketsDto listAllUserTickets(String token, int page, int pageSize);
 }

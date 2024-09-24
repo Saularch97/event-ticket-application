@@ -12,6 +12,7 @@ import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.TicketsService;
+import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -29,18 +30,23 @@ public class TicketsServiceImpl implements TicketsService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    private final JwtUtils jwtUtils;
 
-    public TicketsServiceImpl(TicketRepository ticketRepository, UserRepository userRepository, EventRepository eventRepository) {
+    public TicketsServiceImpl(TicketRepository ticketRepository, UserRepository userRepository, EventRepository eventRepository, JwtUtils jwtUtils) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
+        this.jwtUtils = jwtUtils;
     }
 
     public TicketItemDto orderTicket(
             OrderTicketDto dto,
-            JwtAuthenticationToken token
+            String token
     ) {
-        Optional<User> user = userRepository.findById(UUID.fromString(token.getName()));
+
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+
+        Optional<User> user = userRepository.findByUserName(userName);
         if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
 
         Optional<Event> event = eventRepository.findById(dto.eventId());
@@ -50,11 +56,15 @@ public class TicketsServiceImpl implements TicketsService {
         ticket.setTicketOwner(user.get());
         ticket.setEvent(event.get());
 
+        ticketRepository.save(ticket);
+
         return Ticket.toTicketItemDto(ticket);
     }
 
-    public void deleteTicketOrder(UUID ticketId, JwtAuthenticationToken token) {
-        var user = userRepository.findById(UUID.fromString(token.getName()))
+    public void deleteTicketOrder(UUID ticketId, String token) {
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+
+        var user = userRepository.findByUserName(userName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         var ticket = ticketRepository.findById(ticketId)
@@ -64,22 +74,24 @@ public class TicketsServiceImpl implements TicketsService {
                 .stream()
                 .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
 
-        if (isAdmin || ticket.getTicketOwner().getUserId().equals(UUID.fromString(token.getName()))) {
+        if (isAdmin || ticket.getTicketOwner().getUserName().equals(userName)) {
             ticketRepository.deleteById(ticketId);
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }
 
-    public TicketsDto listAllUserTickets(JwtAuthenticationToken token, int page, int pageSize) {
-        Optional<User> user = userRepository.findById(UUID.fromString(token.getName()));
+    public TicketsDto listAllUserTickets(String token, int page, int pageSize) {
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+
+        Optional<User> user = userRepository.findByUserName(userName);
 
         if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
 
         var tickets = ticketRepository
-                .findAllTicketsByUserId(UUID.fromString(token.getName()), pageRequest)
+                .findAllTicketsByUserId(user.get().getUserId(), pageRequest)
                 .map(Ticket::toTicketItemDto);
 
         return new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements());

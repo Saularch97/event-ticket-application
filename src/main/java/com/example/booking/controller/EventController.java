@@ -8,6 +8,7 @@ import com.example.booking.util.UriUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,8 +38,11 @@ public class EventController {
     }
 
     @DeleteMapping("/events/{id}")
+    // TODO exemplo de permissionamento, incluir na API
+//    @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteEvent(@PathVariable("id") UUID eventId,
-                                            @RequestHeader(name = "Cookie", required = true) String token) throws Exception {
+                                            @RequestHeader(name = "Cookie") String token) throws Exception {
         return eventsServiceImpl.deleteEvent(eventId, token);
     }
 

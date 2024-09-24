@@ -31,7 +31,7 @@ public class TicketController {
     @PostMapping("/ticket")
     public ResponseEntity<TicketItemDto> orderTicket(
             @RequestBody OrderTicketDto dto,
-            JwtAuthenticationToken token
+            @RequestHeader(name = "Cookie") String token
     ) throws Exception {
 
         var savedTicket = ticketsServiceImpl.orderTicket(dto, token);
@@ -41,7 +41,7 @@ public class TicketController {
 
     @DeleteMapping("/tickets/{id}")
     public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
-                                                  JwtAuthenticationToken token) throws Exception {
+                                                  @RequestHeader(name = "Cookie") String token) throws Exception {
 
         ticketsServiceImpl.deleteTicketOrder(ticketId, token);
 
@@ -65,7 +65,7 @@ public class TicketController {
 
     @GetMapping("/userTickets")
     public ResponseEntity<TicketsDto> listAllUserTickets(
-            JwtAuthenticationToken token,
+            @RequestHeader(name = "Cookie") String token,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 

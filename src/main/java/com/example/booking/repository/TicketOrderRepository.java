@@ -13,6 +13,6 @@ import java.util.UUID;
 @Repository
 public interface TicketOrderRepository extends JpaRepository<Order, UUID> {
 
-    @Query("SELECT o FROM Order o WHERE o.user.userId = :id")
-    Page<Order> findOrderByUserId(@Param("id") UUID id, Pageable pageable);
+    @Query("SELECT o FROM Order o WHERE o.user.userName = :name")
+    Page<Order> findOrderByUserName(@Param("name") String name, Pageable pageable);
 }

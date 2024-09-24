@@ -10,11 +10,11 @@ import com.example.booking.repository.TicketOrderRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
+import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,16 +29,22 @@ public class OrderServiceImpl implements OrderService {
     private final TicketOrderRepository ticketOrderRepository;
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
+    private final JwtUtils jwtUtils;
 
-    public OrderServiceImpl(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository) {
+    public OrderServiceImpl(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository, JwtUtils jwtUtils) {
         this.ticketOrderRepository = ticketOrderRepository;
         this.userRepository = userRepository;
         this.ticketRepository = ticketRepository;
+        this.jwtUtils = jwtUtils;
     }
 
     // TODO no futuro deixar a intenção de compra order cacheada no redis
-    public OrderItemDto createNewOrder(CreateNewOrderDto dto, JwtAuthenticationToken token) {
-        Optional<User> user = userRepository.findById(UUID.fromString(token.getName()));
+    // TODO testar pra ver se aceita dois ID`s repetidos de ingresso
+    public OrderItemDto createNewOrder(CreateNewOrderDto dto, String token) {
+
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+
+        Optional<User> user = userRepository.findByUserName(userName);
         if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
 
         Set<Ticket> tickets = new HashSet<>();
@@ -73,12 +79,14 @@ public class OrderServiceImpl implements OrderService {
         return Order.toOrderItemDto(savedOrder);
     }
 
-    public OrdersDto getUserOrders(int page, int pageSize, JwtAuthenticationToken token) {
+    public OrdersDto getUserOrders(int page, int pageSize, String token) {
+
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
 
         var orders = ticketOrderRepository
-                .findOrderByUserId(UUID.fromString(token.getName()), pageRequest)
+                .findOrderByUserName(userName, pageRequest)
                 .map(Order::toOrderItemDto);
 
         return new OrdersDto(orders.getContent(), page, pageSize, orders.getTotalPages(), orders.getTotalElements());
