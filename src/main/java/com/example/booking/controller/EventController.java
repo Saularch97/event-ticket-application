@@ -6,6 +6,7 @@ import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class EventController {
     @PostMapping("/events")
     public ResponseEntity<EventItemDto> createEvent(
             @RequestBody CreateEventDto dto,
-            @RequestHeader(name = "Cookie", required = false) JwtAuthenticationToken token
+            @RequestHeader(name = "Cookie", required = true) String token
     ) throws Exception {
 
         var eventItemDto = eventsServiceImpl.createEvent(dto, token);
@@ -36,11 +37,9 @@ public class EventController {
     }
 
     @DeleteMapping("/events/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable("id") UUID eventId,
-                                             JwtAuthenticationToken token) throws Exception {
-
-        eventsServiceImpl.deleteEvent(eventId, token);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteEvent(@PathVariable("id") UUID eventId,
+                                            @RequestHeader(name = "Cookie", required = true) String token) throws Exception {
+        return eventsServiceImpl.deleteEvent(eventId, token);
     }
 
     @GetMapping("/events")

@@ -8,10 +8,12 @@ import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
+import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -27,14 +30,19 @@ public class EventsServiceImpl implements EventsService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
 
-    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository) {
+    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.jwtUtils = jwtUtils;
     }
 
-    public EventItemDto createEvent(CreateEventDto dto, JwtAuthenticationToken token) {
-        var user = userRepository.findById(UUID.fromString(token.toString()))
+    public EventItemDto createEvent(CreateEventDto dto, String token) {
+
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+
+        var user = userRepository.findByUserName(userName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         var isAdmin = user.getRoles()
@@ -61,8 +69,17 @@ public class EventsServiceImpl implements EventsService {
         return Event.toEventItemDto(savedEvent);
     }
 
-    public void deleteEvent(UUID eventId, JwtAuthenticationToken token) {
-        var user = userRepository.findById(UUID.fromString(token.getName()))
+    public ResponseEntity<?> deleteEvent(UUID eventId, String token) {
+
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+
+        boolean exists = eventRepository.existsById(eventId);  // Verifica se o item existe
+
+        if (!exists) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Retorna 404 se o item não foi encontrado
+        }
+
+        var user = userRepository.findByUserName(userName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         var event = eventRepository.findById(eventId)
@@ -72,8 +89,9 @@ public class EventsServiceImpl implements EventsService {
                 .stream()
                 .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
 
-        if (isAdmin || event.getEventOwner().getUserId().equals(UUID.fromString(token.getName()))) {
+        if (isAdmin || event.getEventOwner().getUserName().equals(userName)) {
             eventRepository.deleteById(eventId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
@@ -86,4 +104,8 @@ public class EventsServiceImpl implements EventsService {
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
+
+//    public EventsDto listAllUserEvents(int page, int pageSize) {
+//
+//    }
 }
