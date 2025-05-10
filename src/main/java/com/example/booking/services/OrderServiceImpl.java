@@ -1,6 +1,6 @@
 package com.example.booking.services;
 
-import com.example.booking.controller.dto.CreateNewOrderDto;
+import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
 import com.example.booking.domain.entities.Order;
@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     // TODO no futuro deixar a intenção de compra order cacheada no redis
     // TODO testar pra ver se aceita dois ID`s repetidos de ingresso
-    public OrderItemDto createNewOrder(CreateNewOrderDto dto, String token) {
+    public OrderItemDto createNewOrder(CreateOrderRequest dto, String token) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 

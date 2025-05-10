@@ -1,6 +1,6 @@
 package com.example.booking.services;
 
-import com.example.booking.controller.dto.CreateEventDto;
+import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.domain.entities.Event;
@@ -14,14 +14,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -38,8 +36,8 @@ public class EventsServiceImpl implements EventsService {
         this.jwtUtils = jwtUtils;
     }
 
-    public EventItemDto createEvent(CreateEventDto dto, String token) {
-
+    public EventItemDto createEvent(CreateEventRequest dto, String token) {
+        // TODO construir response no controller
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
         var user = userRepository.findByUserName(userName)
@@ -104,7 +102,7 @@ public class EventsServiceImpl implements EventsService {
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
-
+    // TODO implementar
 //    public EventsDto listAllUserEvents(int page, int pageSize) {
 //
 //    }

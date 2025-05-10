@@ -1,21 +1,19 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.CreateEventDto;
+import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/api")
 public class EventController {
 
     private final EventsServiceImpl eventsServiceImpl;
@@ -24,13 +22,14 @@ public class EventController {
         this.eventsServiceImpl = eventsServiceImpl;
     }
 
+    // TODO criar evento deveria ter um eventOwner
     @PostMapping("/events")
     public ResponseEntity<EventItemDto> createEvent(
-            @RequestBody CreateEventDto dto,
+            @RequestBody CreateEventRequest request,
             @RequestHeader(name = "Cookie", required = true) String token
     ) throws Exception {
 
-        var eventItemDto = eventsServiceImpl.createEvent(dto, token);
+        var eventItemDto = eventsServiceImpl.createEvent(request, token);
 
         URI location = UriUtil.getUriLocation("eventId", eventItemDto.eventId());
 

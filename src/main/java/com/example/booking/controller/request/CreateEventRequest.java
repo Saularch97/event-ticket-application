@@ -1,8 +1,6 @@
-package com.example.booking.controller.dto;
+package com.example.booking.controller.request;
 
-import java.time.LocalDate;
-
-public record CreateEventDto(
+public record CreateEventRequest(
         String eventName,
         String eventDate,
         int eventHour,

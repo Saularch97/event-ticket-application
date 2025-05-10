@@ -18,6 +18,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/api")
 public class TicketController {
 
     private final TicketRepository ticketRepository;
@@ -39,7 +40,7 @@ public class TicketController {
         return new ResponseEntity<>(savedTicket, HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/tickets/{id}")
+    @DeleteMapping("/ticket/{id}")
     public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
                                                   @RequestHeader(name = "Cookie") String token) throws Exception {
 

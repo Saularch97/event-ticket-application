@@ -1,13 +1,12 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.CreateNewOrderDto;
+import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
 import com.example.booking.services.OrderServiceImpl;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -24,7 +23,7 @@ public class OrderController {
     @Transactional
     @PostMapping("/order")
     public ResponseEntity<OrderItemDto> createNewOrder(
-            @RequestBody CreateNewOrderDto dto,
+            @RequestBody CreateOrderRequest dto,
             @RequestHeader(name = "Cookie") String token
     ) throws Exception {
 

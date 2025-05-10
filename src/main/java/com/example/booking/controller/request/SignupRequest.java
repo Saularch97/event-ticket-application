@@ -1,10 +1,10 @@
-package com.example.booking.controller.dto;
+package com.example.booking.controller.request;
 
 import java.util.Set;
 
 import jakarta.validation.constraints.*;
 
-public class SignupRequestDto {
+public class SignupRequest {
     @NotBlank(message = "The user name is obrigatory")
     @Size(min = 3, max = 20)
     private String username;

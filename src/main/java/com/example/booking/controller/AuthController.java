@@ -4,10 +4,10 @@ package com.example.booking.controller;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.example.booking.controller.dto.LoginRequest;
-import com.example.booking.controller.dto.MessageResponseDto;
-import com.example.booking.controller.dto.SignupRequestDto;
-import com.example.booking.controller.dto.UserInfoResponseDto;
+import com.example.booking.controller.request.LoginRequest;
+import com.example.booking.controller.response.AuthMessageResponse;
+import com.example.booking.controller.request.SignupRequest;
+import com.example.booking.controller.response.UserInfoResponse;
 import com.example.booking.domain.entities.RefreshToken;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
@@ -92,7 +92,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, jwtRefreshCookie.toString())
-                .body(new UserInfoResponseDto(userDetails.getId(),
+                .body(new UserInfoResponse(userDetails.getId(),
                         userDetails.getUsername(),
                         userDetails.getEmail(),
                         roles)
@@ -100,14 +100,14 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequestDto signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         // TODo verify if logic can be moved tto service
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageResponseDto("Error: Username is already taken!"));
+            return ResponseEntity.badRequest().body(new AuthMessageResponse("Error: Username is already taken!"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponseDto("Error: Email is already in use!"));
+            return ResponseEntity.badRequest().body(new AuthMessageResponse("Error: Email is already in use!"));
         }
 
         // Create new user's account
@@ -165,7 +165,7 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, jwtRefreshCookie.toString())
-                .body(new MessageResponseDto("You've been signed out!"));
+                .body(new AuthMessageResponse("You've been signed out!"));
     }
 
     @PostMapping("/refreshtoken")
@@ -181,12 +181,12 @@ public class AuthController {
 
                         return ResponseEntity.ok()
                                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                                .body(new MessageResponseDto("Token is refreshed successfully!"));
+                                .body(new AuthMessageResponse("Token is refreshed successfully!"));
                     })
                     .orElseThrow(() -> new TokenRefreshException(refreshToken,
                             "Refresh token is not in database!"));
         }
 
-        return ResponseEntity.badRequest().body(new MessageResponseDto("Refresh Token is empty!"));
+        return ResponseEntity.badRequest().body(new AuthMessageResponse("Refresh Token is empty!"));
     }
 }

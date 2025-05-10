@@ -1,6 +1,6 @@
 package com.example.booking.services;
 
-import com.example.booking.controller.dto.CreateUserDto;
+import com.example.booking.controller.request.CreateUserRequest;
 import com.example.booking.controller.dto.UserDto;
 import com.example.booking.domain.entities.User;
 import com.example.booking.repository.UserRepository;
@@ -20,12 +20,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto saveUser(CreateUserDto createUserDto) {
+    public UserDto saveUser(CreateUserRequest createUserRequest) {
 
         var user = new User();
-        user.setUserName(createUserDto.username());
-        user.setEmail(createUserDto.email());
-        user.setPassword(createUserDto.password());
+        user.setUserName(createUserRequest.username());
+        user.setEmail(createUserRequest.email());
+        user.setPassword(createUserRequest.password());
 
         return User.toUserDto(user);
     }

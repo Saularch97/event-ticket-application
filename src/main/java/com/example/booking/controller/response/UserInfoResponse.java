@@ -1,15 +1,15 @@
-package com.example.booking.controller.dto;
+package com.example.booking.controller.response;
 
 import java.util.List;
 import java.util.UUID;
 
-public class UserInfoResponseDto {
+public class UserInfoResponse {
     private UUID id;
     private String username;
     private String email;
     private List<String> roles;
 
-    public UserInfoResponseDto(UUID id, String username, String email, List<String> roles) {
+    public UserInfoResponse(UUID id, String username, String email, List<String> roles) {
         this.id = id;
         this.username = username;
         this.email = email;

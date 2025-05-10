@@ -1,4 +1,4 @@
-package com.example.booking.controller.dto;
+package com.example.booking.controller.request;
 
 public record PaymentInfoRequest(Long amount, String currency, String receiptEmail) {
 }
