@@ -14,6 +14,7 @@ public class SignupRequestDto {
     @Email(message = "The email must be valid!")
     private String email;
 
+    @NotEmpty(message = "At least one role must be specified")
     private Set<String> role;
 
     @NotBlank(message = "The user name is obrigatory")
