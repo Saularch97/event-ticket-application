@@ -1,3 +1,4 @@
+/*
 package com.example.booking.controller;
 
 import com.example.booking.controller.dto.PaymentInfoRequest;
@@ -51,3 +52,4 @@ public class PaymentController {
         return paymentService.stripePayment(userEmail);
     }
 }
+*/

@@ -22,11 +22,14 @@ Diagram:
 ![img.png](img.png)
 
 TODO:
-- [ ] adicionar método pagamento(Stripe por exemplo)
 - [ ] adicionar cache no redis para intenção de compra
+- [ ] adicionar pacote valid do spring para os dto's
+- [ ] rest controller advice para tratamento de erros
 - [ ] adicionar qrcode para ingresso
 - [ ] adicionar testes na aplicação (unitários e integração)
 - [ ] fazer deploy(flyio)
 - [ ] adicionar CI(Jenkins ou circleCI)
 - [ ] ter logs na aplicação
+- [ ] adicionar método pagamento(Stripe por exemplo)
+
 

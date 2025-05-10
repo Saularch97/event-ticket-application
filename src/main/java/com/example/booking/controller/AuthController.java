@@ -42,9 +42,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
+    // TODO create service
     private final AuthenticationManager authenticationManager;
-
+    // TODO those repositories should be only available in service
     private final UserRepository userRepository;
 
     private final RoleRepository roleRepository;
@@ -101,6 +101,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequestDto signUpRequest) {
+        // TODo verify if logic can be moved tto service
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
             return ResponseEntity.badRequest().body(new MessageResponseDto("Error: Username is already taken!"));
         }

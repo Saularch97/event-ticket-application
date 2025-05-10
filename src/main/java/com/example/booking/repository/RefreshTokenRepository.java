@@ -1,6 +1,7 @@
 package com.example.booking.repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import com.example.booking.domain.entities.RefreshToken;
 import com.example.booking.domain.entities.User;
@@ -16,4 +17,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     @Modifying
     void deleteByUser(User user);
+
+    Optional<RefreshToken> findByUser_UserId(UUID userId);
 }
