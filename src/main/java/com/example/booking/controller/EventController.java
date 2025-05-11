@@ -3,6 +3,7 @@ package com.example.booking.controller;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.controller.response.EventsResponse;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
 import org.springframework.http.ResponseEntity;
@@ -46,9 +47,22 @@ public class EventController {
     }
 
     @GetMapping("/events")
-    public ResponseEntity<EventsDto> listAllEvents(@RequestParam(value = "page", defaultValue = "0") int page,
+    public ResponseEntity<EventsResponse> listAllEvents(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        return ResponseEntity.ok(eventsServiceImpl.listAllEvents(page, pageSize));
+        var events = eventsServiceImpl.listAllEvents(page, pageSize);
+
+        return ResponseEntity.ok(new EventsResponse(events.events(), events.page(), events.pageSize(), events.totalPages(), events.totalElements()));
+    }
+
+    @GetMapping("/userEvents")
+    public ResponseEntity<EventsResponse> listAllEventsByUser(
+            @RequestHeader(name = "Cookie") String token,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
+
+        var events = eventsServiceImpl.listAllUserEvents(token, page, pageSize);
+
+        return ResponseEntity.ok(new EventsResponse(events.events(), events.page(), events.pageSize(), events.totalPages(), events.totalElements()));
     }
 }

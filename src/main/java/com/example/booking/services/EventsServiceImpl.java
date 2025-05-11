@@ -4,6 +4,7 @@ import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.domain.entities.Event;
+import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
@@ -13,13 +14,13 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -37,7 +38,6 @@ public class EventsServiceImpl implements EventsService {
     }
 
     public EventItemDto createEvent(CreateEventRequest dto, String token) {
-        // TODO construir response no controller
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
         var user = userRepository.findByUserName(userName)
@@ -90,8 +90,6 @@ public class EventsServiceImpl implements EventsService {
         }
     }
 
-
-
     public EventsDto listAllEvents(int page, int pageSize) {
         var events = eventRepository.findAll(
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
@@ -99,8 +97,17 @@ public class EventsServiceImpl implements EventsService {
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
-    // TODO implementar
-//    public EventsDto listAllUserEvents(int page, int pageSize) {
-//
-//    }
+
+    public EventsDto listAllUserEvents(String token, int page, int pageSize) {
+
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        Optional<User> user = userRepository.findByUserName(userName);
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "eventDate");
+
+        var events = eventRepository.findAllEventsByUserId(user.get().getUserId(),
+                PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
+        ).map(Event::toEventItemDto);
+
+        return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
+    }
 }
