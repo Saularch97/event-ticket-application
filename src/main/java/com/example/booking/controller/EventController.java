@@ -5,7 +5,6 @@ import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
