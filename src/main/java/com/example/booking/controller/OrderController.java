@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.UUID;
 
 @RestController
+@RequestMapping("/api")
 public class OrderController {
 
     private final OrderServiceImpl orderServiceImpl;
@@ -34,11 +36,18 @@ public class OrderController {
         return ResponseEntity.created(location).body(savedOrder);
     }
 
-    @GetMapping("/ordersByUser")
+    @GetMapping("/orders")
     public ResponseEntity<OrdersDto> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
                                                    @RequestHeader(name = "Cookie") String token) throws Exception {
 
         return ResponseEntity.ok(orderServiceImpl.getUserOrders(page, pageSize, token));
+    }
+
+    @DeleteMapping("/order/{id}")
+    public ResponseEntity<?> deleteOrder(@PathVariable("id") UUID orderId,
+                                         @RequestHeader(name = "Cookie") String token) {
+        orderServiceImpl.deleteOrder(orderId, token);
+        return ResponseEntity.noContent().build();
     }
 }

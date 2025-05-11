@@ -92,8 +92,18 @@ public class OrderServiceImpl implements OrderService {
         return new OrdersDto(orders.getContent(), page, pageSize, orders.getTotalPages(), orders.getTotalElements());
     }
 
-    @Override
-    public void deleteOrder(UUID orderId) {
-        // TODO implement
+    @Transactional
+    public void deleteOrder(UUID orderId, String token) {
+
+        if (!ticketOrderRepository.existsById(orderId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
+        }
+
+        var order = ticketOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        ticketOrderRepository.deleteById(orderId);
+
+        ticketOrderRepository.delete(order);
     }
 }
