@@ -22,7 +22,6 @@ public class EventController {
         this.eventsServiceImpl = eventsServiceImpl;
     }
 
-    // TODO criar evento deveria ter um eventOwner
     @PostMapping("/events")
     public ResponseEntity<EventItemDto> createEvent(
             @RequestBody CreateEventRequest request,
@@ -40,9 +39,11 @@ public class EventController {
     // TODO exemplo de permissionamento, incluir na API
 //    @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
 //    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteEvent(@PathVariable("id") UUID eventId,
+    public ResponseEntity<Void> deleteEvent(@PathVariable("id") UUID eventId,
                                             @RequestHeader(name = "Cookie") String token) throws Exception {
-        return eventsServiceImpl.deleteEvent(eventId, token);
+         eventsServiceImpl.deleteEvent(eventId, token);
+
+         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/events")

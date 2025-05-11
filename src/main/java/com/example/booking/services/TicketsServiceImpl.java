@@ -14,6 +14,7 @@ import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.TicketsService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -80,6 +81,23 @@ public class TicketsServiceImpl implements TicketsService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }
+
+    public TicketsDto listAllTickets(int page, int pageSize) {
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
+
+        Page<TicketItemDto> ticketsPage = ticketRepository
+                .findAll(pageRequest)
+                .map(Ticket::toTicketItemDto);
+
+        return new TicketsDto(
+                ticketsPage.getContent(),
+                page,
+                pageSize,
+                ticketsPage.getTotalPages(),
+                ticketsPage.getTotalElements()
+        );
+    }
+
 
     public TicketsDto listAllUserTickets(String token, int page, int pageSize) {
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);

@@ -67,33 +67,30 @@ public class EventsServiceImpl implements EventsService {
         return Event.toEventItemDto(savedEvent);
     }
 
-    public ResponseEntity<?> deleteEvent(UUID eventId, String token) {
-
+    public void deleteEvent(UUID eventId, String token) {
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
-        boolean exists = eventRepository.existsById(eventId);  // Verifica se o item existe
-
-        if (!exists) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Retorna 404 se o item não foi encontrado
+        if (!eventRepository.existsById(eventId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
         }
 
         var user = userRepository.findByUserName(userName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         var event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
-        var isAdmin = user.getRoles()
-                .stream()
+        boolean isAdmin = user.getRoles().stream()
                 .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
 
         if (isAdmin || event.getEventOwner().getUserName().equals(userName)) {
             eventRepository.deleteById(eventId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to delete this event");
         }
     }
+
+
 
     public EventsDto listAllEvents(int page, int pageSize) {
         var events = eventRepository.findAll(

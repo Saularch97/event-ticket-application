@@ -11,4 +11,5 @@ public interface TicketsService {
     TicketItemDto orderTicket(OrderTicketDto dto, String token);
     void deleteTicketOrder(UUID ticketId, String token);
     TicketsDto listAllUserTickets(String token, int page, int pageSize);
+    public TicketsDto listAllTickets(int page, int pageSize);
 }

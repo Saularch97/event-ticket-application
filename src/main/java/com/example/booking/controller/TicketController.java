@@ -21,11 +21,9 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class TicketController {
 
-    private final TicketRepository ticketRepository;
     private final TicketsServiceImpl ticketsServiceImpl;
 
-    public TicketController(TicketRepository ticketRepository, TicketsServiceImpl ticketsServiceImpl) {
-        this.ticketRepository = ticketRepository;
+    public TicketController(TicketsServiceImpl ticketsServiceImpl) {
         this.ticketsServiceImpl = ticketsServiceImpl;
     }
 
@@ -52,16 +50,8 @@ public class TicketController {
     @GetMapping("/tickets")
     public ResponseEntity<TicketsDto> listAllTickets(@RequestParam(value = "page", defaultValue = "0") int page,
                                                      @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
-
-
-        // page does not work if you use id as properties
-        var tickets = ticketRepository.findAll(
-                PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId")
-        ).map(Ticket::toTicketItemDto);
-
-        return ResponseEntity.ok(new TicketsDto(
-                tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements())
-        );
+        TicketsDto ticketsDto = ticketsServiceImpl.listAllTickets(page, pageSize);
+        return ResponseEntity.ok(ticketsDto);
     }
 
     @GetMapping("/userTickets")

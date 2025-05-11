@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface EventsService {
     EventItemDto createEvent(CreateEventRequest dto, String token);
-    ResponseEntity<?> deleteEvent(UUID eventId, String token);
+    void deleteEvent(UUID eventId, String token);
     EventsDto listAllEvents(int page, int pageSize);
 }
