@@ -1,17 +1,11 @@
 package com.example.booking.controller;
 
-import com.example.booking.domain.entities.Ticket;
 import com.example.booking.controller.dto.OrderTicketDto;
 import com.example.booking.controller.dto.TicketItemDto;
 import com.example.booking.controller.dto.TicketsDto;
-import com.example.booking.repository.TicketRepository;
 import com.example.booking.services.TicketsServiceImpl;
-import com.example.booking.util.UriUtil;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -44,7 +38,7 @@ public class TicketController {
 
         ticketsServiceImpl.deleteTicketOrder(ticketId, token);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/tickets")
