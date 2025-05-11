@@ -3,6 +3,7 @@ package com.example.booking.controller;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.controller.response.EventResponse;
 import com.example.booking.controller.response.EventsResponse;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
@@ -23,7 +24,7 @@ public class EventController {
     }
 
     @PostMapping("/events")
-    public ResponseEntity<EventItemDto> createEvent(
+    public ResponseEntity<EventResponse> createEvent(
             @RequestBody CreateEventRequest request,
             @RequestHeader(name = "Cookie", required = true) String token
     ) throws Exception {
@@ -32,7 +33,12 @@ public class EventController {
 
         URI location = UriUtil.getUriLocation("eventId", eventItemDto.eventId());
 
-        return ResponseEntity.created(location).body(eventItemDto);
+        return ResponseEntity.created(location).body(new EventResponse(eventItemDto.eventId(),
+                eventItemDto.eventName(),
+                eventItemDto.eventDate(),
+                eventItemDto.eventHour(),
+                eventItemDto.eventMinute(),
+                eventItemDto.eventPrice()));
     }
 
     @DeleteMapping("/events/{id}")
@@ -52,7 +58,11 @@ public class EventController {
 
         var events = eventsServiceImpl.listAllEvents(page, pageSize);
 
-        return ResponseEntity.ok(new EventsResponse(events.events(), events.page(), events.pageSize(), events.totalPages(), events.totalElements()));
+        return ResponseEntity.ok(new EventsResponse(events.events(),
+                events.page(),
+                events.pageSize(),
+                events.totalPages(),
+                events.totalElements()));
     }
 
     @GetMapping("/userEvents")
