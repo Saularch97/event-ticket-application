@@ -31,12 +31,16 @@ public class EventController {
 
         URI location = UriUtil.getUriLocation("eventId", eventItemDto.eventId());
 
-        return ResponseEntity.created(location).body(new EventResponse(eventItemDto.eventId(),
-                eventItemDto.eventName(),
-                eventItemDto.eventDate(),
-                eventItemDto.eventHour(),
-                eventItemDto.eventMinute(),
-                eventItemDto.eventPrice()));
+        return ResponseEntity.created(location).body(new EventResponse(
+                    eventItemDto.eventId(),
+                    eventItemDto.eventName(),
+                    eventItemDto.eventDate(),
+                    eventItemDto.eventHour(),
+                    eventItemDto.eventMinute(),
+                    eventItemDto.eventPrice(),
+                    eventItemDto.availableTickets()
+                )
+        );
     }
 
     @DeleteMapping("/events/{id}")

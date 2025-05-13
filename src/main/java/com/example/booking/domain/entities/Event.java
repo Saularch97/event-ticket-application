@@ -29,6 +29,10 @@ public class Event {
     @JoinColumn(name = "user_id")
     private User eventOwner;
 
+    @Column(name = "available_tickets")
+    private Integer availableTickets;
+
+
     public Event() {
     }
 
@@ -98,6 +102,14 @@ public class Event {
         this.eventPrice = eventPrice;
     }
 
+    public Integer getAvailableTickets() {
+        return availableTickets;
+    }
+
+    public void setAvailableTickets(Integer availableTickets) {
+        this.availableTickets = availableTickets;
+    }
+
     public static EventItemDto toEventItemDto(Event event) {
         return new EventItemDto(
                 event.getEventId(),
@@ -105,7 +117,15 @@ public class Event {
                 event.getEventDate().toString(),
                 event.getEventDate().getHour(),
                 event.getEventDate().getMinute(),
-                event.getEventPrice()
+                event.getEventPrice(),
+                event.getAvailableTickets()
         );
+    }
+
+    public void decrementTicket() {
+        if (this.availableTickets <= 0) {
+            throw new IllegalStateException("No more tickets available.");
+        }
+        this.availableTickets -= 1;
     }
 }

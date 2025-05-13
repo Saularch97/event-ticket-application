@@ -37,7 +37,7 @@ public class EventsServiceImpl implements EventsService {
         this.jwtUtils = jwtUtils;
     }
 
-    public EventItemDto createEvent(CreateEventRequest dto, String token) {
+    public EventItemDto createEvent(CreateEventRequest request, String token) {
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
         var user = userRepository.findByUserName(userName)
@@ -53,14 +53,15 @@ public class EventsServiceImpl implements EventsService {
 
         var event = new Event();
         event.setEventOwner(user);
-        event.setEventName(dto.eventName());
-        event.setEventPrice(dto.eventPrice());
+        event.setEventName(request.eventName());
+        event.setEventPrice(request.eventPrice());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate date = LocalDate.parse(dto.eventDate(), formatter);
-        LocalDateTime dateTime = date.atTime(dto.eventHour(), dto.eventMinute());
+        LocalDate date = LocalDate.parse(request.eventDate(), formatter);
+        LocalDateTime dateTime = date.atTime(request.eventHour(), request.eventMinute());
         event.setEventDate(dateTime);
-        event.setEventLocation(dto.eventLocation());
+        event.setEventLocation(request.eventLocation());
+        event.setAvailableTickets(request.availableTickets());
 
         Event savedEvent = eventRepository.save(event);
 

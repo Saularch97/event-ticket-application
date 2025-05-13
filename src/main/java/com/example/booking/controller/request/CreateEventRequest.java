@@ -3,9 +3,10 @@ package com.example.booking.controller.request;
 public record CreateEventRequest(
         String eventName,
         String eventDate,
-        int eventHour,
-        int eventMinute,
+        Integer eventHour,
+        Integer eventMinute,
         String eventLocation,
-        double eventPrice
+        Double eventPrice,
+        Integer availableTickets
 ) {
 }

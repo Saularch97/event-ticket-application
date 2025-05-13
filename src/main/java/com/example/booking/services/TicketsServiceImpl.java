@@ -4,7 +4,6 @@ import com.example.booking.controller.dto.OrderTicketDto;
 import com.example.booking.controller.dto.TicketItemDto;
 import com.example.booking.controller.dto.TicketsDto;
 import com.example.booking.domain.entities.Event;
-import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -40,22 +38,21 @@ public class TicketsServiceImpl implements TicketsService {
         this.jwtUtils = jwtUtils;
     }
 
-    public TicketItemDto orderTicket(
-            OrderTicketDto dto,
-            String token
-    ) {
+    public TicketItemDto orderTicket(OrderTicketDto dto, String token) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
-        Optional<User> user = userRepository.findByUserName(userName);
-        if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        User user = userRepository.findByUserName(userName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 
-        Optional<Event> event = eventRepository.findById(dto.eventId());
-        if (event.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found!");
+        Event event = eventRepository.findById(dto.eventId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found!"));
 
-        var ticket = new Ticket();
-        ticket.setTicketOwner(user.get());
-        ticket.setEvent(event.get());
+        event.decrementTicket();
+
+        Ticket ticket = new Ticket();
+        ticket.setTicketOwner(user);
+        ticket.setEvent(event);
 
         ticketRepository.save(ticket);
 

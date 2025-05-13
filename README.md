@@ -27,9 +27,9 @@ Diagram:
 ![img.png](img.png)
 
 TODO:
-- [ ] os eventos não tem um valor total de tickets, implementar.
+- [x] os eventos não tem uma quantidade total de tickets, implementar.
 - [ ] adicionar cache no redis para intenção de compra
-  - [ ] cache de consulta de order
+  - [x] cache de consulta de orders por usuário
   - [ ] cache de eventos populares(marcar como evento popular)
   - [ ] Cache de tickets disponíveis por evento (verificação de disponibilidade) 
    💡 Justificativa:
@@ -40,7 +40,7 @@ TODO:
     Deve ser invalidação proativa, não só por TTL, pois dados mudam com frequência.
 - [ ] Adicionar filas (RabbitMq, Kafka)
 - [ ] adicionar pacote valid do spring para os dto's
-- [ ] rest controller advice para tratamento de erros
+- [x] rest controller advice para tratamento de erros
 - [ ] adicionar qrcode para ingresso
 - [ ] adicionar testes na aplicação (unitários e integração)
 - [ ] fazer deploy(flyio)
@@ -171,5 +171,5 @@ Garantia de ordenação em partições	⚠️ Limitada	✅ Sim
 Casos event-driven simples	✅ Melhor escolha	⚠️ Pode ser overkill
 
 
-
+Fila para envio de emails apos compra 
 
