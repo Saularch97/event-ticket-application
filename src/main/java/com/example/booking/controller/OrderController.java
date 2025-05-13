@@ -4,8 +4,10 @@ import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
 import com.example.booking.services.OrderServiceImpl;
+import com.example.booking.util.JwtUtils;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +19,11 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderServiceImpl orderServiceImpl;
+    private final JwtUtils jwtUtils;
 
-    public OrderController(OrderServiceImpl orderServiceImpl) {
+    public OrderController(OrderServiceImpl orderServiceImpl, JwtUtils jwtUtils) {
         this.orderServiceImpl = orderServiceImpl;
+        this.jwtUtils = jwtUtils;
     }
 
     @Transactional
@@ -40,8 +44,8 @@ public class OrderController {
     public ResponseEntity<OrdersDto> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
                                                    @RequestHeader(name = "Cookie") String token) throws Exception {
-
-        return ResponseEntity.ok(orderServiceImpl.getUserOrders(page, pageSize, token));
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        return ResponseEntity.ok(orderServiceImpl.getUserOrders(page, pageSize, userName));
     }
 
     @DeleteMapping("/order/{id}")

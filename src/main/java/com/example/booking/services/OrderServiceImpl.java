@@ -12,6 +12,7 @@ import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
 
     // TODO no futuro deixar a intenção de compra order cacheada no redis
     // TODO testar pra ver se aceita dois ID`s repetidos de ingresso
+    // @CachePut(value = "ORDERS_CACHE", key = "#result.orderId()")
     public OrderItemDto createNewOrder(CreateOrderRequest dto, String token) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
@@ -79,9 +81,12 @@ public class OrderServiceImpl implements OrderService {
         return Order.toOrderItemDto(savedOrder);
     }
 
-    public OrdersDto getUserOrders(int page, int pageSize, String token) {
 
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+    @Cacheable(
+            value = "ORDERS_CACHE",
+            key = "{#userName}"
+    )
+    public OrdersDto getUserOrders(int page, int pageSize, String userName) {
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
 

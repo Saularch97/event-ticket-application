@@ -102,7 +102,7 @@ public class Event {
         return new EventItemDto(
                 event.getEventId(),
                 event.getEventName(),
-                event.getEventDate(),
+                event.getEventDate().toString(),
                 event.getEventDate().getHour(),
                 event.getEventDate().getMinute(),
                 event.getEventPrice()
