@@ -18,7 +18,8 @@ public class Event {
     private String eventLocation;
     private String eventName;
     private LocalDateTime eventDate;
-    private Double eventPrice;
+    private Double eventTicketPrice;
+    //
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", fetch = FetchType.LAZY)
@@ -32,18 +33,21 @@ public class Event {
     @Column(name = "available_tickets")
     private Integer availableTickets;
 
+    @Column(name = "original_amount_of_tickets")
+    private Integer originalAmountOfTickets;
 
     public Event() {
     }
 
-    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner, Double eventPrice) {
+    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner, Double eventTicketPrice, Integer availableTickets) {
         this.eventId = eventId;
         this.eventLocation = eventLocation;
         this.eventName = eventName;
         this.eventDate = eventDate;
         this.tickets = tickets;
         this.eventOwner = eventOwner;
-        this.eventPrice = eventPrice;
+        this.eventTicketPrice = eventTicketPrice;
+        this.availableTickets = availableTickets;
     }
 
     public UUID getEventId() {
@@ -94,12 +98,12 @@ public class Event {
         this.eventOwner = eventOwner;
     }
 
-    public Double getEventPrice() {
-        return eventPrice;
+    public Double getEventTicketPrice() {
+        return eventTicketPrice;
     }
 
-    public void setEventPrice(Double eventPrice) {
-        this.eventPrice = eventPrice;
+    public void setEventTicketPrice(Double eventTicketPrice) {
+        this.eventTicketPrice = eventTicketPrice;
     }
 
     public Integer getAvailableTickets() {
@@ -108,6 +112,17 @@ public class Event {
 
     public void setAvailableTickets(Integer availableTickets) {
         this.availableTickets = availableTickets;
+        if (this.originalAmountOfTickets == null) {
+            this.originalAmountOfTickets = availableTickets;
+        }
+    }
+
+    public Integer getOriginalAmountOfTickets() {
+        return originalAmountOfTickets;
+    }
+
+    public void setOriginalAmountOfTickets(Integer originalAmountOfTickets) {
+        this.originalAmountOfTickets = originalAmountOfTickets;
     }
 
     public static EventItemDto toEventItemDto(Event event) {
@@ -117,7 +132,7 @@ public class Event {
                 event.getEventDate().toString(),
                 event.getEventDate().getHour(),
                 event.getEventDate().getMinute(),
-                event.getEventPrice(),
+                event.getEventTicketPrice(),
                 event.getAvailableTickets()
         );
     }
@@ -127,5 +142,9 @@ public class Event {
             throw new IllegalStateException("No more tickets available.");
         }
         this.availableTickets -= 1;
+    }
+
+    public void incrementTicket() {
+        this.availableTickets += 1;
     }
 }

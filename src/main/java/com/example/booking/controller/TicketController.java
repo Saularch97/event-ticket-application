@@ -1,8 +1,7 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.OrderTicketDto;
-import com.example.booking.controller.dto.TicketItemDto;
 import com.example.booking.controller.dto.TicketsDto;
+import com.example.booking.controller.request.EmmitTicketRequest;
 import com.example.booking.controller.response.CreateTicketResponse;
 import com.example.booking.controller.response.TicketsResponse;
 import com.example.booking.services.TicketsServiceImpl;
@@ -10,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -25,11 +23,11 @@ public class TicketController {
 
     @PostMapping("/ticket")
     public ResponseEntity<CreateTicketResponse> orderTicket(
-            @RequestBody OrderTicketDto dto,
+            @RequestBody EmmitTicketRequest request,
             @RequestHeader(name = "Cookie") String token
     ) throws Exception {
 
-        var savedTicket = ticketsServiceImpl.orderTicket(dto, token);
+        var savedTicket = ticketsServiceImpl.emmitTicket(request, token);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new CreateTicketResponse(

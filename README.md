@@ -28,6 +28,8 @@ Diagram:
 
 TODO:
 - [x] os eventos não tem uma quantidade total de tickets, implementar.
+- [ ] marcação de eventos populares(a cada hora atualiza e marca com os 3 mais vendidos)
+- [ ] implementar serviço de recomendação de eventos para usuário dado um determinado raio
 - [ ] adicionar cache no redis para intenção de compra
   - [x] cache de consulta de orders por usuário
   - [ ] cache de eventos populares(marcar como evento popular)

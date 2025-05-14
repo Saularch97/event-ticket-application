@@ -4,6 +4,7 @@ import com.example.booking.controller.dto.TicketItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -30,6 +31,8 @@ public class Ticket {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    private LocalDateTime emittedAt = LocalDateTime.now();
+
     public Order getOrder() {
         return order;
     }
@@ -41,11 +44,18 @@ public class Ticket {
     public Ticket(UUID ticketId, Event event, User ticketOwner) {
         this.ticketId = ticketId;
         this.event = event;
-
         this.ticketOwner = ticketOwner;
     }
 
     public Ticket() {
+    }
+
+    public LocalDateTime getEmittedAtAt() {
+        return emittedAt;
+    }
+
+    public void setEmittedAtAt(LocalDateTime emittedAt) {
+        this.emittedAt = emittedAt;
     }
 
     public User getTicketOwner() {

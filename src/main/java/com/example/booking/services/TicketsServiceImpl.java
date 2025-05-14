@@ -1,8 +1,8 @@
 package com.example.booking.services;
 
-import com.example.booking.controller.dto.OrderTicketDto;
 import com.example.booking.controller.dto.TicketItemDto;
 import com.example.booking.controller.dto.TicketsDto;
+import com.example.booking.controller.request.EmmitTicketRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.User;
@@ -38,14 +38,14 @@ public class TicketsServiceImpl implements TicketsService {
         this.jwtUtils = jwtUtils;
     }
 
-    public TicketItemDto orderTicket(OrderTicketDto dto, String token) {
+    public TicketItemDto emmitTicket(EmmitTicketRequest request, String token) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
         User user = userRepository.findByUserName(userName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 
-        Event event = eventRepository.findById(dto.eventId())
+        Event event = eventRepository.findById(request.eventId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found!"));
 
         event.decrementTicket();
@@ -71,6 +71,12 @@ public class TicketsServiceImpl implements TicketsService {
         var isAdmin = user.getRoles()
                 .stream()
                 .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
+
+        var event = eventRepository.findById(ticket.getEvent().getEventId()).orElseThrow(()
+                -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
+
+        event.incrementTicket();
 
         if (isAdmin || ticket.getTicketOwner().getUserName().equals(userName)) {
             ticketRepository.deleteById(ticketId);
