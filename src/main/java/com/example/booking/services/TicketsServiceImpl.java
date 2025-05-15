@@ -65,6 +65,7 @@ public class TicketsServiceImpl implements TicketsService {
                 new IllegalArgumentException("Category not found! " + request.ticketCategoryName())
         );
 
+        category.decrementTicketCategory();
         ticket.setTicketCategory(category);
 
         ticketRepository.save(ticket);
@@ -72,7 +73,7 @@ public class TicketsServiceImpl implements TicketsService {
         return Ticket.toTicketItemDto(ticket);
     }
 
-    public void deleteTicketOrder(UUID ticketId, String token) {
+    public void deleteEmittedTicket(UUID ticketId, String token) {
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
         var user = userRepository.findByUserName(userName)
@@ -89,6 +90,7 @@ public class TicketsServiceImpl implements TicketsService {
                 -> new ResponseStatusException(HttpStatus.NOT_FOUND)
         );
 
+        ticket.getTicketCategory().incrementTicketCategory();
         event.incrementTicket();
 
         if (isAdmin || ticket.getTicketOwner().getUserName().equals(userName)) {

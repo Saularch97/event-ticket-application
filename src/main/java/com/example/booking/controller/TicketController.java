@@ -43,7 +43,7 @@ public class TicketController {
     public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
                                                   @RequestHeader(name = "Cookie") String token) throws Exception {
 
-        ticketsServiceImpl.deleteTicketOrder(ticketId, token);
+        ticketsServiceImpl.deleteEmittedTicket(ticketId, token);
 
         return ResponseEntity.noContent().build();
     }

@@ -22,6 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -65,16 +67,21 @@ public class EventsServiceImpl implements EventsService {
         LocalDateTime dateTime = date.atTime(request.eventHour(), request.eventMinute());
         event.setEventDate(dateTime);
         event.setEventLocation(request.eventLocation());
-        event.setAvailableTickets(request.availableTickets());
 
-        request.ticketCategories().forEach(createTicketCategoryRequest -> {
+        Integer availableTickets = 0;
+        List<TicketCategory> ticketCategories = new ArrayList<>();
+        for (var createTicketCategoryRequest : request.ticketCategories()) {
             var ticketCategory = new TicketCategory();
             ticketCategory.setEvent(event);
             ticketCategory.setName(createTicketCategoryRequest.name());
             ticketCategory.setPrice(createTicketCategoryRequest.price());
-            ticketCategoryRepository.save(ticketCategory);
-        });
+            ticketCategory.setAvailableCategoryTickets(createTicketCategoryRequest.availableCategoryTickets());
+            ticketCategories.add(ticketCategory);
+            availableTickets += createTicketCategoryRequest.availableCategoryTickets();
+        }
 
+        event.setAvailableTickets(availableTickets);
+        event.setTicketCategories(ticketCategories);
         Event savedEvent = eventRepository.save(event);
 
         return Event.toEventItemDto(savedEvent);

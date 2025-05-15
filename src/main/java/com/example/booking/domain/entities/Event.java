@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tb_events")
@@ -19,10 +18,6 @@ public class Event {
     private String eventName;
     private LocalDateTime eventDate;
     private Double eventTicketPrice;
-
-    // Declaro no evento o tipo do ingresso como chave
-    // Double será o valor do ingresso
-    // A propriedade valor do ingresso será movida para a entidade ticket
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", orphanRemoval = true)
     private List<TicketCategory> ticketCategories = new ArrayList<>();

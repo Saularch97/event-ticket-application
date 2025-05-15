@@ -9,7 +9,6 @@ public record CreateEventRequest(
         Integer eventMinute,
         String eventLocation,
         Double eventPrice,
-        Integer availableTickets,
         List<CreateTicketCategoryRequest> ticketCategories
 ) {
 }
