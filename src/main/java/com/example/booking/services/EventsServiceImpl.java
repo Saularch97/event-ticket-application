@@ -12,6 +12,7 @@ import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -29,13 +30,11 @@ public class EventsServiceImpl implements EventsService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-    private final TicketCategoryRepository ticketCategoryRepository;
     private final JwtUtils jwtUtils;
 
-    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, TicketCategoryRepository ticketCategoryRepository, JwtUtils jwtUtils) {
+    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
-        this.ticketCategoryRepository = ticketCategoryRepository;
         this.jwtUtils = jwtUtils;
     }
 
@@ -126,6 +125,10 @@ public class EventsServiceImpl implements EventsService {
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
 
+    @Cacheable(
+            value = "EVENTS_CACHE",
+            key = "'topTrending'"
+    )
     public List<EventItemDto> getTopTrendingEvents() {
 
         if(eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList().isEmpty()) {

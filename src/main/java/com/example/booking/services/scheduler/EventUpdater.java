@@ -3,6 +3,7 @@ package com.example.booking.services.scheduler;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.repository.EventRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ public class EventUpdater {
     }
 
     @Scheduled(fixedRate = 300000)
+    @CacheEvict(value = "EVENTS_CACHE", key = "'topTrending'")
     @Transactional
     public void updateEventStatuses() {
 
