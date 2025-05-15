@@ -31,11 +31,11 @@ public class Ticket {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    // Erro do gpt segure apenas o preço e nome de acordo com o que o usuário escolher na requisição para emitir ingressodeslig
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_category_id")
     private TicketCategory ticketCategory;
 
+    @Column(name = "emitted_at")
     private LocalDateTime emittedAt = LocalDateTime.now();
 
     public Order getOrder() {

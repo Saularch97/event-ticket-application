@@ -5,7 +5,6 @@ import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
-import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.TicketCategoryRepository;
@@ -22,10 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -121,13 +117,22 @@ public class EventsServiceImpl implements EventsService {
     public EventsDto listAllUserEvents(String token, int page, int pageSize) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        Optional<User> user = userRepository.findByUserName(userName);
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "eventDate");
+        var user = userRepository.findByUserName(userName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        var events = eventRepository.findAllEventsByUserId(user.get().getUserId(),
+        var events = eventRepository.findAllEventsByUserId(user.getUserId(),
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
         ).map(Event::toEventItemDto);
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
+
+    public List<EventItemDto> getTopTrendingEvents() {
+
+        if(eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList();
+    }
+
 }

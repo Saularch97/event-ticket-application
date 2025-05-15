@@ -37,10 +37,26 @@ public class Event {
     @Column(name = "original_amount_of_tickets")
     private Integer originalAmountOfTickets;
 
+    @Column(name = "is_trending")
+    private Boolean isTrending;
+
+    @Column(name = "tickets_emitted_in_trending_period")
+    private Long ticketsEmittedInTrendingPeriod = 0L;
+
     public Event() {
     }
 
-    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner, Double eventTicketPrice, Integer availableTickets, List<TicketCategory> ticketCategories) {
+    public Event(UUID eventId,
+                 String eventLocation,
+                 String eventName,
+                 LocalDateTime eventDate,
+                 Set<Ticket> tickets,
+                 User eventOwner,
+                 Double eventTicketPrice,
+                 Integer availableTickets,
+                 List<TicketCategory> ticketCategories,
+                 Boolean isTrending,
+                 Long ticketsEmittedInTrendingPeriod) {
         this.eventId = eventId;
         this.eventLocation = eventLocation;
         this.eventName = eventName;
@@ -50,6 +66,8 @@ public class Event {
         this.eventTicketPrice = eventTicketPrice;
         this.availableTickets = availableTickets;
         this.ticketCategories = ticketCategories;
+        this.isTrending = isTrending;
+        this.ticketsEmittedInTrendingPeriod = ticketsEmittedInTrendingPeriod;
     }
 
     public UUID getEventId() {
@@ -133,6 +151,22 @@ public class Event {
 
     public void setOriginalAmountOfTickets(Integer originalAmountOfTickets) {
         this.originalAmountOfTickets = originalAmountOfTickets;
+    }
+
+    public Boolean getTrending() {
+        return isTrending;
+    }
+
+    public void setTrending(Boolean trending) {
+        isTrending = trending;
+    }
+
+    public Long getTicketsEmittedInTrendingPeriod() {
+        return ticketsEmittedInTrendingPeriod;
+    }
+
+    public void setTicketsEmittedInTrendingPeriod(Long ticketsEmittedInTrendingPeriod) {
+        this.ticketsEmittedInTrendingPeriod = ticketsEmittedInTrendingPeriod;
     }
 
     public static EventItemDto toEventItemDto(Event event) {

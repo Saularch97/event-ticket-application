@@ -6,6 +6,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -17,24 +19,25 @@ public class EventUpdater {
         this.eventRepository = eventRepository;
     }
 
-    // Exemplo: roda a cada hora
-    // Verificando quantos ingressos estão sendo vendidos
-    // ingresso quando é emitido tem um timestamp
-    // Faz o calcula da ultima hora
-    // subtrai 1h e ve quais ingressos foram vendidos
-    // por exemplo, partindo das 12h ate as 12:30 venderam 600 ingressos
-    // as 13 da tarde roda o job
-    // ele subtrai 1h ou seja 13 - 1 = 12
-    // Pego todos os ingressos que tem o timestamp depois das 12h
-
-    @Scheduled(fixedRate = 3600000) // a cada 1h (em milissegundos)
+    @Scheduled(fixedRate = 300000)
     @Transactional
     public void updateEventStatuses() {
+
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
+
         List<Event> events = eventRepository.findAll();
 
-        for (Event event : events) {
+        events.forEach(event -> {
+           Long ticketsEmittedOneOurAgo = event.getTickets().stream().filter(ticket -> ticket.getEmittedAt().isAfter(oneHourAgo)).count();
+           event.setTicketsEmittedInTrendingPeriod(ticketsEmittedOneOurAgo);
+           event.setTrending(false);
+        });
 
-        }
+        List<Event> topThreeTrendingEvents = events.stream().sorted(Comparator.comparingLong(Event::getTicketsEmittedInTrendingPeriod).reversed()).limit(3).toList();
+
+        topThreeTrendingEvents.forEach(event -> {
+            event.setTrending(true);
+        });
 
         eventRepository.saveAll(events);
     }
