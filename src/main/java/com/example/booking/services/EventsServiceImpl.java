@@ -4,9 +4,11 @@ import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.domain.entities.Event;
+import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
+import com.example.booking.repository.TicketCategoryRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.JwtUtils;
@@ -29,11 +31,13 @@ public class EventsServiceImpl implements EventsService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final TicketCategoryRepository ticketCategoryRepository;
     private final JwtUtils jwtUtils;
 
-    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils) {
+    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, TicketCategoryRepository ticketCategoryRepository, JwtUtils jwtUtils) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.ticketCategoryRepository = ticketCategoryRepository;
         this.jwtUtils = jwtUtils;
     }
 
@@ -62,6 +66,14 @@ public class EventsServiceImpl implements EventsService {
         event.setEventDate(dateTime);
         event.setEventLocation(request.eventLocation());
         event.setAvailableTickets(request.availableTickets());
+
+        request.ticketCategories().forEach(createTicketCategoryRequest -> {
+            var ticketCategory = new TicketCategory();
+            ticketCategory.setEvent(event);
+            ticketCategory.setName(createTicketCategoryRequest.name());
+            ticketCategory.setPrice(createTicketCategoryRequest.price());
+            ticketCategoryRepository.save(ticketCategory);
+        });
 
         Event savedEvent = eventRepository.save(event);
 

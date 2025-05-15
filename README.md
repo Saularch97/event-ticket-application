@@ -11,7 +11,7 @@ Steps to run the project in your local machine
 
 To access the database via terminal:
 
-` docker exec -it booking-clean-arch-postgres-1 psql -U myuser -d mydatabase
+` docker exec -it event-ticket-api-postgres-1 psql -U myuser -d mydatabase
 `
 Some useful commands:
 `\l` --> List all the databases

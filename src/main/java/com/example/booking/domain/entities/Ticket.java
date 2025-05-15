@@ -31,6 +31,11 @@ public class Ticket {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    // Erro do gpt segure apenas o preço e nome de acordo com o que o usuário escolher na requisição para emitir ingressodeslig
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ticket_category_id")
+    private TicketCategory ticketCategory;
+
     private LocalDateTime emittedAt = LocalDateTime.now();
 
     public Order getOrder() {
@@ -41,10 +46,11 @@ public class Ticket {
         this.order = order;
     }
 
-    public Ticket(UUID ticketId, Event event, User ticketOwner) {
+    public Ticket(UUID ticketId, Event event, User ticketOwner, TicketCategory ticketCategory) {
         this.ticketId = ticketId;
         this.event = event;
         this.ticketOwner = ticketOwner;
+        this.ticketCategory = ticketCategory;
     }
 
     public Ticket() {
@@ -82,11 +88,28 @@ public class Ticket {
         this.ticketId = ticketId;
     }
 
+    public LocalDateTime getEmittedAt() {
+        return emittedAt;
+    }
+
+    public void setEmittedAt(LocalDateTime emittedAt) {
+        this.emittedAt = emittedAt;
+    }
+
+    public TicketCategory getTicketCategory() {
+        return ticketCategory;
+    }
+
+    public void setTicketCategory(TicketCategory ticketCategory) {
+        this.ticketCategory = ticketCategory;
+    }
+
     public static TicketItemDto toTicketItemDto(Ticket ticket) {
         return new TicketItemDto(
                 ticket.getTicketId(),
                 Event.toEventItemDto(ticket.getEvent()),
-                User.toUserDto(ticket.getTicketOwner())
+                User.toUserDto(ticket.getTicketOwner()),
+                TicketCategory.toTicketCategoryDto(ticket.getTicketCategory())
         );
     }
 }

@@ -33,7 +33,8 @@ public class TicketController {
                 new CreateTicketResponse(
                     savedTicket.ticketId(),
                     savedTicket.eventItem(),
-                    savedTicket.userDto()
+                    savedTicket.userDto(),
+                    savedTicket.ticketCategoryDto()
                 )
         );
     }
@@ -51,11 +52,14 @@ public class TicketController {
     public ResponseEntity<TicketsResponse> listAllTickets(@RequestParam(value = "page", defaultValue = "0") int page,
                                                           @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
         TicketsDto ticketsDto = ticketsServiceImpl.listAllTickets(page, pageSize);
-        return ResponseEntity.ok(new TicketsResponse(ticketsDto.tickets(),
-                ticketsDto.page(),
-                ticketsDto.pageSize(),
-                ticketsDto.totalPages(),
-                ticketsDto.totalElements())
+        return ResponseEntity.ok(
+                new TicketsResponse(
+                    ticketsDto.tickets(),
+                    ticketsDto.page(),
+                    ticketsDto.pageSize(),
+                    ticketsDto.totalPages(),
+                    ticketsDto.totalElements()
+                )
         );
     }
 

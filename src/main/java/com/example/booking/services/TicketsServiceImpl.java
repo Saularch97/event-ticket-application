@@ -5,6 +5,7 @@ import com.example.booking.controller.dto.TicketsDto;
 import com.example.booking.controller.request.EmmitTicketRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
+import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
@@ -12,6 +13,7 @@ import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.TicketsService;
 import com.example.booking.util.JwtUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -53,6 +55,17 @@ public class TicketsServiceImpl implements TicketsService {
         Ticket ticket = new Ticket();
         ticket.setTicketOwner(user);
         ticket.setEvent(event);
+
+        Optional<TicketCategory> optionalCategory = event.getTicketCategories()
+                .stream()
+                .filter(tc -> tc.getName().equalsIgnoreCase(request.ticketCategoryName()))
+                .findFirst();
+
+        TicketCategory category = optionalCategory.orElseThrow(() ->
+                new IllegalArgumentException("Category not found! " + request.ticketCategoryName())
+        );
+
+        ticket.setTicketCategory(category);
 
         ticketRepository.save(ticket);
 

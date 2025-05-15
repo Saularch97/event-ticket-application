@@ -1,5 +1,7 @@
 package com.example.booking.controller.request;
 
+import java.util.List;
+
 public record CreateEventRequest(
         String eventName,
         String eventDate,
@@ -7,6 +9,7 @@ public record CreateEventRequest(
         Integer eventMinute,
         String eventLocation,
         Double eventPrice,
-        Integer availableTickets
+        Integer availableTickets,
+        List<CreateTicketCategoryRequest> ticketCategories
 ) {
 }

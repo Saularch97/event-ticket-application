@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tb_events")
@@ -19,7 +19,13 @@ public class Event {
     private String eventName;
     private LocalDateTime eventDate;
     private Double eventTicketPrice;
-    //
+
+    // Declaro no evento o tipo do ingresso como chave
+    // Double será o valor do ingresso
+    // A propriedade valor do ingresso será movida para a entidade ticket
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", orphanRemoval = true)
+    private List<TicketCategory> ticketCategories = new ArrayList<>();
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", fetch = FetchType.LAZY)
@@ -39,7 +45,7 @@ public class Event {
     public Event() {
     }
 
-    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner, Double eventTicketPrice, Integer availableTickets) {
+    public Event(UUID eventId, String eventLocation, String eventName, LocalDateTime eventDate, Set<Ticket> tickets, User eventOwner, Double eventTicketPrice, Integer availableTickets, List<TicketCategory> ticketCategories) {
         this.eventId = eventId;
         this.eventLocation = eventLocation;
         this.eventName = eventName;
@@ -48,6 +54,7 @@ public class Event {
         this.eventOwner = eventOwner;
         this.eventTicketPrice = eventTicketPrice;
         this.availableTickets = availableTickets;
+        this.ticketCategories = ticketCategories;
     }
 
     public UUID getEventId() {
@@ -117,6 +124,14 @@ public class Event {
         }
     }
 
+    public List<TicketCategory> getTicketCategories() {
+        return ticketCategories;
+    }
+
+    public void setTicketCategories(List<TicketCategory> ticketCategories) {
+        this.ticketCategories = ticketCategories;
+    }
+
     public Integer getOriginalAmountOfTickets() {
         return originalAmountOfTickets;
     }
@@ -133,7 +148,8 @@ public class Event {
                 event.getEventDate().getHour(),
                 event.getEventDate().getMinute(),
                 event.getEventTicketPrice(),
-                event.getAvailableTickets()
+                event.getAvailableTickets(),
+                event.getTicketCategories().stream().map(TicketCategory::toTicketCategoryDto).toList()
         );
     }
 
