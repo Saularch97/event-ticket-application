@@ -3,11 +3,10 @@ package com.example.booking.controller;
 import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
-import com.example.booking.services.OrderServiceImpl;
+import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +17,11 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class OrderController {
 
-    private final OrderServiceImpl orderServiceImpl;
+    private final OrderService orderService;
     private final JwtUtils jwtUtils;
 
-    public OrderController(OrderServiceImpl orderServiceImpl, JwtUtils jwtUtils) {
-        this.orderServiceImpl = orderServiceImpl;
+    public OrderController(OrderService orderService, JwtUtils jwtUtils) {
+        this.orderService = orderService;
         this.jwtUtils = jwtUtils;
     }
 
@@ -33,7 +32,7 @@ public class OrderController {
             @RequestHeader(name = "Cookie") String token
     )  {
 
-        var savedOrder = orderServiceImpl.createNewOrder(dto, token);
+        var savedOrder = orderService.createNewOrder(dto, token);
 
         URI location = UriUtil.getUriLocation("orderId", savedOrder.orderId());
 
@@ -43,15 +42,17 @@ public class OrderController {
     @GetMapping("/orders")
     public ResponseEntity<OrdersDto> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-                                                   @RequestHeader(name = "Cookie") String token) throws Exception {
+                                                   @RequestHeader(name = "Cookie") String token) {
+
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        return ResponseEntity.ok(orderServiceImpl.getUserOrders(page, pageSize, userName));
+        var ordersDto = orderService.getUserOrders(page, pageSize, userName);
+        return ResponseEntity.ok(ordersDto);
     }
 
     @DeleteMapping("/order/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable("id") UUID orderId,
                                          @RequestHeader(name = "Cookie") String token) {
-        orderServiceImpl.deleteOrder(orderId, token);
+        orderService.deleteOrder(orderId, token);
         return ResponseEntity.noContent().build();
     }
 }

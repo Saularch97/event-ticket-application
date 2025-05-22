@@ -56,7 +56,7 @@ public class TicketsServiceImpl implements TicketsService {
         Event event = eventRepository.findById(request.eventId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found!"));
 
-        event.decrementTicket();
+        event.decrementAvailableTickets();
 
         Ticket ticket = new Ticket();
         ticket.setTicketOwner(user);
@@ -92,7 +92,7 @@ public class TicketsServiceImpl implements TicketsService {
         Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
 
         ticket.getTicketCategory().incrementTicketCategory();
-        event.incrementTicket();
+        event.incrementAvailableTickets();
 
         ticketRepository.deleteById(ticketId);
     }
@@ -131,7 +131,7 @@ public class TicketsServiceImpl implements TicketsService {
     }
 
     // TODO numero do cache não atualizando
-    @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
+    // @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
     public List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId) {
         var event = eventRepository.findById(eventId).orElseThrow(()
                 -> new ResponseStatusException(HttpStatus.NOT_FOUND)

@@ -4,9 +4,7 @@ import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
-import com.example.booking.domain.entities.Order;
-import com.example.booking.domain.entities.Ticket;
-import com.example.booking.domain.entities.User;
+import com.example.booking.domain.entities.*;
 import com.example.booking.repository.TicketOrderRepository;
 import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
@@ -14,7 +12,6 @@ import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -81,11 +78,12 @@ public class OrderServiceImpl implements OrderService {
         return Order.toOrderItemDto(savedOrder);
     }
 
-
+    /*
     @Cacheable(
             value = CacheNames.ORDERS,
             key = "{#userName}"
     )
+     */
     public OrdersDto getUserOrders(int page, int pageSize, String userName) {
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
@@ -99,15 +97,16 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public void deleteOrder(UUID orderId, String token) {
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        var order = ticketOrderRepository.findById(orderId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
-        Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).evict(userName);
+        var order = ticketOrderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
-        order.getTickets().forEach(ticket -> {
-            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
-        });
+        for (var ticket: order.getTickets()) {
+            ticket.getEvent().incrementAvailableTickets();
+            ticket.getTicketCategory().incrementTicketCategory();
+        }
 
         ticketOrderRepository.deleteById(orderId);
     }
+
 }

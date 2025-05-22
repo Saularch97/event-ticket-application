@@ -182,14 +182,14 @@ public class Event {
         );
     }
 
-    public void decrementTicket() {
+    public void decrementAvailableTickets() {
         if (this.availableTickets <= 0) {
             throw new IllegalStateException("No more tickets available.");
         }
         this.availableTickets -= 1;
     }
 
-    public void incrementTicket() {
+    public void incrementAvailableTickets() {
         this.availableTickets += 1;
     }
 }
