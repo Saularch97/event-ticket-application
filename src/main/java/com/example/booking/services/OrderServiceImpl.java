@@ -1,5 +1,6 @@
 package com.example.booking.services;
 
+import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
@@ -12,6 +13,7 @@ import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -19,10 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -31,17 +30,16 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
     private final JwtUtils jwtUtils;
+    private final CacheManager cacheManager;
 
-    public OrderServiceImpl(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository, JwtUtils jwtUtils) {
+    public OrderServiceImpl(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository, JwtUtils jwtUtils, CacheManager cacheManager) {
         this.ticketOrderRepository = ticketOrderRepository;
         this.userRepository = userRepository;
         this.ticketRepository = ticketRepository;
         this.jwtUtils = jwtUtils;
+        this.cacheManager = cacheManager;
     }
 
-    // TODO no futuro deixar a intenção de compra order cacheada no redis
-    // TODO testar pra ver se aceita dois ID`s repetidos de ingresso
-    // @CachePut(value = "ORDERS_CACHE", key = "#result.orderId()")
     public OrderItemDto createNewOrder(CreateOrderRequest dto, String token) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
@@ -73,17 +71,19 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = ticketOrderRepository.save(ticketOrder);
 
-        for (Ticket ticket : tickets) {
-            ticket.setOrder(savedOrder);
-            ticketRepository.save(ticket);
-        }
+        tickets.forEach(ticket -> ticket.setOrder(savedOrder));
+        ticketRepository.saveAll(tickets);
+
+        savedOrder.getTickets().forEach(ticket -> {
+            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
+        });
 
         return Order.toOrderItemDto(savedOrder);
     }
 
 
     @Cacheable(
-            value = "ORDERS_CACHE",
+            value = CacheNames.ORDERS,
             key = "{#userName}"
     )
     public OrdersDto getUserOrders(int page, int pageSize, String userName) {
@@ -99,16 +99,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public void deleteOrder(UUID orderId, String token) {
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        var order = ticketOrderRepository.findById(orderId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
-        if (!ticketOrderRepository.existsById(orderId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found");
-        }
+        Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).evict(userName);
 
-        var order = ticketOrderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        order.getTickets().forEach(ticket -> {
+            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
+        });
 
         ticketOrderRepository.deleteById(orderId);
-
-        ticketOrderRepository.delete(order);
     }
 }

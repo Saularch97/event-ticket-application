@@ -31,7 +31,7 @@ public class OrderController {
     public ResponseEntity<OrderItemDto> createNewOrder(
             @RequestBody CreateOrderRequest dto,
             @RequestHeader(name = "Cookie") String token
-    ) throws Exception {
+    )  {
 
         var savedOrder = orderServiceImpl.createNewOrder(dto, token);
 

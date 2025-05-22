@@ -1,5 +1,6 @@
 package com.example.booking.controller.dto;
 
+import java.io.Serializable;
 import java.util.List;
 
 public record OrdersDto(
@@ -8,5 +9,5 @@ public record OrdersDto(
         int pageSize,
         int totalPages,
         long totalElements
-) {
+) implements Serializable {
 }

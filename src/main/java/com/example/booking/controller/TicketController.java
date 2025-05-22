@@ -2,6 +2,7 @@ package com.example.booking.controller;
 
 import com.example.booking.controller.dto.TicketsDto;
 import com.example.booking.controller.request.EmmitTicketRequest;
+import com.example.booking.controller.response.AvailableTicketsResponse;
 import com.example.booking.controller.response.CreateTicketResponse;
 import com.example.booking.controller.response.TicketsResponse;
 import com.example.booking.services.TicketsServiceImpl;
@@ -77,5 +78,10 @@ public class TicketController {
                 ticketsDto.totalPages(),
                 ticketsDto.totalElements())
         );
+    }
+
+    @GetMapping("/availableTickets/{eventId}")
+    public ResponseEntity<AvailableTicketsResponse> getAvailableTicketsForEvent(@PathVariable(name = "eventId") UUID eventId) {
+        return ResponseEntity.ok(new AvailableTicketsResponse(ticketsServiceImpl.getAvailableTicketsByCategoryFromEvent(eventId)));
     }
 }

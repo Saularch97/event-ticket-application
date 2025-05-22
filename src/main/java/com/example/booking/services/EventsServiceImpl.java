@@ -1,5 +1,6 @@
 package com.example.booking.services;
 
+import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
@@ -126,7 +127,7 @@ public class EventsServiceImpl implements EventsService {
     }
 
     @Cacheable(
-            value = "EVENTS_CACHE",
+            value = CacheNames.TOP_EVENTS,
             key = "'topTrending'"
     )
     public List<EventItemDto> getTopTrendingEvents() {
