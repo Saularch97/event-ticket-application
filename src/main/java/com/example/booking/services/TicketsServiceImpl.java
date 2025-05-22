@@ -130,8 +130,7 @@ public class TicketsServiceImpl implements TicketsService {
         return new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements());
     }
 
-    // TODO numero do cache não atualizando
-    // @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
+    @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
     public List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId) {
         var event = eventRepository.findById(eventId).orElseThrow(()
                 -> new ResponseStatusException(HttpStatus.NOT_FOUND)

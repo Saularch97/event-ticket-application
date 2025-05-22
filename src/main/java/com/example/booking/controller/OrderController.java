@@ -52,7 +52,8 @@ public class OrderController {
     @DeleteMapping("/order/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable("id") UUID orderId,
                                          @RequestHeader(name = "Cookie") String token) {
-        orderService.deleteOrder(orderId, token);
+        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        orderService.deleteOrder(orderId, userName);
         return ResponseEntity.noContent().build();
     }
 }

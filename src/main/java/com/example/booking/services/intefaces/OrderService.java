@@ -9,5 +9,5 @@ import java.util.UUID;
 public interface OrderService {
     OrderItemDto createNewOrder(CreateOrderRequest dto, String token);
     OrdersDto getUserOrders(int page, int pageSize, String token);
-    void deleteOrder(UUID orderId, String token);
+    void deleteOrder(UUID orderId, String username);
 }

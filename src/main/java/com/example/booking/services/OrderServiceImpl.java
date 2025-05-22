@@ -12,6 +12,7 @@ import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -78,12 +79,11 @@ public class OrderServiceImpl implements OrderService {
         return Order.toOrderItemDto(savedOrder);
     }
 
-    /*
+
     @Cacheable(
             value = CacheNames.ORDERS,
             key = "{#userName}"
     )
-     */
     public OrdersDto getUserOrders(int page, int pageSize, String userName) {
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
@@ -96,15 +96,19 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void deleteOrder(UUID orderId, String token) {
+    public void deleteOrder(UUID orderId, String userName) {
 
         var order = ticketOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         for (var ticket: order.getTickets()) {
-            ticket.getEvent().incrementAvailableTickets();
+            var event = ticket.getEvent();
+            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(event.getEventId());
+            event.incrementAvailableTickets();
             ticket.getTicketCategory().incrementTicketCategory();
         }
+
+        Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).evict(userName);
 
         ticketOrderRepository.deleteById(orderId);
     }

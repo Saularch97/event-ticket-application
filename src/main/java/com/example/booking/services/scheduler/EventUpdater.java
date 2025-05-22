@@ -1,5 +1,6 @@
 package com.example.booking.services.scheduler;
 
+import com.example.booking.config.cache.CacheNames;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.repository.EventRepository;
 import jakarta.transaction.Transactional;
@@ -21,7 +22,7 @@ public class EventUpdater {
     }
 
     @Scheduled(fixedRate = 300000)
-    @CacheEvict(value = "EVENTS_CACHE", key = "'topTrending'")
+    @CacheEvict(value = CacheNames.TOP_EVENTS, key = "'topTrending'")
     @Transactional
     public void updateEventStatuses() {
 
