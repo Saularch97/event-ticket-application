@@ -1,4 +1,4 @@
-package booking.service.discovery.servicediscovery;
+package com.service.discovery.servicediscovery;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

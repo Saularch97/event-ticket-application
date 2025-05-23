@@ -1,4 +1,4 @@
-package booking.service.discovery.servicediscovery;
+package com.service.discovery.servicediscovery;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
