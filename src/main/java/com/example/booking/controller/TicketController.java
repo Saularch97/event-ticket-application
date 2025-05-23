@@ -6,6 +6,7 @@ import com.example.booking.controller.response.AvailableTicketsResponse;
 import com.example.booking.controller.response.CreateTicketResponse;
 import com.example.booking.controller.response.TicketsResponse;
 import com.example.booking.services.TicketsServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,9 +25,10 @@ public class TicketController {
 
     @PostMapping("/ticket")
     public ResponseEntity<CreateTicketResponse> orderTicket(
+            @Valid
             @RequestBody EmmitTicketRequest request,
             @RequestHeader(name = "Cookie") String token
-    ) throws Exception {
+    )  {
 
         var savedTicket = ticketsServiceImpl.emmitTicket(request, token);
 

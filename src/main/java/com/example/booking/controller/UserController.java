@@ -7,6 +7,7 @@ import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +28,7 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserDto> newUser(@RequestBody CreateUserRequest createUserRequest) {
+    public ResponseEntity<UserDto> newUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
 
         var savedUser = userService.saveUser(createUserRequest);
 

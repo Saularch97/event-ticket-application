@@ -82,20 +82,20 @@ public class AuthService {
     }
 
     public UserDto registerUser(SignupRequest signUpRequest) {
-        if (userRepository.existsByUserName(signUpRequest.getUsername())) {
+        if (userRepository.existsByUserName(signUpRequest.username())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is already taken");
         }
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+        if (userRepository.existsByEmail(signUpRequest.email())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already in use");
         }
 
         User user = new User();
-        user.setUserName(signUpRequest.getUsername());
-        user.setEmail(signUpRequest.getEmail());
-        user.setPassword(encoder.encode(signUpRequest.getPassword()));
+        user.setUserName(signUpRequest.username());
+        user.setEmail(signUpRequest.email());
+        user.setPassword(encoder.encode(signUpRequest.password()));
 
-        Set<String> strRoles = signUpRequest.getRole();
+        Set<String> strRoles = signUpRequest.role();
         Set<Role> roles = new HashSet<>();
 
         if (strRoles == null) {

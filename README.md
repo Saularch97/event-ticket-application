@@ -30,7 +30,7 @@ TODO:
 - [x] os eventos não tem uma quantidade total de tickets, implementar.
 - [x] marcação de eventos populares(a cada hora atualiza e marca com os 3 mais vendidos, e faz cache)
 - [ ] implementar serviço de recomendação de eventos para usuário dado um determinado raio
-- [ ] adicionar cache no redis para intenção de compra
+- [x] adicionar cache no redis para intenção de compra
   - [x] cache de consulta de orders por usuário
   - [x] cache de eventos populares(marcar como evento popular)
   - [ ] Cache de tickets disponíveis por evento (verificação de disponibilidade) 
@@ -40,8 +40,7 @@ TODO:
     Atualizar o cache via evento assíncrono (quando alguém compra ou cancela).
     ⚠️ Importante:
     Deve ser invalidação proativa, não só por TTL, pois dados mudam com frequência.
-- [ ] Adicionar filas (RabbitMq, Kafka)
-- [ ] adicionar pacote valid do spring para os dto's
+- [x] adicionar pacote valid do spring para os dto's
 - [x] rest controller advice para tratamento de erros
 - [ ] adicionar qrcode para ingresso
 - [ ] adicionar testes na aplicação (unitários e integração)

@@ -7,6 +7,7 @@ import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
 import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class OrderController {
     @Transactional
     @PostMapping("/order")
     public ResponseEntity<OrderItemDto> createNewOrder(
+            @Valid
             @RequestBody CreateOrderRequest dto,
             @RequestHeader(name = "Cookie") String token
     )  {

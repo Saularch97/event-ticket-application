@@ -6,6 +6,7 @@ import com.example.booking.controller.response.EventResponse;
 import com.example.booking.controller.response.EventsResponse;
 import com.example.booking.services.EventsServiceImpl;
 import com.example.booking.util.UriUtil;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class EventController {
 
     @PostMapping("/events")
     public ResponseEntity<EventResponse> createEvent(
+            @Valid
             @RequestBody CreateEventRequest request,
             @RequestHeader(name = "Cookie", required = true) String token
     ) throws Exception {
@@ -82,7 +84,7 @@ public class EventController {
     }
 
     @GetMapping("/trending")
-    public ResponseEntity<List<EventItemDto>> listAllTrendingEvents() {
+    public ResponseEntity<?> listAllTrendingEvents() {
         var trendingEvents = eventsServiceImpl.getTopTrendingEvents();
 
         return ResponseEntity.ok(trendingEvents);
