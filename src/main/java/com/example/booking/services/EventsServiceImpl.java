@@ -12,6 +12,7 @@ import com.example.booking.repository.TicketCategoryRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.JwtUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -117,7 +118,7 @@ public class EventsServiceImpl implements EventsService {
     public EventsDto listAllUserEvents(String token, int page, int pageSize) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        var user = userRepository.findByUserName(userName).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        var user = userRepository.findByUserName(userName).orElseThrow(() -> new EntityNotFoundException("User not found!"));
 
         var events = eventRepository.findAllEventsByUserId(user.getUserId(),
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")

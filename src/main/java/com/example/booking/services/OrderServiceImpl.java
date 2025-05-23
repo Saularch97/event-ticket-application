@@ -10,6 +10,7 @@ import com.example.booking.repository.TicketRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
@@ -49,7 +50,8 @@ public class OrderServiceImpl implements OrderService {
 
         for (UUID ticketId : dto.ticketIds()) {
             var ticket = ticketRepository.findById(ticketId);
-            if (ticket.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            if (ticket.isEmpty()) throw new EntityNotFoundException("Ticket not found!");
+
             if (ticket.get().getOrder() != null) throw new ResponseStatusException(HttpStatus.CONFLICT, "Ticket already has an order in it!");
 
             tickets.add(ticket.get());
@@ -99,7 +101,7 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(UUID orderId, String userName) {
 
         var order = ticketOrderRepository.findById(orderId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
         for (var ticket: order.getTickets()) {
             var event = ticket.getEvent();
