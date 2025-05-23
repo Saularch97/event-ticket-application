@@ -1,0 +1,583 @@
+
+{
+  "name": "EventTicketApi",
+  "version": "1",
+  "items": [
+    {
+      "type": "folder",
+      "name": "auth",
+      "filename": "auth",
+      "root": {
+        "meta": {
+          "name": "auth"
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "RefreshToken",
+          "filename": "RefreshToken.bru",
+          "seq": 2,
+          "request": {
+            "url": "http://localhost:8080/api/auth/refreshtoken",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": ""
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Signin",
+          "filename": "Signin.bru",
+          "seq": 1,
+          "request": {
+            "url": "http://localhost:8080/api/auth/signin",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"username\" : \"admin\",\n  \"password\" : \"123\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "res": "const cookies = res.getHeader('set-cookie');\n\nif(cookies) {\n  bru.setVar(\"cookie\", cookies.join('; '));\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Signout",
+          "filename": "Signout.bru",
+          "seq": 4,
+          "request": {
+            "url": "http://localhost:8080/api/auth/signout",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Signup",
+          "filename": "Signup.bru",
+          "seq": 3,
+          "request": {
+            "url": "http://localhost:8080/api/auth/signup",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"username\": \"das\",\n  \"email\": \"duat.hereer@gmail.com\",\n  \"role\": [\"user\"],\n  \"password\": \"senhaSegura123\"\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "events",
+      "filename": "events",
+      "root": {
+        "meta": {
+          "name": "events"
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Create Event",
+          "filename": "Create Event.bru",
+          "seq": 1,
+          "request": {
+            "url": "http://localhost:8080/api/events",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"eventName\": \"Exemplo de Evento4\",\n  \"eventDate\": \"03/04/2016\",\n  \"eventHour\": 18,\n  \"eventMinute\": 30,\n  \"eventLocation\": \"Auditório Central\",\n  \"eventPrice\": 49.99\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {
+              "res": [
+                {
+                  "name": "eventId",
+                  "value": "res.body.eventId",
+                  "enabled": true,
+                  "local": false
+                }
+              ]
+            },
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Event",
+          "filename": "Delete Event.bru",
+          "seq": 3,
+          "request": {
+            "url": "http://localhost:8080/api/events/{{eventId}}",
+            "method": "DELETE",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "json": "{\n  \"eventName\": \"Exemplo de Evento\",\n  \"eventDate\": \"03/04/2025\",\n  \"eventHour\": 18,\n  \"eventMinute\": 30,\n  \"eventLocation\": \"Auditório Central\",\n  \"eventPrice\": 49.99\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "ListAllEvents",
+          "filename": "ListAllEvents.bru",
+          "seq": 2,
+          "request": {
+            "url": "http://localhost:8080/api/events?page=0&pageSize=10",
+            "method": "GET",
+            "headers": [],
+            "params": [
+              {
+                "name": "page",
+                "value": "0",
+                "type": "query",
+                "enabled": true
+              },
+              {
+                "name": "pageSize",
+                "value": "10",
+                "type": "query",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "ListAllUserEvents",
+          "filename": "ListAllUserEvents.bru",
+          "seq": 4,
+          "request": {
+            "url": "http://localhost:8080/api/userEvents",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "tickets",
+      "filename": "tickets",
+      "root": {
+        "meta": {
+          "name": "tickets"
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Emit Ticket",
+          "filename": "Emit Ticket.bru",
+          "seq": 1,
+          "request": {
+            "url": "http://localhost:8080/api/ticket",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"eventId\": \"{{eventId}}\",\n  \"quantity\": 2\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {
+              "res": [
+                {
+                  "name": "ticketId",
+                  "value": "res.body.ticketId",
+                  "enabled": true,
+                  "local": false
+                }
+              ]
+            },
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Ticket",
+          "filename": "Delete Ticket.bru",
+          "seq": 2,
+          "request": {
+            "url": "http://localhost:8080/api/ticket/{{ticketId}}",
+            "method": "DELETE",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "json": "{\n  \"eventId\": \"UUID-do-evento\",\n  \"quantity\": 2\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "List all tickets",
+          "filename": "List all tickets.bru",
+          "seq": 3,
+          "request": {
+            "url": "http://localhost:8080/api/tickets?page=0&pageSize=10",
+            "method": "GET",
+            "headers": [],
+            "params": [
+              {
+                "name": "page",
+                "value": "0",
+                "type": "query",
+                "enabled": true
+              },
+              {
+                "name": "pageSize",
+                "value": "10",
+                "type": "query",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "none",
+              "json": "{\n  \"eventId\": \"UUID-do-evento\",\n  \"quantity\": 2\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "List all user tickets",
+          "filename": "List all user tickets.bru",
+          "seq": 4,
+          "request": {
+            "url": "http://localhost:8080/api/userTickets?page=0&pageSize=10",
+            "method": "GET",
+            "headers": [],
+            "params": [
+              {
+                "name": "page",
+                "value": "0",
+                "type": "query",
+                "enabled": true
+              },
+              {
+                "name": "pageSize",
+                "value": "10",
+                "type": "query",
+                "enabled": true
+              }
+            ],
+            "body": {
+              "mode": "none",
+              "json": "{\n  \"eventId\": \"UUID-do-evento\",\n  \"quantity\": 2\n}\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "Orders",
+      "filename": "Orders",
+      "root": {
+        "meta": {
+          "name": "Orders"
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "Create Order",
+          "filename": "Create Order.bru",
+          "seq": 1,
+          "request": {
+            "url": "http://localhost:8080/api/order",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n  \"ticketIds\": [\n    \"{{ticketId}}\"\n  ]\n}\n\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {
+              "res": [
+                {
+                  "name": "orderId",
+                  "value": "res.body.orderId",
+                  "enabled": true,
+                  "local": false
+                }
+              ]
+            },
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Get User Orders",
+          "filename": "Get User Orders.bru",
+          "seq": 2,
+          "request": {
+            "url": "http://localhost:8080/api/orders",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "\n\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {
+              "res": [
+                {
+                  "name": "ticketId",
+                  "value": "res.body.ticketId",
+                  "enabled": true,
+                  "local": false
+                }
+              ]
+            },
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "Delete Order",
+          "filename": "Delete Order.bru",
+          "seq": 3,
+          "request": {
+            "url": "http://localhost:8080/api/order/{{orderId}}",
+            "method": "DELETE",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "\n\n",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {
+              "req": "const cookie = bru.getVar(\"cookie\");\n\nif(cookie) {\n  req.setHeader(\"Cookie\", cookie)\n}"
+            },
+            "vars": {
+              "res": [
+                {
+                  "name": "ticketId",
+                  "value": "res.body.ticketId",
+                  "enabled": true,
+                  "local": false
+                }
+              ]
+            },
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "environments": [],
+  "brunoConfig": {
+    "version": "1",
+    "name": "EventTicketApi",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ],
+    "size": 0.00228118896484375,
+    "filesCount": 10
+  }
+}

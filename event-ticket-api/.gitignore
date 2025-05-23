@@ -1,0 +1,6 @@
+.gradle/
+.idea/
+build/
+postgres
+.DS_Store
+.env
