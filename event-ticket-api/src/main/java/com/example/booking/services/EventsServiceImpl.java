@@ -8,7 +8,6 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
-import com.example.booking.repository.TicketCategoryRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.JwtUtils;

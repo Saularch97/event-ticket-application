@@ -1,6 +1,5 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.response.EventResponse;
 import com.example.booking.controller.response.EventsResponse;
@@ -11,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
