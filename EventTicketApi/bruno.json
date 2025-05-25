@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "name": "EventTicketApi",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "size": 0.00228118896484375,
+  "filesCount": 10
+}

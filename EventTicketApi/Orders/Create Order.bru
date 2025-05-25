@@ -1,0 +1,33 @@
+meta {
+  name: Create Order
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/order
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "ticketIds": [
+      "{{ticketId}}"
+    ]
+  }
+  
+  
+}
+
+vars:post-response {
+  orderId: res.body.orderId
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

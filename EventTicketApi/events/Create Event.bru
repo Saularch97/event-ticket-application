@@ -1,0 +1,47 @@
+meta {
+  name: Create Event
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/events
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventName": "Exemplo de Evento4",
+    "eventDate": "03/04/2016",
+    "eventHour": 18,
+    "eventMinute": 30,
+    "eventLocation": "Alfenas",
+    "eventPrice": 49.99,
+    "ticketCategories" :[
+      {
+        "name" : "Pista Paia",
+        "price": 250.0,
+        "availableCategoryTickets": 300
+      },
+      {
+        "name" : "Pista Pika",
+        "price": 280.0,
+        "availableCategoryTickets": 150
+      }
+    ]
+  }
+  
+}
+
+vars:post-response {
+  eventId: res.body.eventId
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

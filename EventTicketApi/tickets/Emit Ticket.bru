@@ -1,0 +1,31 @@
+meta {
+  name: Emit Ticket
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/ticket
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventId": "{{eventId}}",
+    "quantity": 2
+  }
+  
+}
+
+vars:post-response {
+  ticketId: res.body.ticketId
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

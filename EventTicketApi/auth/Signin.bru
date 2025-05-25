@@ -1,0 +1,26 @@
+meta {
+  name: Signin
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/auth/signin
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username" : "admin",
+    "password" : "123"
+  }
+}
+
+script:post-response {
+  const cookies = res.getHeader('set-cookie');
+  
+  if(cookies) {
+    bru.setVar("cookie", cookies.join('; '));
+  }
+}

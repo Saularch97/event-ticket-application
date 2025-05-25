@@ -13,10 +13,15 @@ public class Event {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "event_id")
     private UUID eventId;
+    @Column(name = "event_location")
     private String eventLocation;
+    @Column(name = "event_name")
     private String eventName;
+    @Column(name = "event_date")
     private LocalDateTime eventDate;
+    @Column(name = "event_ticket_price")
     private Double eventTicketPrice;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", orphanRemoval = true)

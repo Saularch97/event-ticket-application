@@ -1,6 +1,7 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
+import com.example.booking.controller.dto.CityDataDto;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
@@ -10,6 +11,7 @@ import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
+import com.example.booking.services.intefaces.GeoService;
 import com.example.booking.util.JwtUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -25,18 +27,20 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Service
 @Transactional
+@Service
 public class EventsServiceImpl implements EventsService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
+    private final GeoService geoService;
 
-    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils) {
+    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils, GeoService geoService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.jwtUtils = jwtUtils;
+        this.geoService = geoService;
     }
 
     public EventItemDto createEvent(CreateEventRequest request, String token) {
@@ -63,6 +67,19 @@ public class EventsServiceImpl implements EventsService {
         LocalDateTime dateTime = date.atTime(request.eventHour(), request.eventMinute());
         event.setEventDate(dateTime);
         event.setEventLocation(request.eventLocation());
+
+        CityDataDto eventDataForRecommendationService = geoService.searchForCityData(event.getEventLocation());
+
+        // TODO using the inputted name of the city, get lat and long
+        // Send lat and long for an RabbitMq instance with the eventID
+        // Content to study ;for implementation
+        // Service Discovery:
+        // https://www.youtube.com/watch?v=ju7NTqJxKRs
+        // https://www.youtube.com/watch?v=ecuEkmFs5Vk
+        // https://www.youtube.com/watch?v=v4u7m2Im7ng
+        // https://www.youtube.com/results?search_query=rabbit+mq+with+spring
+        // https://www.youtube.com/watch?v=weAruTI623k
+        // https://www.youtube.com/watch?v=ZnECi2gatMs
 
         Integer availableTickets = 0;
         List<TicketCategory> ticketCategories = new ArrayList<>();

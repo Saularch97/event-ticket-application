@@ -1,0 +1,19 @@
+meta {
+  name: ListAllUserEvents
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/api/userEvents
+  body: none
+  auth: inherit
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

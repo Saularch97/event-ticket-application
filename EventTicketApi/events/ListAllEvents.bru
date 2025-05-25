@@ -1,0 +1,24 @@
+meta {
+  name: ListAllEvents
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8080/api/events?page=0&pageSize=10
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 0
+  pageSize: 10
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

@@ -29,8 +29,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@Transactional
 @Service
+@Transactional
 public class TicketsServiceImpl implements TicketsService {
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;

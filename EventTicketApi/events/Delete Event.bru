@@ -1,0 +1,31 @@
+meta {
+  name: Delete Event
+  type: http
+  seq: 3
+}
+
+delete {
+  url: http://localhost:8080/api/events/{{eventId}}
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventName": "Exemplo de Evento",
+    "eventDate": "03/04/2025",
+    "eventHour": 18,
+    "eventMinute": 30,
+    "eventLocation": "Auditório Central",
+    "eventPrice": 49.99
+  }
+  
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

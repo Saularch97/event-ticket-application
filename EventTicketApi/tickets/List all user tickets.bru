@@ -1,0 +1,32 @@
+meta {
+  name: List all user tickets
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/api/userTickets?page=0&pageSize=10
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 0
+  pageSize: 10
+}
+
+body:json {
+  {
+    "eventId": "UUID-do-evento",
+    "quantity": 2
+  }
+  
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

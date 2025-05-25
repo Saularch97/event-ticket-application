@@ -1,0 +1,27 @@
+meta {
+  name: Delete Ticket
+  type: http
+  seq: 2
+}
+
+delete {
+  url: http://localhost:8080/api/ticket/{{ticketId}}
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventId": "UUID-do-evento",
+    "quantity": 2
+  }
+  
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}
