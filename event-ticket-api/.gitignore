@@ -4,3 +4,5 @@ build/
 postgres
 .DS_Store
 .env
+bin/
+/out/
