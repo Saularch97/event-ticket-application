@@ -5,16 +5,21 @@ import com.example.booking.controller.dto.CityDataDto;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.controller.dto.RecomendEventDto;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.GeoService;
 import com.example.booking.util.JwtUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -35,12 +40,17 @@ public class EventsServiceImpl implements EventsService {
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
     private final GeoService geoService;
+    private final EventRequestProducer producer;
 
-    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils, GeoService geoService) {
+    private static final Logger log = LoggerFactory.getLogger(EventsServiceImpl.class);
+
+
+    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils, GeoService geoService, EventRequestProducer producer) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.jwtUtils = jwtUtils;
         this.geoService = geoService;
+        this.producer = producer;
     }
 
     public EventItemDto createEvent(CreateEventRequest request, String token) {
@@ -68,7 +78,7 @@ public class EventsServiceImpl implements EventsService {
         event.setEventDate(dateTime);
         event.setEventLocation(request.eventLocation());
 
-        CityDataDto eventDataForRecommendationService = geoService.searchForCityData(event.getEventLocation());
+        CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
 
         // TODO using the inputted name of the city, get lat and long
         // Send lat and long for an RabbitMq instance with the eventID
@@ -93,6 +103,13 @@ public class EventsServiceImpl implements EventsService {
         event.setAvailableTickets(availableTickets);
         event.setTicketCategories(ticketCategories);
         Event savedEvent = eventRepository.save(event);
+
+        try {
+            RecomendEventDto recomendEventDto = new RecomendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
+            producer.publishEventRecommendation(recomendEventDto);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to send event recommendation to queue", e);
+        }
 
         return Event.toEventItemDto(savedEvent);
     }

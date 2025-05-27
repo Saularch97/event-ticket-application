@@ -37,6 +37,16 @@
             "projectName": "api-gateway",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-RecomendationApplication<recomendation>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.br.recomendation.recomendation.RecomendationApplication",
+            "projectName": "recomendation",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
