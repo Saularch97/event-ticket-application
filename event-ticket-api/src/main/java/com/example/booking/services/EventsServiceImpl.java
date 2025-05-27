@@ -80,14 +80,6 @@ public class EventsServiceImpl implements EventsService {
 
         CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
 
-        // TODO using the inputted name of the city, get lat and long
-        // Send lat and long for an RabbitMq instance with the eventID
-        // Content to study ;for implementation
-        // Service Discovery:
-        // https://www.youtube.com/results?search_query=rabbit+mq+with+spring
-        // https://www.youtube.com/watch?v=weAruTI623k
-        // https://www.youtube.com/watch?v=ZnECi2gatMs
-
         Integer availableTickets = 0;
         List<TicketCategory> ticketCategories = new ArrayList<>();
         for (var createTicketCategoryRequest : request.ticketCategories()) {
