@@ -74,9 +74,6 @@ public class EventsServiceImpl implements EventsService {
         // Send lat and long for an RabbitMq instance with the eventID
         // Content to study ;for implementation
         // Service Discovery:
-        // https://www.youtube.com/watch?v=ju7NTqJxKRs
-        // https://www.youtube.com/watch?v=ecuEkmFs5Vk
-        // https://www.youtube.com/watch?v=v4u7m2Im7ng
         // https://www.youtube.com/results?search_query=rabbit+mq+with+spring
         // https://www.youtube.com/watch?v=weAruTI623k
         // https://www.youtube.com/watch?v=ZnECi2gatMs

@@ -2,6 +2,12 @@
     "configurations": [
         {
             "type": "java",
+            "name": "RecomendationApplication",
+            "request": "launch",
+            "mainClass": "com.br.recomendation.recomendation.RecomendationApplication"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-ServicediscoveryApplication<servicediscovery>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
