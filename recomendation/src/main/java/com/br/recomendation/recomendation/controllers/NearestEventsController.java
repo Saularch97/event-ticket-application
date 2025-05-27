@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.br.recomendation.recomendation.services.RecomendationService;
 
 @Controller
-@RequestMapping("api")
+@RequestMapping("/api")
 public class NearestEventsController {
     private final RecomendationService service;
 
@@ -21,7 +21,7 @@ public class NearestEventsController {
     }
 
     @GetMapping("/nearestEvents")
-    public ResponseEntity<List<UUID>> getNearestEvents(@RequestParam(name = "event_id") UUID eventId, @RequestParam Double radius) {
+    public ResponseEntity<List<UUID>> getNearestEvents(@RequestParam(name = "event_id") UUID eventId, @RequestParam(name = "radius") Double radius) {
         List<UUID> ids = service.getNearestEventIds(radius, eventId);
 
         return ResponseEntity.ok(ids);
