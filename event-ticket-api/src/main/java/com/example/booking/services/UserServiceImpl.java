@@ -4,6 +4,7 @@ import com.example.booking.controller.request.CreateUserRequest;
 import com.example.booking.controller.dto.UserDto;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
+import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.UserService;
 

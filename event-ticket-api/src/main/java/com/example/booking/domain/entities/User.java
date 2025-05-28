@@ -144,4 +144,10 @@ public class User {
                 user.getRoles().stream().map(Role::toRoleItemDto).collect(Collectors.toList())
         );
     }
+
+    public static Boolean userContainsAEspecificRole(User user, String roleName) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().name().equalsIgnoreCase(roleName));
+    }
+
 }

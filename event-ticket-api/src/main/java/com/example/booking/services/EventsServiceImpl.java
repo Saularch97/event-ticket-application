@@ -8,11 +8,13 @@ import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.controller.dto.RecomendEventDto;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
+import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.GeoService;
+import com.example.booking.services.intefaces.TicketCategoryService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,16 +41,18 @@ public class EventsServiceImpl implements EventsService {
     private final UserService userService;
     private final JwtUtils jwtUtils;
     private final GeoService geoService;
+    private final TicketCategoryService ticketCategoryService;
     private final EventRequestProducer producer;
 
     private static final Logger log = LoggerFactory.getLogger(EventsServiceImpl.class);
 
 
-    public EventsServiceImpl(EventRepository eventRepository, UserService userRepository, JwtUtils jwtUtils, GeoService geoService, EventRequestProducer producer) {
+    public EventsServiceImpl(EventRepository eventRepository, UserService userRepository, JwtUtils jwtUtils, GeoService geoService, TicketCategoryService ticketCategoryService, EventRequestProducer producer) {
         this.eventRepository = eventRepository;
         this.userService = userRepository;
         this.jwtUtils = jwtUtils;
         this.geoService = geoService;
+        this.ticketCategoryService = ticketCategoryService;
         this.producer = producer;
     }
 
@@ -65,7 +69,7 @@ public class EventsServiceImpl implements EventsService {
         if (!isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-
+        Map<String, Integer> map = new HashMap<>();
         var event = new Event();
         event.setEventOwner(user);
         event.setEventName(request.eventName());
@@ -79,17 +83,11 @@ public class EventsServiceImpl implements EventsService {
 
         CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
 
-        // TODO ticketCategory must be created with a ticketCategoryService
         Integer availableTickets = 0;
-        List<TicketCategory> ticketCategories = new ArrayList<>();
-        for (var createTicketCategoryRequest : request.ticketCategories()) {
-            var ticketCategory = new TicketCategory();
-            ticketCategory.setEvent(event);
-            ticketCategory.setName(createTicketCategoryRequest.name());
-            ticketCategory.setPrice(createTicketCategoryRequest.price());
-            ticketCategory.setAvailableCategoryTickets(createTicketCategoryRequest.availableCategoryTickets());
-            ticketCategories.add(ticketCategory);
-            availableTickets += createTicketCategoryRequest.availableCategoryTickets();
+        List<TicketCategory> ticketCategories = ticketCategoryService.createTicketCategoriesForEvent(event, request.ticketCategories());
+
+        for (var ticketCategory : ticketCategories) {
+            availableTickets += ticketCategory.getAvailableCategoryTickets();
         }
 
         event.setAvailableTickets(availableTickets);
@@ -115,11 +113,9 @@ public class EventsServiceImpl implements EventsService {
 
         var user = userService.findEntityByUserName(userName);
 
-        var event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        var event = findEventEntityById(eventId);
 
-        boolean isAdmin = user.getRoles().stream()
-                .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
+        boolean isAdmin = User.userContainsAEspecificRole(user,ERole.ROLE_ADMIN.name());
 
         if (isAdmin || event.getEventOwner().getUserName().equals(userName)) {
             eventRepository.deleteById(eventId);
@@ -161,4 +157,8 @@ public class EventsServiceImpl implements EventsService {
         return eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList();
     }
 
+    @Override
+    public Event findEventEntityById(UUID eventId) {
+        return eventRepository.findById(eventId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+    }
 }

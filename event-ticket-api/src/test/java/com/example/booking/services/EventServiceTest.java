@@ -7,22 +7,21 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import com.example.booking.controller.dto.CityDataDto;
+import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.services.intefaces.GeoService;
+import com.example.booking.services.intefaces.TicketCategoryService;
 import io.jsonwebtoken.MalformedJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.booking.controller.dto.EventItemDto;
@@ -31,9 +30,12 @@ import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repository.EventRepository;
-import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -55,8 +57,14 @@ public class EventServiceTest {
     @Mock
     private GeoService geoService;
 
+    @Mock
+    private TicketCategoryService ticketCategoryService;
+
     @InjectMocks
     private EventsServiceImpl eventsService;
+
+    @Captor
+    private ArgumentCaptor<Event> eventCaptor;
 
     private Event event;
     private CreateEventRequest createEventRequest;
@@ -66,7 +74,6 @@ public class EventServiceTest {
 
     @BeforeEach
     void setUp() {
-
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String formatedDate = now.format(formatter);
@@ -130,6 +137,14 @@ public class EventServiceTest {
         when(jwtUtils.getUserNameFromJwtToken(anyString())).thenReturn("adminUser");
         when(geoService.searchForCityData(event.getEventLocation())).thenReturn(cityDataDto);
         when(eventRepository.save(any(Event.class))).thenReturn(event);
+        when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any()))
+                .thenReturn(List.of(new TicketCategory(
+                    20,
+                    event,
+                    20.0,
+                    "prime_ticket",
+                    1))
+                );
 
         // Act
         EventItemDto result = eventsService.createEvent(createEventRequest, fakeToken);
@@ -178,21 +193,257 @@ public class EventServiceTest {
 
     @Test
     void createEvent_ShouldReturnAnEventItemDtoWithMoreThanOneTicketCategory_WhenMoreThanOneTicketCategoryIsProvided() {
-        // TODO decouple ticketCategory creation from eventServiceImpl
         // Arrange
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
+        List<TicketCategory> ticketCategories = List.of(
+                new TicketCategory(20, event, 20.0, "prime_ticket", 1),
+                new TicketCategory(30, event, 40.0, "ultra_ticket", 2)
+        );
+
+        CreateEventRequest createRequest = new CreateEventRequest(
+                "Festival de Verão",
+                "25/12/2025",
+                20,
+                30,
+                "São Paulo - SP",
+                100.0,
+                List.of(
+                        new CreateTicketCategoryRequest("prime_ticket", 20.0, 1),
+                        new CreateTicketCategoryRequest("ultra_ticket", 40.0, 2)
+                )
+        );
 
         when(userService.findEntityByUserName("adminUser")).thenReturn(user);
         when(jwtUtils.getUserNameFromJwtToken(anyString())).thenReturn("adminUser");
-        when(geoService.searchForCityData(event.getEventLocation())).thenReturn(cityDataDto);
-        when(eventRepository.save(any(Event.class))).thenReturn(event);
+        when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
+        when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any())).thenReturn(ticketCategories);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
+            Event e = invocation.getArgument(0);
+            e.setTicketCategories(ticketCategories);
+            return e;
+        });
 
         // Act
-        EventItemDto result = eventsService.createEvent(createEventRequest, fakeToken);
+        EventItemDto result = eventsService.createEvent(createRequest, fakeToken);
 
         // Assert
         verify(eventRepository).save(any(Event.class));
         assertNotNull(result);
-        assertEquals(eventItemDto, result);
+        assertEquals("Festival de Verão", result.eventName());
+        assertEquals(2, result.ticketCategories().size());
+        assertEquals("prime_ticket", result.ticketCategories().get(0).name());
+        assertEquals("ultra_ticket", result.ticketCategories().get(1).name());
+    }
+
+    @Test
+    void createEvent_ShouldHaveTheRightAmountOfAvailableAndOriginalTickets_WhenCreateEventWithAGivenAmountOfTicketCategories() {
+        // Arrange
+        CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
+        List<TicketCategory> ticketCategories = List.of(
+                new TicketCategory(50, event, 20.0, "prime_ticket", 1),
+                new TicketCategory(50, event, 40.0, "ultra_ticket", 2)
+        );
+
+        CreateEventRequest createRequest = new CreateEventRequest(
+                "Festival de Verão",
+                "25/12/2025",
+                20,
+                30,
+                "São Paulo - SP",
+                100.0,
+                List.of(
+                        new CreateTicketCategoryRequest("prime_ticket", 20.0, 50),
+                        new CreateTicketCategoryRequest("ultra_ticket", 40.0, 50)
+                )
+        );
+
+        when(userService.findEntityByUserName("adminUser")).thenReturn(user);
+        when(jwtUtils.getUserNameFromJwtToken(anyString())).thenReturn("adminUser");
+        when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
+        when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any())).thenReturn(ticketCategories);
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
+            Event e = invocation.getArgument(0);
+            e.setTicketCategories(ticketCategories);
+            return e;
+        });
+
+        // Act
+        EventItemDto result = eventsService.createEvent(createRequest, fakeToken);
+
+        verify(eventRepository).save(eventCaptor.capture());
+        Event savedEvent = eventCaptor.getValue();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(100, result.availableTickets());
+        assertEquals(100, savedEvent.getOriginalAmountOfTickets());
+    }
+
+    @Test
+    void listAllEvents_ShouldReturnPaginatedEvents() {
+        // Arrange
+        int page = 0;
+        int pageSize = 2;
+
+        Event event1 = new Event(
+                UUID.randomUUID(),
+                "Alfenas",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(), // Set<Ticket>
+                null,
+                150.00,
+                1000,
+                new ArrayList<>(),
+                false,
+                0L
+        );
+
+        Event event2 = new Event(
+                UUID.randomUUID(),
+                "Botelhos",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(),
+                null,
+                150.00,
+                1000,
+                new ArrayList<>(),
+                false,
+                0L
+        );
+
+
+        List<Event> eventList = List.of(
+                event1,
+                event2
+        );
+
+        Page<Event> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
+
+        when(eventRepository.findAll(any(PageRequest.class))).thenReturn(eventPage);
+
+        EventsDto result = eventsService.listAllEvents(page, pageSize);
+
+        assertNotNull(result);
+        assertEquals(page, result.page());
+        assertEquals(pageSize, result.pageSize());
+        assertEquals(5, result.totalElements());
+        assertEquals(3, result.totalPages()); // totalPages = ceil(5/2) = 3
+        assertEquals(2, result.events().size());
+
+        ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        verify(eventRepository).findAll(pageRequestCaptor.capture());
+
+        PageRequest pr = pageRequestCaptor.getValue();
+        assertEquals(page, pr.getPageNumber());
+        assertEquals(pageSize, pr.getPageSize());
+        assertEquals(Sort.Direction.DESC, Objects.requireNonNull(pr.getSort().getOrderFor("eventDate")).getDirection());
+    }
+
+    @Test
+    void getTopTrendingEvents_ShouldReturnTrendingEventsCorrectly() {
+
+        Event event1 = new Event(
+                UUID.randomUUID(),
+                "Alfenas",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(), // Set<Ticket>
+                null,
+                150.00,
+                1000,
+                new ArrayList<>(),
+                false,
+                0L
+        );
+
+        Event event2 = new Event(
+                UUID.randomUUID(),
+                "Botelhos",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(), // Set<Ticket>
+                null, // User (pode passar um usuário se tiver)
+                150.00,
+                1000,
+                new ArrayList<>(), // List<TicketCategory>
+                true,
+                0L
+        );
+
+        when(eventRepository.findAll()).thenReturn(List.of(event1, event2));
+
+        // Act
+        List<EventItemDto> trendingEvents = eventsService.getTopTrendingEvents();
+
+        // Assert
+        assertEquals(1, trendingEvents.size());
+        assertEquals(event2.getEventName(), trendingEvents.getFirst().eventName());
+    }
+
+    @Test
+    void getTopTrendingEvents_ShouldReturnAnEmptyListWhenNoEventsAreTrending() {
+
+        Event event1 = new Event(
+                UUID.randomUUID(),
+                "Alfenas",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(), // Set<Ticket>
+                null,
+                150.00,
+                1000,
+                new ArrayList<>(),
+                false,
+                0L
+        );
+
+        Event event2 = new Event(
+                UUID.randomUUID(),
+                "Botelhos",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(), // Set<Ticket>
+                null, // User (pode passar um usuário se tiver)
+                150.00,
+                1000,
+                new ArrayList<>(), // List<TicketCategory>
+                false,
+                0L
+        );
+
+        when(eventRepository.findAll()).thenReturn(List.of(event1, event2));
+
+        // Act
+        List<EventItemDto> trendingEvents = eventsService.getTopTrendingEvents();
+
+        // Assert
+        assertEquals(0, trendingEvents.size());
+    }
+
+    @Test
+    void findEventById_ShouldReturnAnEventGivenHisId() {
+
+        UUID id = UUID.randomUUID();
+        Event event = new Event(
+                id,
+                "Alfenas",
+                "Show de Rock",
+                LocalDateTime.of(2025, 8, 15, 20, 30),
+                new HashSet<>(), // Set<Ticket>
+                null,
+                150.00,
+                1000,
+                new ArrayList<>(),
+                false,
+                0L
+        );
+
+        when(eventRepository.findById(id)).thenReturn(Optional.of(event));
+
+        var res = eventsService.findEventEntityById(id);
+
+        assertEquals(event, res);
     }
 }
