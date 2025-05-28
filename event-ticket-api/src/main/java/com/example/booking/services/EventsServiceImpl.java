@@ -11,12 +11,11 @@ import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repository.EventRepository;
-import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.GeoService;
+import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ import java.util.*;
 public class EventsServiceImpl implements EventsService {
 
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final JwtUtils jwtUtils;
     private final GeoService geoService;
     private final EventRequestProducer producer;
@@ -45,19 +44,19 @@ public class EventsServiceImpl implements EventsService {
     private static final Logger log = LoggerFactory.getLogger(EventsServiceImpl.class);
 
 
-    public EventsServiceImpl(EventRepository eventRepository, UserRepository userRepository, JwtUtils jwtUtils, GeoService geoService, EventRequestProducer producer) {
+    public EventsServiceImpl(EventRepository eventRepository, UserService userRepository, JwtUtils jwtUtils, GeoService geoService, EventRequestProducer producer) {
         this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
+        this.userService = userRepository;
         this.jwtUtils = jwtUtils;
         this.geoService = geoService;
         this.producer = producer;
     }
 
     public EventItemDto createEvent(CreateEventRequest request, String token) {
+        // TODO extract to an filter the logic of extract the content from token
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
 
-        var user = userRepository.findByUserName(userName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var user = userService.findEntityByUserName(userName);
 
         var isAdmin = user.getRoles()
                 .stream()
@@ -80,6 +79,7 @@ public class EventsServiceImpl implements EventsService {
 
         CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
 
+        // TODO ticketCategory must be created with a ticketCategoryService
         Integer availableTickets = 0;
         List<TicketCategory> ticketCategories = new ArrayList<>();
         for (var createTicketCategoryRequest : request.ticketCategories()) {
@@ -113,8 +113,7 @@ public class EventsServiceImpl implements EventsService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
         }
 
-        var user = userRepository.findByUserName(userName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        var user = userService.findEntityByUserName(userName);
 
         var event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
@@ -140,7 +139,7 @@ public class EventsServiceImpl implements EventsService {
     public EventsDto listAllUserEvents(String token, int page, int pageSize) {
 
         String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        var user = userRepository.findByUserName(userName).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        var user = userService.findEntityByUserName(userName);
 
         var events = eventRepository.findAllEventsByUserId(user.getUserId(),
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")

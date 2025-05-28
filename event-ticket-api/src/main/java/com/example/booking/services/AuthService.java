@@ -34,7 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
-
+    // TODO usar um role service
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
