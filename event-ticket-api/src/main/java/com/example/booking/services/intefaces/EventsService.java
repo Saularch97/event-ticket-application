@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface EventsService {
-    EventItemDto createEvent(CreateEventRequest dto, String token);
-    void deleteEvent(UUID eventId, String token);
+    EventItemDto createEvent(CreateEventRequest dto);
+    void deleteEvent(UUID eventId);
     EventsDto listAllEvents(int page, int pageSize);
     List<EventItemDto> getTopTrendingEvents();
     Event findEventEntityById(UUID eventId);
+    public EventsDto listAllUserEvents(int page, int pageSize);
 }

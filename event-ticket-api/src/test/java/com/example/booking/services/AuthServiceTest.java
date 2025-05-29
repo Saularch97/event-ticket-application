@@ -1,5 +1,6 @@
 package com.example.booking.services;
 
+import com.example.booking.controller.dto.CookieParDto;
 import com.example.booking.controller.dto.UserDto;
 import com.example.booking.controller.request.LoginRequest;
 import com.example.booking.controller.request.SignupRequest;
@@ -60,14 +61,13 @@ class AuthServiceTest {
     private RefreshTokenService refreshTokenService;
 
     @InjectMocks
-    private AuthService authService;
+    private AuthServiceImpl authServiceImpl;
 
     private LoginRequest loginRequest;
     private SignupRequest signupRequest;
     private User user;
     private Role userRole;
     private Role adminRole;
-    private Role moderatorRole;
     private RefreshToken refreshToken;
     // TODO arrumar inline-mock-maker
     @BeforeEach
@@ -80,9 +80,6 @@ class AuthServiceTest {
         
         adminRole = new Role();
         adminRole.setName(ERole.ROLE_ADMIN);
-
-        moderatorRole = new Role();
-        moderatorRole.setName(ERole.ROLE_MODERATOR);
 
         user = new User();
         user.setUserId(UUID.randomUUID());
@@ -118,7 +115,7 @@ class AuthServiceTest {
         when(refreshTokenService.createRefreshToken(user.getUserId())).thenReturn(refreshToken);
 
         // Act
-        AuthResponse response = authService.authenticateUser(loginRequest);
+        AuthResponse response = authServiceImpl.authenticateUser(loginRequest);
 
         // Assert
         assertNotNull(response);
@@ -147,7 +144,7 @@ class AuthServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
-        UserDto result = authService.registerUser(signupRequest);
+        UserDto result = authServiceImpl.registerUser(signupRequest);
 
         // Assert
         assertNotNull(result);
@@ -169,7 +166,7 @@ class AuthServiceTest {
 
         // Act & Assert
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
-            () -> authService.registerUser(signupRequest));
+            () -> authServiceImpl.registerUser(signupRequest));
         
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("Username is already taken", exception.getReason());
@@ -187,7 +184,7 @@ class AuthServiceTest {
 
         // Act & Assert
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
-            () -> authService.registerUser(signupRequest));
+            () -> authServiceImpl.registerUser(signupRequest));
         
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("Email is already in use", exception.getReason());
@@ -217,7 +214,7 @@ class AuthServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(adminUser);
 
         // Act
-        UserDto result = authService.registerUser(adminSignupRequest);
+        UserDto result = authServiceImpl.registerUser(adminSignupRequest);
 
         // Assert
         assertNotNull(result);
@@ -245,7 +242,7 @@ class AuthServiceTest {
         when(jwtUtils.getCleanJwtRefreshCookie()).thenReturn(cleanRefreshCookie);
 
         // Act
-        AuthService.CookiePair result = authService.logoutUser();
+        CookieParDto result = authServiceImpl.logoutUser();
 
         // Assert
         assertNotNull(result);
@@ -271,7 +268,7 @@ class AuthServiceTest {
         when(jwtUtils.getCleanJwtRefreshCookie()).thenReturn(cleanRefreshCookie);
 
         // Act
-        AuthService.CookiePair result = authService.logoutUser();
+        CookieParDto result = authServiceImpl.logoutUser();
 
         // Assert
         assertNotNull(result);
@@ -297,7 +294,7 @@ class AuthServiceTest {
         when(jwtUtils.generateJwtCookie(refreshToken.getUser())).thenReturn(newJwtCookie);
 
         // Act
-        RefreshTokenResponse result = authService.refreshToken(request);
+        RefreshTokenResponse result = authServiceImpl.refreshToken(request);
 
         // Assert
         assertNotNull(result);
@@ -317,7 +314,7 @@ class AuthServiceTest {
 
         // Act & Assert
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
-            () -> authService.refreshToken(request));
+            () -> authServiceImpl.refreshToken(request));
         
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("Refresh token is empty", exception.getReason());
@@ -335,7 +332,7 @@ class AuthServiceTest {
 
         // Act & Assert
         TokenRefreshException exception = assertThrows(TokenRefreshException.class,
-            () -> authService.refreshToken(request));
+            () -> authServiceImpl.refreshToken(request));
 
         assertEquals("Failed for [invalidToken]: Refresh token is not in database!", exception.getMessage());
 

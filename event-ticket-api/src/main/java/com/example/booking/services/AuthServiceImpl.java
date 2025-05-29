@@ -4,6 +4,7 @@ package com.example.booking.services;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.example.booking.controller.dto.CookieParDto;
 import com.example.booking.controller.dto.UserDto;
 import com.example.booking.controller.request.LoginRequest;
 import com.example.booking.controller.request.SignupRequest;
@@ -17,6 +18,7 @@ import com.example.booking.domain.enums.ERole;
 import com.example.booking.exception.TokenRefreshException;
 import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.AuthService;
 import com.example.booking.util.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -27,13 +29,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class AuthService {
+public class AuthServiceImpl implements AuthService {
     // TODO usar um role service
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -42,12 +45,12 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
 
-    public AuthService(AuthenticationManager authenticationManager,
-                       UserRepository userRepository,
-                       RoleRepository roleRepository,
-                       PasswordEncoder encoder,
-                       JwtUtils jwtUtils,
-                       RefreshTokenService refreshTokenService) {
+    public AuthServiceImpl(AuthenticationManager authenticationManager,
+                           UserRepository userRepository,
+                           RoleRepository roleRepository,
+                           PasswordEncoder encoder,
+                           JwtUtils jwtUtils,
+                           RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -128,7 +131,7 @@ public class AuthService {
         return User.toUserDto(userRepository.save(user));
     }
 
-    public CookiePair logoutUser() {
+    public CookieParDto logoutUser() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!"anonymousUser".equals(principal.toString())) {
@@ -136,7 +139,7 @@ public class AuthService {
             refreshTokenService.deleteByUserId(userId);
         }
 
-        return new CookiePair(jwtUtils.getCleanJwtCookie(), jwtUtils.getCleanJwtRefreshCookie());
+        return new CookieParDto(jwtUtils.getCleanJwtCookie(), jwtUtils.getCleanJwtRefreshCookie());
     }
 
     public RefreshTokenResponse refreshToken(HttpServletRequest request) {
@@ -154,7 +157,14 @@ public class AuthService {
         return new RefreshTokenResponse(jwtCookie);
     }
 
-    // DTOs internos
-    public record CookiePair(ResponseCookie jwt, ResponseCookie refresh) {}
+    public String getAuthenticatedUsername() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
+        }
+    }
 }
 

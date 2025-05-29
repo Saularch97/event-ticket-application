@@ -5,21 +5,19 @@ import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.repository.TicketCategoryRepository;
-import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.TicketCategoryService;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+@Service
 public class TicketCategoryServiceImpl implements TicketCategoryService {
 
     private final TicketCategoryRepository repository;
-    private final EventsService eventsService;
 
-    public TicketCategoryServiceImpl(TicketCategoryRepository repository, EventsService eventsService) {
+    public TicketCategoryServiceImpl(TicketCategoryRepository repository) {
         this.repository = repository;
-        this.eventsService = eventsService;
     }
 
     @Override
@@ -36,8 +34,7 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         return ticketCategories;
     }
 
-    public TicketCategoryDto createTicketCategory(CreateTicketCategoryRequest request, UUID eventId) {
-        var event = eventsService.findEventEntityById(eventId);
+    public TicketCategoryDto createTicketCategory(CreateTicketCategoryRequest request, Event event) {
 
         var ticketCategory = new TicketCategory();
         ticketCategory.setEvent(event);

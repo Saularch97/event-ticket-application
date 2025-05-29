@@ -3,7 +3,7 @@ package com.example.booking.controller;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.response.EventResponse;
 import com.example.booking.controller.response.EventsResponse;
-import com.example.booking.services.EventsServiceImpl;
+import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.UriUtil;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -16,20 +16,19 @@ import java.util.UUID;
 @RequestMapping("/api")
 public class EventController {
 
-    private final EventsServiceImpl eventsServiceImpl;
+    private final EventsService eventsService;
 
-    public EventController(EventsServiceImpl eventsServiceImpl) {
-        this.eventsServiceImpl = eventsServiceImpl;
+    public EventController(EventsService eventsService) {
+        this.eventsService = eventsService;
     }
 
     @PostMapping("/events")
     public ResponseEntity<EventResponse> createEvent(
             @Valid
-            @RequestBody CreateEventRequest request,
-            @RequestHeader(name = "Cookie", required = true) String token
+            @RequestBody CreateEventRequest request
     ) throws Exception {
 
-        var eventItemDto = eventsServiceImpl.createEvent(request, token);
+        var eventItemDto = eventsService.createEvent(request);
 
         URI location = UriUtil.getUriLocation("eventId", eventItemDto.eventId());
 
@@ -50,9 +49,8 @@ public class EventController {
     // TODO exemplo de permissionamento, incluir na API
 //    @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
 //    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteEvent(@PathVariable("id") UUID eventId,
-                                            @RequestHeader(name = "Cookie") String token) throws Exception {
-         eventsServiceImpl.deleteEvent(eventId, token);
+    public ResponseEntity<Void> deleteEvent(@PathVariable("id") UUID eventId) {
+         eventsService.deleteEvent(eventId);
 
          return ResponseEntity.noContent().build();
     }
@@ -61,7 +59,7 @@ public class EventController {
     public ResponseEntity<EventsResponse> listAllEvents(@RequestParam(value = "page", defaultValue = "0") int page,
                                                    @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        var events = eventsServiceImpl.listAllEvents(page, pageSize);
+        var events = eventsService.listAllEvents(page, pageSize);
 
         return ResponseEntity.ok(new EventsResponse(events.events(),
                 events.page(),
@@ -72,18 +70,17 @@ public class EventController {
 
     @GetMapping("/userEvents")
     public ResponseEntity<EventsResponse> listAllEventsByUser(
-            @RequestHeader(name = "Cookie") String token,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        var events = eventsServiceImpl.listAllUserEvents(token, page, pageSize);
+        var events = eventsService.listAllUserEvents(page, pageSize);
 
         return ResponseEntity.ok(new EventsResponse(events.events(), events.page(), events.pageSize(), events.totalPages(), events.totalElements()));
     }
 
     @GetMapping("/trending")
     public ResponseEntity<?> listAllTrendingEvents() {
-        var trendingEvents = eventsServiceImpl.getTopTrendingEvents();
+        var trendingEvents = eventsService.getTopTrendingEvents();
 
         return ResponseEntity.ok(trendingEvents);
     }

@@ -56,10 +56,9 @@ public class EventsServiceImpl implements EventsService {
         this.producer = producer;
     }
 
-    public EventItemDto createEvent(CreateEventRequest request, String token) {
-        // TODO extract to an filter the logic of extract the content from token
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+    public EventItemDto createEvent(CreateEventRequest request) {
 
+        String userName = jwtUtils.getAuthenticatedUsername();
         var user = userService.findEntityByUserName(userName);
 
         var isAdmin = user.getRoles()
@@ -104,8 +103,8 @@ public class EventsServiceImpl implements EventsService {
         return Event.toEventItemDto(savedEvent);
     }
 
-    public void deleteEvent(UUID eventId, String token) {
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+    public void deleteEvent(UUID eventId) {
+        String userName = jwtUtils.getAuthenticatedUsername();
 
         if (!eventRepository.existsById(eventId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
@@ -132,9 +131,9 @@ public class EventsServiceImpl implements EventsService {
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
 
-    public EventsDto listAllUserEvents(String token, int page, int pageSize) {
+    public EventsDto listAllUserEvents(int page, int pageSize) {
 
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        String userName = jwtUtils.getAuthenticatedUsername();
         var user = userService.findEntityByUserName(userName);
 
         var events = eventRepository.findAllEventsByUserId(user.getUserId(),

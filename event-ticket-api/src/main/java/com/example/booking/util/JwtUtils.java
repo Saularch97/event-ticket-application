@@ -12,8 +12,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.WebUtils;
 
 
@@ -119,6 +123,16 @@ public class JwtUtils {
             return cookie.getValue();
         } else {
             return null;
+        }
+    }
+
+    public String getAuthenticatedUsername() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated!");
         }
     }
 }
