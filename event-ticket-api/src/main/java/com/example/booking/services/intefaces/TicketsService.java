@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TicketsService {
-    TicketItemDto emmitTicket(EmmitTicketRequest request, String token);
-    void deleteEmittedTicket(UUID ticketId, String token);
-    TicketsDto listAllUserTickets(String token, int page, int pageSize);
+    TicketItemDto emmitTicket(EmmitTicketRequest request);
+    void deleteEmittedTicket(UUID ticketId);
+    TicketsDto listAllUserTickets(int page, int pageSize);
     public TicketsDto listAllTickets(int page, int pageSize);
 
     List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId);

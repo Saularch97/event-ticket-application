@@ -5,6 +5,9 @@
       <module name="booking" options="-parameters" />
       <module name="booking.main" options="-parameters" />
       <module name="booking.test" options="-parameters" />
+      <module name="recomendation" options="-parameters" />
+      <module name="recomendation.main" options="-parameters" />
+      <module name="recomendation.test" options="-parameters" />
       <module name="servicediscovery" options="-parameters" />
       <module name="servicediscovery.main" options="-parameters" />
       <module name="servicediscovery.test" options="-parameters" />

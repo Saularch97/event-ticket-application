@@ -26,11 +26,10 @@ public class TicketController {
     @PostMapping("/ticket")
     public ResponseEntity<CreateTicketResponse> orderTicket(
             @Valid
-            @RequestBody EmmitTicketRequest request,
-            @RequestHeader(name = "Cookie") String token
+            @RequestBody EmmitTicketRequest request
     )  {
 
-        var savedTicket = ticketsServiceImpl.emmitTicket(request, token);
+        var savedTicket = ticketsServiceImpl.emmitTicket(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new CreateTicketResponse(
@@ -43,10 +42,9 @@ public class TicketController {
     }
 
     @DeleteMapping("/ticket/{id}")
-    public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId,
-                                                  @RequestHeader(name = "Cookie") String token) throws Exception {
+    public ResponseEntity<Void> deleteTicketOrder(@PathVariable("id") UUID ticketId) {
 
-        ticketsServiceImpl.deleteEmittedTicket(ticketId, token);
+        ticketsServiceImpl.deleteEmittedTicket(ticketId);
 
         return ResponseEntity.noContent().build();
     }
@@ -68,11 +66,10 @@ public class TicketController {
 
     @GetMapping("/userTickets")
     public ResponseEntity<TicketsResponse> listAllUserTickets(
-            @RequestHeader(name = "Cookie") String token,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        var ticketsDto = ticketsServiceImpl.listAllUserTickets(token, page, pageSize);
+        var ticketsDto = ticketsServiceImpl.listAllUserTickets(page, pageSize);
 
         return ResponseEntity.ok(new TicketsResponse(ticketsDto.tickets(),
                 ticketsDto.page(),

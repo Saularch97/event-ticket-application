@@ -46,9 +46,9 @@ public class TicketsServiceImpl implements TicketsService {
         this.cacheManager = cacheManager;
     }
 
-    public TicketItemDto emmitTicket(EmmitTicketRequest request, String token) {
+    public TicketItemDto emmitTicket(EmmitTicketRequest request) {
 
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        String userName = jwtUtils.getAuthenticatedUsername();
 
         User user = userRepository.findByUserName(userName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
@@ -62,12 +62,10 @@ public class TicketsServiceImpl implements TicketsService {
         ticket.setTicketOwner(user);
         ticket.setEvent(event);
 
-        Optional<TicketCategory> optionalCategory = event.getTicketCategories()
+        TicketCategory category = event.getTicketCategories()
                 .stream()
                 .filter(tc -> tc.getName().equalsIgnoreCase(request.ticketCategoryName()))
-                .findFirst();
-
-        TicketCategory category = optionalCategory.orElseThrow(() ->
+                .findFirst().orElseThrow(() ->
                 new IllegalArgumentException("Category not found! " + request.ticketCategoryName())
         );
 
@@ -81,7 +79,7 @@ public class TicketsServiceImpl implements TicketsService {
         return Ticket.toTicketItemDto(ticket);
     }
 
-    public void deleteEmittedTicket(UUID ticketId, String token) {
+    public void deleteEmittedTicket(UUID ticketId) {
         var ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -114,8 +112,8 @@ public class TicketsServiceImpl implements TicketsService {
     }
 
 
-    public TicketsDto listAllUserTickets(String token, int page, int pageSize) {
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+    public TicketsDto listAllUserTickets(int page, int pageSize) {
+        String userName = jwtUtils.getAuthenticatedUsername();
 
         Optional<User> user = userRepository.findByUserName(userName);
 
