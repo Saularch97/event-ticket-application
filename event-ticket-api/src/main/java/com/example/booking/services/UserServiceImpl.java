@@ -32,7 +32,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(createUserRequest.email());
         user.setPassword(createUserRequest.password());
 
-        return User.toUserDto(user);
+        var res = repository.save(user);
+
+        return User.toUserDto(res);
     }
 
     @Override
