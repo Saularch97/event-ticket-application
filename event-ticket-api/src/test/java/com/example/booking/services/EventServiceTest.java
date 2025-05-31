@@ -40,7 +40,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 public class EventServiceTest {
-    
+
     @Mock
     private EventRepository eventRepository;
 
@@ -78,9 +78,9 @@ public class EventServiceTest {
         String formatedDate = now.format(formatter);
 
         CreateTicketCategoryRequest category = new CreateTicketCategoryRequest(
-               "category",
-               300.0,
-               100
+                "category",
+                300.0,
+                100
         );
 
         createEventRequest = new CreateEventRequest("event",
@@ -91,28 +91,8 @@ public class EventServiceTest {
                 120.0,
                 List.of(category));
 
-        event = new Event();
-        event.setEventName("event");
-        event.setEventLocation("National Stadium");
-        event.setEventDate(now);
-        event.setEventTicketPrice(120.0);
-
-        List<TicketCategory> ticketCategories = new ArrayList<>();
-        TicketCategory ticketCategory = new TicketCategory();
-        ticketCategory.setName("Pista");
-        ticketCategory.setPrice(150.0);
-        ticketCategory.setAvailableCategoryTickets(500);
-        ticketCategory.setEvent(event);
-        ticketCategories.add(ticketCategory);
-
-        event.setTicketCategories(ticketCategories);
-        event.setAvailableTickets(500);
-        event.setTrending(true);
-        event.setTicketsEmittedInTrendingPeriod(0L);
-
-        user = new User();
-        user.setUserName("adminUser");
-        user.setRoles(Set.of(new Role(ERole.ROLE_ADMIN)));
+        event = createSampleEvent(now, "event", "National Stadium", 120.0, 500, true);
+        user = createAdminUser("adminUser");
         event.setEventOwner(user);
 
         eventItemDto = new EventItemDto(event.getEventId(),
@@ -123,6 +103,54 @@ public class EventServiceTest {
                 event.getEventTicketPrice(),
                 event.getAvailableTickets(),
                 event.getTicketCategories().stream().map(TicketCategory::toTicketCategoryDto).toList());
+    }
+
+    private Event createSampleEvent(LocalDateTime date, String name, String location,
+                                    double price, int availableTickets, boolean isTrending) {
+        Event event = new Event();
+        event.setEventName(name);
+        event.setEventLocation(location);
+        event.setEventDate(date);
+        event.setEventTicketPrice(price);
+
+        List<TicketCategory> ticketCategories = new ArrayList<>();
+        TicketCategory ticketCategory = new TicketCategory();
+        ticketCategory.setName("Pista");
+        ticketCategory.setPrice(150.0);
+        ticketCategory.setAvailableCategoryTickets(availableTickets);
+        ticketCategory.setEvent(event);
+        ticketCategories.add(ticketCategory);
+
+        event.setTicketCategories(ticketCategories);
+        event.setAvailableTickets(availableTickets);
+        event.setTrending(isTrending);
+        event.setTicketsEmittedInTrendingPeriod(0L);
+
+        return event;
+    }
+
+    private User createAdminUser(String username) {
+        User user = new User();
+        user.setUserName(username);
+        user.setRoles(Set.of(new Role(ERole.ROLE_ADMIN)));
+        return user;
+    }
+
+    private Event createSimpleEvent(String name, String location, LocalDateTime date,
+                                    User owner, double price, int tickets, boolean trending) {
+        return new Event(
+                UUID.randomUUID(),
+                location,
+                name,
+                date,
+                new HashSet<>(),
+                owner,
+                price,
+                tickets,
+                new ArrayList<>(),
+                trending,
+                0L
+        );
     }
 
     @Test
@@ -136,11 +164,11 @@ public class EventServiceTest {
         when(eventRepository.save(any(Event.class))).thenReturn(event);
         when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any()))
                 .thenReturn(List.of(new TicketCategory(
-                    20,
-                    event,
-                    20.0,
-                    "prime_ticket",
-                    1))
+                        20,
+                        event,
+                        20.0,
+                        "prime_ticket",
+                        1))
                 );
 
         // Act
@@ -165,7 +193,6 @@ public class EventServiceTest {
                 ResponseStatusException.class,
                 () -> eventsService.createEvent(createEventRequest)
         );
-
 
         verify(eventRepository, never()).save(any(Event.class));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
@@ -281,40 +308,11 @@ public class EventServiceTest {
         int page = 0;
         int pageSize = 2;
 
-        Event event1 = new Event(
-                UUID.randomUUID(),
-                "Alfenas",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                null,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
+        LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
+        Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, null, 150.00, 1000, false);
+        Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, null, 150.00, 1000, false);
 
-        Event event2 = new Event(
-                UUID.randomUUID(),
-                "Botelhos",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(),
-                null,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
-
-
-        List<Event> eventList = List.of(
-                event1,
-                event2
-        );
-
+        List<Event> eventList = List.of(event1, event2);
         Page<Event> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
 
         when(eventRepository.findAll(any(PageRequest.class))).thenReturn(eventPage);
@@ -325,7 +323,7 @@ public class EventServiceTest {
         assertEquals(page, result.page());
         assertEquals(pageSize, result.pageSize());
         assertEquals(5, result.totalElements());
-        assertEquals(3, result.totalPages()); // totalPages = ceil(5/2) = 3
+        assertEquals(3, result.totalPages());
         assertEquals(2, result.events().size());
 
         ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
@@ -343,39 +341,11 @@ public class EventServiceTest {
         int page = 0;
         int pageSize = 2;
 
-        Event event1 = new Event(
-                UUID.randomUUID(),
-                "Alfenas",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                user,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
+        LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
+        Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, user, 150.00, 1000, false);
+        Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, user, 150.00, 1000, false);
 
-        Event event2 = new Event(
-                UUID.randomUUID(),
-                "Botelhos",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(),
-                user,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
-
-        List<Event> eventList = List.of(
-                event1,
-                event2
-        );
-
+        List<Event> eventList = List.of(event1, event2);
         Page<Event> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
@@ -389,7 +359,7 @@ public class EventServiceTest {
         assertEquals(page, result.page());
         assertEquals(pageSize, result.pageSize());
         assertEquals(5, result.totalElements());
-        assertEquals(3, result.totalPages()); // totalPages = ceil(5/2) = 3
+        assertEquals(3, result.totalPages());
         assertEquals(2, result.events().size());
 
         ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
@@ -403,34 +373,10 @@ public class EventServiceTest {
 
     @Test
     void getTopTrendingEvents_ShouldReturnTrendingEventsCorrectly() {
-
-        Event event1 = new Event(
-                UUID.randomUUID(),
-                "Alfenas",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                null,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
-
-        Event event2 = new Event(
-                UUID.randomUUID(),
-                "Botelhos",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                null, // User (pode passar um usuário se tiver)
-                150.00,
-                1000,
-                new ArrayList<>(), // List<TicketCategory>
-                true,
-                0L
-        );
+        // Arrange
+        LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
+        Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, null, 150.00, 1000, false);
+        Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, null, 150.00, 1000, true);
 
         when(eventRepository.findAll()).thenReturn(List.of(event1, event2));
 
@@ -444,34 +390,10 @@ public class EventServiceTest {
 
     @Test
     void getTopTrendingEvents_ShouldReturnAnEmptyListWhenNoEventsAreTrending() {
-
-        Event event1 = new Event(
-                UUID.randomUUID(),
-                "Alfenas",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                null,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
-
-        Event event2 = new Event(
-                UUID.randomUUID(),
-                "Botelhos",
-                "Show de Rock",
-                LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                null, // User (pode passar um usuário se tiver)
-                150.00,
-                1000,
-                new ArrayList<>(), // List<TicketCategory>
-                false,
-                0L
-        );
+        // Arrange
+        LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
+        Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, null, 150.00, 1000, false);
+        Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, null, 150.00, 1000, false);
 
         when(eventRepository.findAll()).thenReturn(List.of(event1, event2));
 
@@ -484,26 +406,19 @@ public class EventServiceTest {
 
     @Test
     void findEventById_ShouldReturnAnEventGivenHisId() {
-
+        // Arrange
         UUID id = UUID.randomUUID();
-        Event event = new Event(
-                id,
-                "Alfenas",
-                "Show de Rock",
+        Event event = createSimpleEvent("Show de Rock", "Alfenas",
                 LocalDateTime.of(2025, 8, 15, 20, 30),
-                new HashSet<>(), // Set<Ticket>
-                null,
-                150.00,
-                1000,
-                new ArrayList<>(),
-                false,
-                0L
-        );
+                null, 150.00, 1000, false);
+        event.setEventId(id);
 
         when(eventRepository.findById(id)).thenReturn(Optional.of(event));
 
+        // Act
         var res = eventsService.findEventEntityById(id);
 
+        // Assert
         assertEquals(event, res);
     }
 }
