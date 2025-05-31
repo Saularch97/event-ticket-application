@@ -6,5 +6,5 @@ import com.example.booking.controller.dto.UserDto;
 
 import java.util.UUID;
 
-public record CreateTicketResponse(UUID ticketId, EventItemDto eventItem, UserDto userDto, TicketCategoryDto ticketCategoryDto) {
+public record CreateTicketResponse(UUID ticketId, UUID eventId, UUID userId, Integer ticketCategoryId) {
 }

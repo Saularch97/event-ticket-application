@@ -8,7 +8,7 @@ import com.example.booking.controller.request.EmmitTicketRequest;
 import java.util.List;
 import java.util.UUID;
 
-public interface TicketsService {
+public interface TicketService {
     TicketItemDto emmitTicket(EmmitTicketRequest request);
     void deleteEmittedTicket(UUID ticketId);
     TicketsDto listAllUserTickets(int page, int pageSize);

@@ -69,7 +69,7 @@ class AuthServiceTest {
     private Role userRole;
     private Role adminRole;
     private RefreshToken refreshToken;
-    // TODO arrumar inline-mock-maker
+
     @BeforeEach
     void setUp() {
         loginRequest = new LoginRequest("testuser", "password");

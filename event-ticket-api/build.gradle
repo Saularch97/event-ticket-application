@@ -46,9 +46,10 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.springframework.amqp:spring-rabbit-test'
+	testImplementation 'org.mockito:mockito-core:5.18.0'
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	
+
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	compileOnly("org.springframework.boot:spring-boot-devtools")
 }
@@ -61,4 +62,11 @@ dependencyManagement {
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	doFirst {
+		def mockitoJar = configurations.testRuntimeClasspath.resolve().find { it.name.contains("mockito-core") }
+		if (mockitoJar) {
+			jvmArgs "-javaagent:${mockitoJar.absolutePath}", "-Xshare:off"
+		}
+	}
 }

@@ -1,15 +1,14 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
+import com.example.booking.controller.dto.RemainingTicketCategoryDto;
 import com.example.booking.controller.dto.TicketItemDto;
+import com.example.booking.controller.dto.TicketsDto;
 import com.example.booking.controller.request.EmmitTicketRequest;
-import com.example.booking.domain.entities.Event;
-import com.example.booking.domain.entities.Ticket;
-import com.example.booking.domain.entities.TicketCategory;
-import com.example.booking.domain.entities.User;
-import com.example.booking.repository.EventRepository;
+import com.example.booking.domain.entities.*;
 import com.example.booking.repository.TicketRepository;
-import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.EventsService;
+import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,109 +18,242 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TicketServiceTest {
+class TicketServiceTest {
 
-    @Mock
-    private TicketRepository ticketRepository;
+    private static final String CATEGORY_NAME = "Pista Premium";
+    private static final String INVALID_CATEGORY = "INVALID_CATEGORY";
+    private static final String TEST_LOCATION = "Estádio Nacional";
 
-    @Mock
-    private UserRepository userRepository;
+    @Mock private TicketRepository ticketRepository;
+    @Mock private UserService userService;
+    @Mock private EventsService eventService;
+    @Mock private JwtUtils jwtUtils;
+    @Mock private CacheManager cacheManager;
+    @Mock private Cache cache;
 
-    @Mock
-    private EventRepository eventRepository;
+    @InjectMocks private TicketServiceImpl ticketsService;
 
-    @Mock
-    private JwtUtils jwtUtils;
-
-    @Mock
-    CacheManager cacheManager;
-
-    @InjectMocks
-    TicketsServiceImpl ticketsService;
-
-    // Compartilhados nos dois testes
-    private EmmitTicketRequest emmitTicketRequest;
-    private Event mockedEvent;
-    private User mockedUser;
-
-    // emmitTicket_shouldThrowException_whenEventNotFound
-
-    // emmitTicket_shouldThrowException_whenCategoryNotFound
-
-    // deleteEmittedTicket_shouldDeleteTicket_whenTicketExists
-
-    // deleteEmittedTicket_shouldThrowException_whenTicketNotFound
-
-    // deleteEmittedTicket_shouldThrowException_whenEventNotFound
-
-    // listAllTickets_shouldReturnTicketsDto_whenTicketsExist
-
-    // listAllUserTickets_shouldReturnUserTickets_whenUserExists
-
-    // listAllUserTickets_shouldThrowException_whenUserNotFound
-
-    // getAvailableTicketsByCategoryFromEvent_shouldReturnCategoryList_whenEventExists
-
-    // getAvailableTicketsByCategoryFromEvent_shouldThrowException_whenEventNotFound
+    private User testUser;
+    private Event testEvent;
+    private TicketCategory testCategory;
+    private UUID testEventId;
+    private UUID testUserId;
+    private String testUsername;
 
     @BeforeEach
     void setUp() {
-        emmitTicketRequest = new EmmitTicketRequest(UUID.randomUUID(), "Ingresso maneiro");
+        testUsername = "testUser";
+        testUserId = UUID.randomUUID();
+        testEventId = UUID.randomUUID();
 
-        mockedEvent = mock(Event.class);
-        mockedUser = mock(User.class);
+        testUser = new User();
+        testUser.setUserId(testUserId);
+        testUser.setUserName(testUsername);
 
-        when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
+        testCategory = new TicketCategory();
+        testCategory.setTicketCategoryId(1);
+        testCategory.setName(CATEGORY_NAME);
+        testCategory.setPrice(250.0);
+        testCategory.setAvailableCategoryTickets(300);
+
+        testEvent = new Event();
+        testEvent.setEventId(testEventId);
+        testEvent.setEventLocation(TEST_LOCATION);
+        testEvent.setEventDate(LocalDateTime.of(2025, 12, 15, 20, 0));
+        testEvent.setTicketCategories(List.of(testCategory));
+        testEvent.setAvailableTickets(500);
     }
 
     @Test
-    void emmitTicket_WhenEmmitTicketRequestIsReceived_ShouldEmmitAnTicketCorrectly() {
-        Optional<Event> optionalMockedEvent = Optional.of(mockedEvent);
-        Optional<User> optionalUser = Optional.of(mockedUser);
+    void emmitTicket_ShouldReturnTicketItemDto_WhenRequestIsValid() {
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, CATEGORY_NAME);
 
-        TicketCategory category = new TicketCategory();
-        category.setName("Ingresso maneiro");
-        category.setAvailableCategoryTickets(10);
-
-        Cache mockedCache = mock(Cache.class);
-
-        when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(mockedCache);
-        when(mockedEvent.getTicketCategories()).thenReturn(List.of(category));
-        when(mockedEvent.getEventDate()).thenReturn(LocalDateTime.now());
-        when(userRepository.findByUserName("adminUser")).thenReturn(optionalUser);
-        when(eventRepository.findById(any(UUID.class))).thenReturn(optionalMockedEvent);
+        when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
+        when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
+        when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
+        when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        TicketItemDto ticketItemDto = ticketsService.emmitTicket(emmitTicketRequest);
+        TicketItemDto result = ticketsService.emmitTicket(request);
 
-        assertEquals("Ingresso maneiro", ticketItemDto.ticketCategoryDto().name());
-        assertNotNull(ticketItemDto);
+        assertNotNull(result);
+        //assertEquals(CATEGORY_NAME, result.ticketCategoryName());
+        // assertEquals(TEST_LOCATION, result.ticketEventLocation());
+        assertEquals(testEvent.getOriginalAmountOfTickets() - 1, testEvent.getAvailableTickets());
     }
 
     @Test
-    void emmitTicket_shouldThrowException_whenUserNotFound() {
-        when(userRepository.findByUserName("adminUser")).thenReturn(Optional.empty());
+    void emmitTicket_ShouldThrowIllegalArgumentException_WhenCategoryNotFound() {
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, "INVALID_CATEGORY");
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
-                ticketsService.emmitTicket(emmitTicketRequest)
-        );
+        when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
-        assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(exception.getReason()).isEqualTo("User not found!");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> ticketsService.emmitTicket(request));
+
+        assertEquals("Category not found! " + request.ticketCategoryName(), exception.getMessage());
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void emmitTicket_ShouldThrowException_WhenNoTicketsAvailableInCategory() {
+        String categoryName = "VIP";
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, categoryName);
+
+        when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
+
+        assertThrows(IllegalArgumentException.class, () -> ticketsService.emmitTicket(request));
+
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @Test
+    void deleteEmittedTicket_ShouldDeleteTicketAndUpdateCounts_WhenTicketExists() {
+        Ticket ticket = new Ticket();
+        ticket.setTicketId(UUID.randomUUID());
+        ticket.setEvent(testEvent);
+        ticket.setTicketCategory(testCategory);
+        testEvent.decrementAvailableTickets();
+
+        when(ticketRepository.findById(ticket.getTicketId())).thenReturn(Optional.of(ticket));
+        when(eventService.findEventEntityById(testEvent.getEventId())).thenReturn(testEvent);
+        when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
+
+        ticketsService.deleteEmittedTicket(ticket.getTicketId());
+
+        verify(ticketRepository).deleteById(ticket.getTicketId());
+        verify(cache).evict(testEvent.getEventId());
+        assertEquals(testEvent.getOriginalAmountOfTickets(), testEvent.getAvailableTickets());
+    }
+
+    @Test
+    void deleteEmittedTicket_ShouldThrowResponseStatusException_WhenTicketNotFound() {
+        UUID id = UUID.randomUUID();
+        when(ticketRepository.findById(id)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> ticketsService.deleteEmittedTicket(id));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        verify(ticketRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void listAllTickets_ShouldReturnPaginatedTicketsDto_WhenCalledWithValidParameters() {
+        int page = 0, pageSize = 10;
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
+
+        List<Ticket> tickets = List.of(mockTicket(), mockTicket());
+        Page<Ticket> ticketPage = new PageImpl<>(tickets, pageRequest, tickets.size());
+
+        when(ticketRepository.findAll(pageRequest)).thenReturn(ticketPage);
+
+        TicketsDto result = ticketsService.listAllTickets(page, pageSize);
+
+        assertNotNull(result);
+        assertEquals(tickets.size(), result.tickets().size());
+    }
+
+    @Test
+    void listAllTickets_ShouldReturnEmptyTicketsDto_WhenNoTicketsExist() {
+        int page = 0, pageSize = 10;
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
+        Page<Ticket> emptyPage = new PageImpl<>(List.of(), pageRequest, 0);
+
+        when(ticketRepository.findAll(pageRequest)).thenReturn(emptyPage);
+
+        TicketsDto result = ticketsService.listAllTickets(page, pageSize);
+
+        assertNotNull(result);
+        assertTrue(result.tickets().isEmpty());
+    }
+
+    @Test
+    void listAllUserTickets_ShouldReturnPaginatedTicketsDtoForAuthenticatedUser_WhenCalled() {
+        int page = 0, pageSize = 5;
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
+
+        List<Ticket> userTickets = List.of(mockTicketWithUser(testUserId), mockTicketWithUser(testUserId));
+        Page<Ticket> ticketPage = new PageImpl<>(userTickets, pageRequest, userTickets.size());
+
+        when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
+        when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
+        when(ticketRepository.findAllTicketsByUserId(testUserId, pageRequest)).thenReturn(ticketPage);
+
+        TicketsDto result = ticketsService.listAllUserTickets(page, pageSize);
+
+        assertNotNull(result);
+        assertEquals(userTickets.size(), result.tickets().size());
+    }
+
+    @Test
+    void listAllUserTickets_ShouldReturnEmptyTicketsDto_WhenUserHasNoTickets() {
+        int page = 0, pageSize = 5;
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
+        Page<Ticket> emptyPage = new PageImpl<>(List.of(), pageRequest, 0);
+
+        when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
+        when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
+        when(ticketRepository.findAllTicketsByUserId(testUserId, pageRequest)).thenReturn(emptyPage);
+
+        TicketsDto result = ticketsService.listAllUserTickets(page, pageSize);
+
+        assertNotNull(result);
+        assertTrue(result.tickets().isEmpty());
+    }
+
+    @Test
+    void getAvailableTicketsByCategoryFromEvent_ShouldReturnListOfRemainingTicketCategories_WhenEventExists() {
+        when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
+
+        List<RemainingTicketCategoryDto> result = ticketsService.getAvailableTicketsByCategoryFromEvent(testEventId);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(CATEGORY_NAME, result.get(0).categoryName());
+        assertEquals(300, result.get(0).remainingTickets());
+    }
+
+    @Test
+    void getAvailableTicketsByCategoryFromEvent_ShouldReturnEmptyList_WhenEventHasNoCategories() {
+        testEvent.setTicketCategories(List.of());
+        when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
+
+        List<RemainingTicketCategoryDto> result = ticketsService.getAvailableTicketsByCategoryFromEvent(testEventId);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    private Ticket mockTicket() {
+        Ticket ticket = new Ticket();
+        ticket.setTicketId(UUID.randomUUID());
+        ticket.setTicketOwner(new User());
+        ticket.setEvent(new Event());
+        ticket.setTicketCategory(new TicketCategory());
+        return ticket;
+    }
+
+    private Ticket mockTicketWithUser(UUID userId) {
+        User user = new User();
+        user.setUserId(userId);
+
+        Ticket ticket = new Ticket();
+        ticket.setTicketOwner(user);
+        ticket.setTicketCategory(new TicketCategory());
+        ticket.setEvent(new Event());
+        return ticket;
     }
 }

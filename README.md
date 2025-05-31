@@ -31,5 +31,9 @@ The system is designed using a microservices architecture with asynchronous mess
 - The recommendation service performs a geolocation query and returns nearby events.
 
 
+## TODO
+[] - Evaluate the use of tilt or localstack]
+[] - Use Terraform for infra
+
 TODO:
  - https://www.javaguides.net/2025/02/top-10-best-practices-for-spring-data.html#google_vignette

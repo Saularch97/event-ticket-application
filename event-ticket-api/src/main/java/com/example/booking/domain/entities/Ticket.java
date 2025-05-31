@@ -38,6 +38,20 @@ public class Ticket {
     @Column(name = "emitted_at")
     private LocalDateTime emittedAt = LocalDateTime.now();
 
+    @Column(name = "ticket_event_location")
+    private String ticketEventLocation;
+
+    @Column(name = "ticket_event_date")
+    private String ticketEventDate;
+
+    @Column(name = "ticket_category_name")
+    private String ticketCategoryName;
+
+    @Column(name = "ticket_price")
+    private Double ticketPrice;
+
+
+
     public Order getOrder() {
         return order;
     }
@@ -46,18 +60,29 @@ public class Ticket {
         this.order = order;
     }
 
-    public Ticket(UUID ticketId, Event event, User ticketOwner, TicketCategory ticketCategory) {
+    public Ticket(UUID ticketId,
+                  Event event,
+                  User ticketOwner,
+                  Order order,
+                  TicketCategory ticketCategory,
+                  LocalDateTime emittedAt,
+                  String ticketEventLocation,
+                  String ticket,
+                  String ticketCategoryName,
+                  Double ticketPrice) {
         this.ticketId = ticketId;
         this.event = event;
         this.ticketOwner = ticketOwner;
+        this.order = order;
         this.ticketCategory = ticketCategory;
+        this.emittedAt = emittedAt;
+        this.ticketEventLocation = ticketEventLocation;
+        this.ticketEventDate = ticket;
+        this.ticketCategoryName = ticketCategoryName;
+        this.ticketPrice = ticketPrice;
     }
 
     public Ticket() {
-    }
-
-    public LocalDateTime getEmittedAtAt() {
-        return emittedAt;
     }
 
     public void setEmittedAtAt(LocalDateTime emittedAt) {
@@ -104,12 +129,44 @@ public class Ticket {
         this.ticketCategory = ticketCategory;
     }
 
+    public Double getTicketPrice() {
+        return ticketPrice;
+    }
+
+    public void setTicketPrice(Double ticketPrice) {
+        this.ticketPrice = ticketPrice;
+    }
+
+    public String getTicketCategoryName() {
+        return ticketCategoryName;
+    }
+
+    public void setTicketCategoryName(String ticketCategoryName) {
+        this.ticketCategoryName = ticketCategoryName;
+    }
+
+    public String getTicketEventDate() {
+        return ticketEventDate;
+    }
+
+    public void setTicketEventDate(String ticketEventDate) {
+        this.ticketEventDate = ticketEventDate;
+    }
+
+    public String getTicketEventLocation() {
+        return ticketEventLocation;
+    }
+
+    public void setTicketEventLocation(String ticketEventLocation) {
+        this.ticketEventLocation = ticketEventLocation;
+    }
+
     public static TicketItemDto toTicketItemDto(Ticket ticket) {
         return new TicketItemDto(
                 ticket.getTicketId(),
-                Event.toEventItemDto(ticket.getEvent()),
-                User.toUserDto(ticket.getTicketOwner()),
-                TicketCategory.toTicketCategoryDto(ticket.getTicketCategory())
+                ticket.getEvent().getEventId(),
+                ticket.getTicketOwner().getUserId(),
+                ticket.getTicketCategory().getTicketCategoryId()
         );
     }
 }
