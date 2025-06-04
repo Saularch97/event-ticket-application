@@ -64,11 +64,24 @@ public class JwtUtils {
     }
 
     public ResponseCookie getCleanJwtCookie() {
-        return ResponseCookie.from(jwtCookie, null).path("/api").build();
+        return ResponseCookie.from(jwtCookie, "")
+                .path("/api")
+                .maxAge(0) // 👈 ESSENCIAL
+                .httpOnly(true)
+                .sameSite("None")
+                .secure(true)
+                .build();
     }
 
+
     public ResponseCookie getCleanJwtRefreshCookie() {
-        return ResponseCookie.from(jwtRefreshCookie, null).path("/api/auth/refreshtoken").build();
+        return ResponseCookie.from(jwtRefreshCookie, "")
+                .path("/api/auth/refreshtoken")
+                .maxAge(0) // 👈 ESSENCIAL
+                .httpOnly(true)
+                .sameSite("None")
+                .secure(true)
+                .build();
     }
 
     public String getUserNameFromJwtToken(String token) {
