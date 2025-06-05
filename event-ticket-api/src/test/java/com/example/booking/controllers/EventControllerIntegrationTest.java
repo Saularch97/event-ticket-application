@@ -6,6 +6,7 @@ import com.example.booking.messaging.EventRequestProducerImpl;
 import com.example.booking.repository.EventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
 class EventControllerIntegrationTest {
@@ -71,24 +73,25 @@ class EventControllerIntegrationTest {
     @BeforeEach
     void cleanUp() {
         eventRepository.deleteAll();
-        redisTemplate.getConnectionFactory().getConnection().flushAll(); // limpa Redis
+        Assertions.assertNotNull(redisTemplate.getConnectionFactory());
+        redisTemplate.getConnectionFactory().getConnection().serverCommands();
     }
 
     @Test
     void testCreateEvent() throws Exception {
 
-        String jwt = mockMvc.perform(post("/api/auth/signin")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                {
-                    "username": "admin",
-                    "password": "123"
-                }
-                """))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getCookie("booking-jwt") // ou getHeader("Authorization")
+        String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "username": "admin",
+                                            "password": "123"
+                                        }
+                                        """))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("test-jwt"))
                 .getValue();
 
 
@@ -106,7 +109,7 @@ class EventControllerIntegrationTest {
         );
 
         mockMvc.perform(post("/api/events")
-            .cookie(new Cookie("booking-jwt", jwt))
+            .cookie(new Cookie("test-jwt", jwt))
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -117,22 +120,22 @@ class EventControllerIntegrationTest {
     @Test
     void testListTrendingEventsInitiallyEmpty() throws Exception {
 
-        String jwt = mockMvc.perform(post("/api/auth/signin")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                {
-                    "username": "admin",
-                    "password": "123"
-                }
-                """))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getCookie("booking-jwt") // ou getHeader("Authorization")
+        String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "username": "admin",
+                                            "password": "123"
+                                        }
+                                        """))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("test-jwt")) // ou getHeader("Authorization")
                 .getValue();
 
 
-        mockMvc.perform(get("/api/trending").cookie(new Cookie("booking-jwt", jwt)))
+        mockMvc.perform(get("/api/trending").cookie(new Cookie("test-jwt", jwt)))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
     }
@@ -140,21 +143,20 @@ class EventControllerIntegrationTest {
     @Test
     void testDeleteEvent() throws Exception {
 
-        String jwt = mockMvc.perform(post("/api/auth/signin")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                {
-                    "username": "admin",
-                    "password": "123"
-                }
-                """))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getCookie("booking-jwt") // ou getHeader("Authorization")
+        String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "username": "admin",
+                                            "password": "123"
+                                        }
+                                        """))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("test-jwt"))
                 .getValue();
 
-        // Primeiro cria o evento
         CreateEventRequest request = new CreateEventRequest(
                 "Show do Legado",
                 "22/04/2025",
@@ -170,16 +172,14 @@ class EventControllerIntegrationTest {
 
 
         String content = mockMvc.perform(post("/api/events")
-                        .cookie(new Cookie("booking-jwt", jwt))
+                        .cookie(new Cookie("test-jwt", jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andReturn().getResponse().getContentAsString();
 
-        // Extrai o ID do evento da resposta
         String eventId = objectMapper.readTree(content).get("eventId").asText();
 
-        // Deleta o evento
-        mockMvc.perform(delete("/api/events/" + eventId).cookie(new Cookie("booking-jwt", jwt)))
+        mockMvc.perform(delete("/api/events/" + eventId).cookie(new Cookie("test-jwt", jwt)))
                 .andExpect(status().isNoContent());
     }
 }
