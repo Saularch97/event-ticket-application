@@ -4,7 +4,6 @@ import com.example.booking.controller.request.LoginRequest;
 import com.example.booking.controller.request.SignupRequest;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repository.RefreshTokenRepository;
-import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class AuthControllerIntegrationTest {
 
+    @SuppressWarnings("resource")
     @Container
     public static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:16")
             .withDatabaseName("testdb")
@@ -63,16 +63,12 @@ class AuthControllerIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     AuthService authService;
 
     private final String testUsername = "testuser";
-    private final String testEmail = "testuser@example.com";
     private final String testPassword = "testpassword";
 
     @BeforeEach
@@ -80,6 +76,7 @@ class AuthControllerIntegrationTest {
         userRepository.deleteAll();
         refreshTokenRepository.deleteAll();
 
+        String testEmail = "testuser@example.com";
         SignupRequest request = new SignupRequest(testUsername, testEmail, Set.of(ERole.ROLE_USER.name()), testPassword);
 
         mockMvc.perform(post("/api/auth/signup")
