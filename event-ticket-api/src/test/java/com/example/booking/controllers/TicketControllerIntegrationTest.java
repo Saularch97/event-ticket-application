@@ -15,16 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
@@ -38,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
-public class TicketControllerIntegrationTest {
+public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     private static final String API_BASE_URL = "/api";
     private static final String TICKET_URL = API_BASE_URL + "/ticket";
@@ -50,18 +46,6 @@ public class TicketControllerIntegrationTest {
     private static final String JWT_COOKIE_NAME = "test-jwt";
     private static final String CATEGORY_VIP = "VIP";
     private static final String CATEGORY_PISTA = "Pista";
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
-
-    @Container
-    @ServiceConnection
-    static GenericContainer<?> redis = new GenericContainer<>("redis:7.2.4-alpine")
-            .withExposedPorts(6379);
 
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
@@ -91,7 +75,7 @@ public class TicketControllerIntegrationTest {
         emmitTicketRequest(CATEGORY_VIP)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketId", notNullValue()))
-                .andExpect(jsonPath("$.ticketCategoryId", is(1)));
+                .andExpect(jsonPath("$.ticketCategoryId", is(9)));
     }
 
     @Test
