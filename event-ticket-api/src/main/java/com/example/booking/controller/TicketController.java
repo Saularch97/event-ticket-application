@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -32,12 +34,19 @@ public class TicketController {
 
         var savedTicket = ticketService.emmitTicket(request);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedTicket.ticketId())
+                .toUri();
+
+        // Usa o método .created(), que já define o status 201 e o header Location
+        return ResponseEntity.created(location).body(
                 new CreateTicketResponse(
-                    savedTicket.ticketId(),
-                    savedTicket.eventId(),
-                    savedTicket.userId(),
-                    savedTicket.ticketCategoryId()
+                        savedTicket.ticketId(),
+                        savedTicket.eventId(),
+                        savedTicket.userId(),
+                        savedTicket.ticketCategoryId()
                 )
         );
     }

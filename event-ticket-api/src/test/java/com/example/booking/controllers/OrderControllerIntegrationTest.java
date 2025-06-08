@@ -1,10 +1,12 @@
 package com.example.booking.controllers;
 
 import com.example.booking.controller.request.CreateEventRequest;
+import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.controller.request.EmmitTicketRequest;
 import com.example.booking.messaging.EventRequestProducerImpl;
 import com.example.booking.repository.EventRepository;
+import com.example.booking.repository.TicketOrderRepository;
 import com.example.booking.repository.TicketRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +24,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -39,29 +40,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
-public class TicketControllerIntegrationTest {
+public class OrderControllerIntegrationTest {
 
     private static final String API_BASE_URL = "/api";
+    private static final String ORDER_URL = API_BASE_URL + "/order";
+    private static final String ORDERS_URL = API_BASE_URL + "/orders";
     private static final String TICKET_URL = API_BASE_URL + "/ticket";
-    private static final String TICKETS_URL = API_BASE_URL + "/tickets";
-    private static final String USER_TICKETS_URL = API_BASE_URL + "/userTickets";
-    private static final String AVAILABLE_TICKETS_URL = API_BASE_URL + "/availableTickets";
     private static final String EVENTS_URL = API_BASE_URL + "/events";
     private static final String AUTH_SIGNIN_URL = API_BASE_URL + "/auth/signin";
     private static final String JWT_COOKIE_NAME = "test-jwt";
     private static final String CATEGORY_VIP = "VIP";
-    private static final String CATEGORY_PISTA = "Pista";
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
-
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16").withDatabaseName("testdb").withUsername("test").withPassword("test");
     @Container
-    static GenericContainer<?> redis = new GenericContainer<>("redis:7.2.4-alpine")
-            .withExposedPorts(6379);
-
+    static GenericContainer<?> redis = new GenericContainer<>("redis:7.2.4-alpine").withExposedPorts(6379);
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
 
@@ -71,7 +64,7 @@ public class TicketControllerIntegrationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
+        registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379).toString());
         registry.add("eureka.client.enabled", () -> "false");
     }
 
@@ -79,130 +72,113 @@ public class TicketControllerIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private EventRepository eventRepository;
     @Autowired private TicketRepository ticketRepository;
+    @Autowired private TicketOrderRepository orderRepository; // Repositório de Pedidos
     @Autowired private RedisTemplate<String, String> redisTemplate;
 
     private String jwt;
-    private UUID eventId;
+    private UUID ticketId;
 
     @BeforeEach
     void setup() throws Exception {
+        orderRepository.deleteAll();
         ticketRepository.deleteAll();
         eventRepository.deleteAll();
         Assertions.assertNotNull(redisTemplate.getConnectionFactory());
-        redisTemplate.getConnectionFactory().getConnection().serverCommands();
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
 
         this.jwt = obtainJwt();
-        this.eventId = createTestEvent();
+        UUID eventId = createTestEvent();
+        this.ticketId = createTestTicket(eventId);
     }
 
     @Test
-    void shouldEmmitNewTicketSuccessfully() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP)
+    void shouldCreateNewOrderSuccessfully() throws Exception {
+        var createOrderRequest = new CreateOrderRequest(List.of(this.ticketId));
+
+        mockMvc.perform(post(ORDER_URL)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createOrderRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.ticketId", notNullValue()))
-                .andExpect(jsonPath("$.ticketCategoryId", is(1)));
+                .andExpect(header().string("Location", containsString(ORDER_URL + "/")))
+                .andExpect(jsonPath("$.orderId", notNullValue()))
+                .andExpect(jsonPath("$.tickets.length()", is(1)))
+                .andExpect(jsonPath("$.tickets[0].ticketId", is(this.ticketId.toString())))
+                .andExpect(jsonPath("$.user.userName", is("admin")));
     }
 
     @Test
-    void shouldListAllEmittedTickets() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP);
-        emmitTicketRequest(CATEGORY_PISTA);
+    void shouldReturnErrorWhenCreatingOrderWithNoTickets() throws Exception {
+        var createOrderRequest = new CreateOrderRequest(List.of()); // Lista de tickets vazia
 
-        mockMvc.perform(get(TICKETS_URL)
+        mockMvc.perform(post(ORDER_URL)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createOrderRequest)))
+                .andExpect(status().isBadRequest()); // Validação do @Valid e @Size(min=1)
+    }
+
+    @Test
+    void shouldListUserOrders() throws Exception {
+        // Cria um pedido para ter o que listar
+        createTestOrder(List.of(this.ticketId));
+
+        mockMvc.perform(get(ORDERS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
                         .param("page", "0").param("pageSize", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tickets.length()", is(2)));
+                .andExpect(jsonPath("$.orders.length()", is(1)))
+                .andExpect(jsonPath("$.orders[0].orderId", notNullValue()));
     }
 
     @Test
-    void shouldListOnlyTicketsForAuthenticatedUser() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP);
-        emmitTicketRequest(CATEGORY_PISTA);
+    void shouldDeleteOrderSuccessfully() throws Exception {
+        UUID orderIdToDelete = createTestOrder(List.of(this.ticketId));
 
-        mockMvc.perform(get(USER_TICKETS_URL)
-                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
-                        .param("page", "0").param("pageSize", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tickets.length()", is(2)));
-    }
-
-    @Test
-    void shouldDeleteTicketAndRemoveItFromList() throws Exception {
-        MvcResult result = emmitTicketRequest(CATEGORY_VIP).andReturn();
-        UUID ticketIdToDelete = getUuidFromMvcResult(result, "ticketId");
-
-        emmitTicketRequest(CATEGORY_PISTA);
-
-        mockMvc.perform(delete(TICKET_URL + "/" + ticketIdToDelete)
+        mockMvc.perform(delete(ORDER_URL + "/" + orderIdToDelete)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get(TICKETS_URL)
-                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
-                        .param("page", "0").param("pageSize", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.tickets.length()", is(1)));
-    }
-
-    @Test
-    void shouldReturnCorrectCountOfAvailableTicketsByCategory() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP);
-
-        mockMvc.perform(get(AVAILABLE_TICKETS_URL + "/" + eventId)
+        mockMvc.perform(get(ORDERS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.availableTickets").isArray())
-                .andExpect(jsonPath("$.availableTickets[?(@.categoryName == 'VIP')].remainingTickets", contains(1)))
-                .andExpect(jsonPath("$.availableTickets[?(@.categoryName == 'Pista')].remainingTickets", contains(3)));
+                .andExpect(jsonPath("$.orders.length()", is(0)));
     }
 
     private String obtainJwt() throws Exception {
-        MvcResult result = mockMvc.perform(post(AUTH_SIGNIN_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "username": "admin",
-                                  "password": "123"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andReturn();
-
+        MvcResult result = mockMvc.perform(post(AUTH_SIGNIN_URL).contentType(MediaType.APPLICATION_JSON).content("{\"username\": \"admin\",\"password\": \"123\"}")).andExpect(status().isOk()).andReturn();
         return Objects.requireNonNull(result.getResponse().getCookie(JWT_COOKIE_NAME)).getValue();
     }
 
     private UUID createTestEvent() throws Exception {
-        var eventRequest = new CreateEventRequest(
-                "Show do Legado",
-                "22/04/2025",
-                22,
-                0,
-                "Alfenas",
-                30.0,
-                List.of(
-                        new CreateTicketCategoryRequest(CATEGORY_VIP, 200.0, 2),
-                        new CreateTicketCategoryRequest(CATEGORY_PISTA, 150.0, 3)
-                )
-        );
-
+        var eventRequest = new CreateEventRequest("Evento para Pedidos", "25/12/2025", 20, 0, "Online", 300.0,
+                List.of(new CreateTicketCategoryRequest(CATEGORY_VIP, 250.0, 10)));
         MvcResult result = mockMvc.perform(post(EVENTS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventRequest)))
-                .andExpect(status().isCreated())
-                .andReturn();
-
+                .andExpect(status().isCreated()).andReturn();
         return getUuidFromMvcResult(result, "eventId");
     }
 
-    private ResultActions emmitTicketRequest(String category) throws Exception {
-        var emmitRequest = new EmmitTicketRequest(eventId, category);
-
-        return mockMvc.perform(post(TICKET_URL)
+    private UUID createTestTicket(UUID eventId) throws Exception {
+        var emmitRequest = new EmmitTicketRequest(eventId, OrderControllerIntegrationTest.CATEGORY_VIP);
+        MvcResult result = mockMvc.perform(post(TICKET_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(emmitRequest)));
+                        .content(objectMapper.writeValueAsString(emmitRequest)))
+                .andExpect(status().isCreated()).andReturn();
+        return getUuidFromMvcResult(result, "ticketId");
+    }
+
+    private UUID createTestOrder(List<UUID> ticketIds) throws Exception {
+        var createOrderRequest = new CreateOrderRequest(ticketIds);
+        MvcResult result = mockMvc.perform(post(ORDER_URL)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createOrderRequest)))
+                .andExpect(status().isCreated()).andReturn();
+        return getUuidFromMvcResult(result, "orderId");
     }
 
     private UUID getUuidFromMvcResult(MvcResult result, String fieldName) throws Exception {

@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.UUID;
@@ -36,7 +37,11 @@ public class OrderController {
 
         var savedOrder = orderService.createNewOrder(dto, token);
 
-        URI location = UriUtil.getUriLocation("orderId", savedOrder.orderId());
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(savedOrder.orderId())
+                .toUri();
 
         return ResponseEntity.created(location).body(savedOrder);
     }
