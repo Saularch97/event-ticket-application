@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.br.recomendation.recomendation.services.RecomendationService;
+import com.br.recomendation.recomendation.services.RecommendationService;
 
 @Controller
 @RequestMapping("/api")
 public class NearestEventsController {
-    private final RecomendationService service;
+    private final RecommendationService service;
 
-    public NearestEventsController(RecomendationService service) {
+    public NearestEventsController(RecommendationService service) {
         this.service = service;
     }
 

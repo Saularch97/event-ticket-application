@@ -13,11 +13,11 @@ import com.br.recomendation.recomendation.repositories.RecomendationRepository;
 
 
 @Service
-public class RecomendationService {
+public class RecommendationService {
     
     private final RecomendationRepository repository;
 
-    public RecomendationService(RecomendationRepository repository) {
+    public RecommendationService(RecomendationRepository repository) {
         this.repository = repository;
     }
 
@@ -27,7 +27,7 @@ public class RecomendationService {
         
         var events = repository.findAll();
 
-        List<UUID> nearestEventsIds = events.stream()
+        return events.stream()
             .filter(event -> event.getLatitude() != null && event.getLongitude() != null && !event.getEventid().equals(currentEvent.getEventid()))
             .filter(event ->
                 calcularDistanciaKm(
@@ -37,8 +37,6 @@ public class RecomendationService {
             )
             .map(EventData::getEventid)
             .toList();
-
-        return nearestEventsIds;
     }   
 
 
@@ -49,7 +47,7 @@ public class RecomendationService {
 
 
     public double calcularDistanciaKm(double lat1, double lon1, double lat2, double lon2) {
-        final int R = 6371; // Raio da Terra em km
+        final int R = 6371;
 
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);

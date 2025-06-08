@@ -30,7 +30,6 @@ public class TicketController {
             @Valid
             @RequestBody EmmitTicketRequest request
     )  {
-        // TODO usar id do ticketCategory
         var savedTicket = ticketService.emmitTicket(request);
 
         URI location = ServletUriComponentsBuilder
