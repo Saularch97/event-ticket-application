@@ -16,9 +16,9 @@ import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.exception.TokenRefreshException;
-import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.AuthService;
+import com.example.booking.services.intefaces.RoleService;
 import com.example.booking.util.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,23 +36,22 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthServiceImpl implements AuthService {
-    // TODO usar um role service e userService
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            UserRepository userRepository,
-                           RoleRepository roleRepository,
+                           RoleService roleService,
                            PasswordEncoder encoder,
                            JwtUtils jwtUtils,
                            RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
         this.encoder = encoder;
         this.jwtUtils = jwtUtils;
         this.refreshTokenService = refreshTokenService;
@@ -101,25 +100,21 @@ public class AuthServiceImpl implements AuthService {
         Set<Role> roles = new HashSet<>();
 
         if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+            Role userRole = roleService.findRoleEntityByName(ERole.ROLE_USER);
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role) {
                     case "admin":
-                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        Role adminRole = roleService.findRoleEntityByName(ERole.ROLE_ADMIN);
                         roles.add(adminRole);
                         break;
                     case "mod":
-                        Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        Role modRole = roleService.findRoleEntityByName(ERole.ROLE_MODERATOR);
                         roles.add(modRole);
                         break;
                     default:
-                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        Role userRole = roleService.findRoleEntityByName(ERole.ROLE_USER);
                         roles.add(userRole);
                 }
             });

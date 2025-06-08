@@ -12,8 +12,8 @@ import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.exception.TokenRefreshException;
-import com.example.booking.repository.RoleRepository;
 import com.example.booking.repository.UserRepository;
+import com.example.booking.services.intefaces.RoleService;
 import com.example.booking.util.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class AuthServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private RoleRepository roleRepository;
+    private RoleService roleService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -140,7 +140,7 @@ class AuthServiceTest {
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(signupRequest.email())).thenReturn(false);
         when(passwordEncoder.encode(signupRequest.password())).thenReturn("encodedPassword");
-        when(roleRepository.findByName(ERole.ROLE_USER)).thenReturn(Optional.of(userRole));
+        when(roleService.findRoleEntityByName(ERole.ROLE_USER)).thenReturn(userRole);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
@@ -155,7 +155,7 @@ class AuthServiceTest {
         verify(userRepository).existsByUserName(signupRequest.username());
         verify(userRepository).existsByEmail(signupRequest.email());
         verify(passwordEncoder).encode(signupRequest.password());
-        verify(roleRepository).findByName(ERole.ROLE_USER);
+        verify(roleService).findRoleEntityByName(ERole.ROLE_USER);
         verify(userRepository).save(any(User.class));
     }
 
@@ -202,7 +202,7 @@ class AuthServiceTest {
         when(userRepository.existsByUserName(adminSignupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(adminSignupRequest.email())).thenReturn(false);
         when(passwordEncoder.encode(adminSignupRequest.password())).thenReturn("encodedPassword");
-        when(roleRepository.findByName(ERole.ROLE_ADMIN)).thenReturn(Optional.of(adminRole));
+        when(roleService.findRoleEntityByName(ERole.ROLE_ADMIN)).thenReturn(adminRole);
 
         User adminUser = new User();
         adminUser.setUserId(UUID.randomUUID());
@@ -221,8 +221,8 @@ class AuthServiceTest {
         assertEquals(adminUser.getUserId(), result.userId());
         assertEquals(adminUser.getUserName(), result.userName());
 
-        verify(roleRepository).findByName(ERole.ROLE_ADMIN);
-        verify(roleRepository, never()).findByName(ERole.ROLE_USER);
+        verify(roleService).findRoleEntityByName(ERole.ROLE_ADMIN);
+        verify(roleService, never()).findRoleEntityByName(ERole.ROLE_USER);
     }
 
     @Test

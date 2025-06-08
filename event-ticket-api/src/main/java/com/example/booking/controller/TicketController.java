@@ -8,7 +8,6 @@ import com.example.booking.controller.response.TicketsResponse;
 import com.example.booking.services.TicketServiceImpl;
 import com.example.booking.services.intefaces.TicketService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -27,11 +26,11 @@ public class TicketController {
     }
 
     @PostMapping("/ticket")
-    public ResponseEntity<CreateTicketResponse> orderTicket(
+    public ResponseEntity<CreateTicketResponse> emmitTicket(
             @Valid
             @RequestBody EmmitTicketRequest request
     )  {
-
+        // TODO usar id do ticketCategory
         var savedTicket = ticketService.emmitTicket(request);
 
         URI location = ServletUriComponentsBuilder
@@ -40,7 +39,6 @@ public class TicketController {
                 .buildAndExpand(savedTicket.ticketId())
                 .toUri();
 
-        // Usa o método .created(), que já define o status 201 e o header Location
         return ResponseEntity.created(location).body(
                 new CreateTicketResponse(
                         savedTicket.ticketId(),
