@@ -31,7 +31,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-	implementation 'org.springframework.boot:spring-boot-docker-compose'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
@@ -54,7 +53,6 @@ dependencies {
 	testImplementation 'org.testcontainers:postgresql:1.21.1'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	compileOnly("org.springframework.boot:spring-boot-devtools")
 }
 

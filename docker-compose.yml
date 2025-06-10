@@ -1,0 +1,134 @@
+# Define a versão do Docker Compose a ser usada
+version: '3.8'
+
+# Define todos os serviços (contêineres) que compõem a aplicação
+services:
+
+  # Serviço de Infraestrutura: Banco de Dados PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: booking_postgres_db
+    environment:
+      - POSTGRES_DB=bookingdb
+      - POSTGRES_USER=bookinguser
+      - POSTGRES_PASSWORD=bookingpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookinguser -d bookingdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Serviço de Infraestrutura: Cache com Redis
+  redis:
+    image: redis:7-alpine
+    container_name: booking_redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Serviço de Infraestrutura: Message Broker RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: booking_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_running", "-q" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Serviço de Aplicação: Service Discovery (Eureka)
+  discovery:
+    build: ./servicediscovery
+    container_name: discovery_service
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Serviço de Aplicação: API Principal (Producer)
+  booking:
+    build: ./event-ticket-api
+    container_name: booking_service
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bookingdb
+      - SPRING_DATASOURCE_USERNAME=bookinguser
+      - SPRING_DATASOURCE_PASSWORD=bookingpass
+      - SPRING_DATA_REDIS_HOST=redis
+      # <-- ATUALIZAÇÃO: Adiciona configuração do RabbitMQ -->
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    depends_on:
+      discovery:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # <-- ATUALIZAÇÃO: Adiciona dependência do RabbitMQ -->
+      rabbitmq:
+        condition: service_healthy
+
+  # Serviço de Aplicação: Recomendação (Consumer)
+  recomendation:
+    build: ./recomendation
+    container_name: recomendation_service
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka/
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+      # <-- ATUALIZAÇÃO: Adiciona configuração do RabbitMQ -->
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    depends_on:
+      discovery:
+        condition: service_healthy
+      # <-- ATUALIZAÇÃO: Adiciona dependência do RabbitMQ -->
+      rabbitmq:
+        condition: service_healthy
+
+  # Serviço de Aplicação: API Gateway
+  apigateway:
+    build: ./api-gateway
+    container_name: api_gateway_service
+    ports:
+      - "8081:8081"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka/
+    depends_on:
+      discovery:
+        condition: service_healthy
+      booking:
+        condition: service_started
+      recomendation:
+        condition: service_started
+
+# Define volumes nomeados para persistir os dados
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data: # <-- ATUALIZAÇÃO: Declara o volume do RabbitMQ
