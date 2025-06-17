@@ -1,0 +1,36 @@
+# Define o Deployment, que gerencia os Pods do Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        # Usa a imagem oficial e leve do Redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+---
+# Define o Service, que cria um ponto de acesso de rede estável para o Redis
+apiVersion: v1
+kind: Service
+metadata:
+  # Este é o nome que seus outros serviços usarão para se conectar ao Redis
+  name: redis
+spec:
+  selector:
+    # Encontra os Pods criados pelo Deployment com este rótulo
+    app: redis
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
