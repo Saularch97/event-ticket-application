@@ -5,7 +5,6 @@ import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.util.JwtUtils;
-import com.example.booking.util.UriUtil;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

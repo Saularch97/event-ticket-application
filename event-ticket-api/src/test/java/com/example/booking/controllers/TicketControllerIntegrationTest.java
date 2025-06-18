@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -34,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     private static final String API_BASE_URL = "/api";
@@ -64,7 +66,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
         ticketRepository.deleteAll();
         eventRepository.deleteAll();
         Assertions.assertNotNull(redisTemplate.getConnectionFactory());
-        redisTemplate.getConnectionFactory().getConnection().serverCommands();
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
 
         this.jwt = obtainJwt();
         this.eventId = createTestEvent();
@@ -72,16 +74,16 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldEmmitNewTicketSuccessfully() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP)
+        emmitTicketRequest(1)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketId", notNullValue()))
-                .andExpect(jsonPath("$.ticketCategoryId", is(9)));
+                .andExpect(jsonPath("$.ticketCategoryId", is(1)));
     }
 
     @Test
     void shouldListAllEmittedTickets() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP);
-        emmitTicketRequest(CATEGORY_PISTA);
+        emmitTicketRequest(1);
+        emmitTicketRequest(2);
 
         mockMvc.perform(get(TICKETS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
@@ -92,8 +94,8 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldListOnlyTicketsForAuthenticatedUser() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP);
-        emmitTicketRequest(CATEGORY_PISTA);
+        emmitTicketRequest(1);
+        emmitTicketRequest(2);
 
         mockMvc.perform(get(USER_TICKETS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
@@ -104,10 +106,10 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldDeleteTicketAndRemoveItFromList() throws Exception {
-        MvcResult result = emmitTicketRequest(CATEGORY_VIP).andReturn();
+        MvcResult result = emmitTicketRequest(1).andReturn();
         UUID ticketIdToDelete = getUuidFromMvcResult(result, "ticketId");
 
-        emmitTicketRequest(CATEGORY_PISTA);
+        emmitTicketRequest(1);
 
         mockMvc.perform(delete(TICKET_URL + "/" + ticketIdToDelete)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
@@ -122,7 +124,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldReturnCorrectCountOfAvailableTicketsByCategory() throws Exception {
-        emmitTicketRequest(CATEGORY_VIP);
+        emmitTicketRequest(1);
 
         mockMvc.perform(get(AVAILABLE_TICKETS_URL + "/" + eventId)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
@@ -171,8 +173,8 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
         return getUuidFromMvcResult(result, "eventId");
     }
 
-    private ResultActions emmitTicketRequest(String category) throws Exception {
-        var emmitRequest = new EmmitTicketRequest(eventId, category);
+    private ResultActions emmitTicketRequest(Integer ticketCategoryId) throws Exception {
+        var emmitRequest = new EmmitTicketRequest(eventId, ticketCategoryId);
 
         return mockMvc.perform(post(TICKET_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))

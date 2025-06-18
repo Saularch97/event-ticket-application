@@ -32,7 +32,6 @@ import static org.mockito.Mockito.*;
 class TicketServiceTest {
 
     private static final String CATEGORY_NAME = "Pista Premium";
-    private static final String INVALID_CATEGORY = "INVALID_CATEGORY";
     private static final String TEST_LOCATION = "Estádio Nacional";
 
     @Mock private TicketRepository ticketRepository;
@@ -48,6 +47,7 @@ class TicketServiceTest {
     private Event testEvent;
     private TicketCategory testCategory;
     private UUID testEventId;
+    private Integer testTicketCategoryId;
     private UUID testUserId;
     private String testUsername;
 
@@ -56,13 +56,14 @@ class TicketServiceTest {
         testUsername = "testUser";
         testUserId = UUID.randomUUID();
         testEventId = UUID.randomUUID();
+        testTicketCategoryId = 1;
 
         testUser = new User();
         testUser.setUserId(testUserId);
         testUser.setUserName(testUsername);
 
         testCategory = new TicketCategory();
-        testCategory.setTicketCategoryId(1);
+        testCategory.setTicketCategoryId(testTicketCategoryId);
         testCategory.setName(CATEGORY_NAME);
         testCategory.setPrice(250.0);
         testCategory.setAvailableCategoryTickets(300);
@@ -77,7 +78,7 @@ class TicketServiceTest {
 
     @Test
     void emmitTicket_ShouldReturnTicketItemDto_WhenRequestIsValid() {
-        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, CATEGORY_NAME);
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, testTicketCategoryId);
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
         when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
@@ -88,33 +89,31 @@ class TicketServiceTest {
         TicketItemDto result = ticketsService.emmitTicket(request);
 
         assertNotNull(result);
-        //assertEquals(CATEGORY_NAME, result.ticketCategoryName());
-        // assertEquals(TEST_LOCATION, result.ticketEventLocation());
         assertEquals(testEvent.getOriginalAmountOfTickets() - 1, testEvent.getAvailableTickets());
     }
 
     @Test
     void emmitTicket_ShouldThrowIllegalArgumentException_WhenCategoryNotFound() {
-        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, "INVALID_CATEGORY");
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, 2);
 
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> ticketsService.emmitTicket(request));
 
-        assertEquals("Category not found! " + request.ticketCategoryName(), exception.getMessage());
+        assertEquals("Ticket category not found for id: 2", exception.getMessage());
 
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
     @Test
     void emmitTicket_ShouldThrowException_WhenNoTicketsAvailableInCategory() {
-        String categoryName = "VIP";
-        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, categoryName);
+        testEvent.getTicketCategories().getFirst().setAvailableCategoryTickets(0);
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, testTicketCategoryId);
 
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
-        assertThrows(IllegalArgumentException.class, () -> ticketsService.emmitTicket(request));
+        assertThrows(IllegalStateException.class, () -> ticketsService.emmitTicket(request));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
@@ -222,8 +221,8 @@ class TicketServiceTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(CATEGORY_NAME, result.get(0).categoryName());
-        assertEquals(300, result.get(0).remainingTickets());
+        assertEquals(CATEGORY_NAME, result.getFirst().categoryName());
+        assertEquals(300, result.getFirst().remainingTickets());
     }
 
     @Test

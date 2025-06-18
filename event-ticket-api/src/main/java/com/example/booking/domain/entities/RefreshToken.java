@@ -6,6 +6,7 @@ import java.time.Instant;
 import jakarta.persistence.*;
 
 @Entity(name = "refreshtoken")
+@Table(name = "tb_refreshtoken")
 public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

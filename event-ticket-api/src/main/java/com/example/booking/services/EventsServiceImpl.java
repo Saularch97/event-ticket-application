@@ -68,7 +68,7 @@ public class EventsServiceImpl implements EventsService {
         if (!isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        Map<String, Integer> map = new HashMap<>();
+      
         var event = new Event();
         event.setEventOwner(user);
         event.setEventName(request.eventName());

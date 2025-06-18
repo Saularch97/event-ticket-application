@@ -69,7 +69,6 @@ public class EventServiceTest {
     private CreateEventRequest createEventRequest;
     private EventItemDto eventItemDto;
     private User user;
-    private String fakeToken;
 
     @BeforeEach
     void setUp() {

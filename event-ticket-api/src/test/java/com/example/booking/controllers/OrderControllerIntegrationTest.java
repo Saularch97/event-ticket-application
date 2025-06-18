@@ -19,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     private static final String API_BASE_URL = "/api";
@@ -143,7 +145,7 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     private UUID createTestTicket(UUID eventId) throws Exception {
-        var emmitRequest = new EmmitTicketRequest(eventId, OrderControllerIntegrationTest.CATEGORY_VIP);
+        var emmitRequest = new EmmitTicketRequest(eventId, 1);
         MvcResult result = mockMvc.perform(post(TICKET_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
                         .contentType(MediaType.APPLICATION_JSON)

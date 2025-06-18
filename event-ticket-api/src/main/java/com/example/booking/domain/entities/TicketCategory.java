@@ -4,6 +4,7 @@ import com.example.booking.controller.dto.TicketCategoryDto;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "tb_ticket_category")
 public class TicketCategory {
 
     @Id

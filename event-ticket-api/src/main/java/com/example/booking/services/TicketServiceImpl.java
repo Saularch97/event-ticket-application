@@ -61,9 +61,9 @@ public class TicketServiceImpl implements TicketService {
 
         TicketCategory category = event.getTicketCategories()
                 .stream()
-                .filter(tc -> tc.getName().equalsIgnoreCase(request.ticketCategoryName()))
+                .filter(tc -> tc.getTicketCategoryId().equals(request.ticketCategoryId()))
                 .findFirst().orElseThrow(() ->
-                new IllegalArgumentException("Category not found! " + request.ticketCategoryName())
+                new IllegalArgumentException("Ticket category not found for id: " + request.ticketCategoryId())
         );
 
         if (category.getAvailableCategoryTickets() == 0) {
