@@ -3,8 +3,6 @@ In order to have the environment configured for this project you will need:
 - Docker (docker desktop for macs)
 - Java version 17
 
-// TODO mudar para goparty!
-
 Steps to run the project in your local machine
 - run the command `docker compose up` (need to have docker desktop running if you are mac user)
 - then run via terminal() or Intelij
@@ -27,27 +25,7 @@ Diagram:
 ![img.png](img.png)
 
 TODO:
-- [x] os eventos não tem uma quantidade total de tickets, implementar.
-- [x] marcação de eventos populares(a cada hora atualiza e marca com os 3 mais vendidos, e faz cache)
-- [ ] implementar serviço de recomendação de eventos para usuário dado um determinado raio
-- [x] adicionar cache no redis para intenção de compra
-  - [x] cache de consulta de orders por usuário
-  - [x] cache de eventos populares(marcar como evento popular)
-  - [ ] Cache de tickets disponíveis por evento (verificação de disponibilidade) 
-   💡 Justificativa:
-    Evita varreduras pesadas na tabela Ticket para cada visitante.
 
-    Atualizar o cache via evento assíncrono (quando alguém compra ou cancela).
-    ⚠️ Importante:
-    Deve ser invalidação proativa, não só por TTL, pois dados mudam com frequência.
-- [x] adicionar pacote valid do spring para os dto's
-- [x] rest controller advice para tratamento de erros
-- [ ] adicionar qrcode para ingresso
-- [ ] adicionar testes na aplicação (unitários e integração)
-- [ ] fazer deploy(flyio)
-- [ ] adicionar CI(Jenkins ou circleCI)
-- [ ] ter logs na aplicação
-- [ ] adicionar método pagamento(Stripe por exemplo)
 
 
 

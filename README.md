@@ -30,10 +30,43 @@ The system is designed using a microservices architecture with asynchronous mess
 - The client can request event recommendations by providing the current latitude and longitude.
 - The recommendation service performs a geolocation query and returns nearby events.
 
+---
 
-## TODO
-[] - Evaluate the use of tilt or localstack]
-[] - Use Terraform for infra
+## ✅ TODO
 
-TODO:
- - https://www.javaguides.net/2025/02/top-10-best-practices-for-spring-data.html#google_vignette
+* [ ] Implement Circuit break
+* [ ] More complex querys using dtos, entity manager
+* [ ] Add **QR code generation** for tickets
+* [ ] Add migrations
+* [ ] Add kafka
+* [ ] Queue for logs(Kafka or Rabbit)
+* [x] Use **Tilt** for local development with Kubernetes
+* [ ] Use **Terraform** for infrastructure management
+* [ ] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
+* [ ] Use **Virtual Threads** (Project Loom) where applicable
+* [x] Events do not have a total number of tickets — **implemented**
+* [x] Popular events marking — updates every hour with the 3 best sellers and caches them
+* [x] Implement recommendation service for users based on a given radius
+* [x] Add Redis cache for purchase intent
+  * [x] Cache user orders lookup
+  * [x] Cache popular events marking
+  * [x] Cache available tickets per event (availability check)
+    💡 **Justification:** Avoids heavy scans on the Ticket table for each visitor.
+    🔄 Cache updates via asynchronous events (when someone buys or cancels).
+    ⚠️ **Important:** Use **proactive invalidation**, not only TTL, since data changes frequently.
+* [x] Add Spring Validation (`spring-boot-starter-validation`) for DTOs
+* [x] Implement `@RestControllerAdvice` for error handling
+
+* [x] Add **tests** (unit and integration)
+* [ ] Setup **deployment** pipeline
+* [ ] Add **CI/CD** (Jenkins, CircleCI, GitHub Actions, etc.)
+* [ ] Implement structured **logging** in the application
+* [ ] Integrate a **payment method** (e.g., Stripe)
+
+---
+
+## 📌 References
+
+* [Top 10 Best Practices for Spring Data JPA (JavaGuides)](https://www.javaguides.net/2025/02/top-10-best-practices-for-spring-data.html#google_vignette)
+
+---
