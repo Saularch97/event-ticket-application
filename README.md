@@ -34,15 +34,15 @@ The system is designed using a microservices architecture with asynchronous mess
 
 ## ✅ TODO
 
-* [ ] Implement Circuit break
+* [ ] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [ ] More complex querys using dtos, entity manager
+* [ ] Implement Circuit break
 * [ ] Add **QR code generation** for tickets
 * [ ] Add migrations
 * [ ] Add kafka
 * [ ] Queue for logs(Kafka or Rabbit)
 * [x] Use **Tilt** for local development with Kubernetes
 * [ ] Use **Terraform** for infrastructure management
-* [ ] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [x] Events do not have a total number of tickets — **implemented**
 * [x] Popular events marking — updates every hour with the 3 best sellers and caches them

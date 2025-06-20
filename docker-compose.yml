@@ -1,10 +1,7 @@
-# Define a versão do Docker Compose a ser usada
 version: '3.8'
 
-# Define todos os serviços (contêineres) que compõem a aplicação
 services:
 
-  # Serviço de Infraestrutura: Banco de Dados PostgreSQL
   postgres:
     image: postgres:16-alpine
     container_name: booking_postgres_db
@@ -22,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Serviço de Infraestrutura: Cache com Redis
   redis:
     image: redis:7-alpine
     container_name: booking_redis_cache
@@ -36,7 +32,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Serviço de Infraestrutura: Message Broker RabbitMQ
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: booking_rabbitmq
@@ -51,7 +46,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Serviço de Aplicação: Service Discovery (Eureka)
   discovery:
     build: ./servicediscovery
     container_name: discovery_service
@@ -63,7 +57,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Serviço de Aplicação: API Principal (Producer)
   booking:
     build: ./event-ticket-api
     container_name: booking_service
@@ -75,7 +68,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=bookinguser
       - SPRING_DATASOURCE_PASSWORD=bookingpass
       - SPRING_DATA_REDIS_HOST=redis
-      # <-- ATUALIZAÇÃO: Adiciona configuração do RabbitMQ -->
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
@@ -86,11 +78,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      # <-- ATUALIZAÇÃO: Adiciona dependência do RabbitMQ -->
       rabbitmq:
         condition: service_healthy
 
-  # Serviço de Aplicação: Recomendação (Consumer)
   recomendation:
     build: ./recomendation
     container_name: recomendation_service
@@ -100,18 +90,15 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery:8761/eureka/
       - MONGODB_URI=${MONGODB_URI}
       - MONGO_DATABASE=${MONGO_DATABASE}
-      # <-- ATUALIZAÇÃO: Adiciona configuração do RabbitMQ -->
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
     depends_on:
       discovery:
         condition: service_healthy
-      # <-- ATUALIZAÇÃO: Adiciona dependência do RabbitMQ -->
       rabbitmq:
         condition: service_healthy
 
-  # Serviço de Aplicação: API Gateway
   apigateway:
     build: ./api-gateway
     container_name: api_gateway_service
@@ -127,8 +114,7 @@ services:
       recomendation:
         condition: service_started
 
-# Define volumes nomeados para persistir os dados
 volumes:
   postgres_data:
   redis_data:
-  rabbitmq_data: # <-- ATUALIZAÇÃO: Declara o volume do RabbitMQ
+  rabbitmq_data:
