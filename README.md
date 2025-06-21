@@ -34,7 +34,8 @@ The system is designed using a microservices architecture with asynchronous mess
 
 ## ✅ TODO
 
-* [ ] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
+* [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
+* [ ] Implement some migrations
 * [ ] More complex querys using dtos, entity manager
 * [ ] Implement Circuit break
 * [ ] Add **QR code generation** for tickets
