@@ -9,7 +9,7 @@ import jakarta.persistence.*;
 @Table(name = "tb_refreshtoken")
 public class RefreshToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @OneToOne

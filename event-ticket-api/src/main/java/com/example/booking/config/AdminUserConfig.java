@@ -25,6 +25,11 @@ public class AdminUserConfig implements CommandLineRunner {
     }
 
     @Override
+    public void run(String... args) throws Exception {
+        System.out.println("HAHAHAH");
+    }
+    /*
+    @Override
     @Transactional
     public void run(String... args) throws Exception {
         var roleAdmin = roleRepository.findByName(ERole.ROLE_ADMIN);
@@ -36,13 +41,18 @@ public class AdminUserConfig implements CommandLineRunner {
                     System.out.println("admin already exists");
                 },
                 () -> {
+                    String senhaCodificada = passwordEncoder.encode("123");
+                    System.out.println("SENHA CODIFICADA PARA O ADMIN: " + senhaCodificada); // <-- ADICIONE ISSO
+
                     var user = new User();
                     user.setUserName("admin");
                     user.setEmail("admin@admin.com");
-                    user.setPassword(passwordEncoder.encode("123"));
-                    user.setRoles(Set.of(roleAdmin.orElseThrow(() -> new RuntimeException("Error: Role is not found."))));
+                    user.setPassword(senhaCodificada); // Usa a variável
+                    user.setRoles(Set.of(roleAdmin.get()));
                     userRepository.save(user);
                 }
         );
     }
+
+     */
 }

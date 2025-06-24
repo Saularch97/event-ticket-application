@@ -35,8 +35,9 @@ The system is designed using a microservices architecture with asynchronous mess
 ## ✅ TODO
 
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
-* [ ] Implement some migrations
+* [x] Implement some migrations with flyway for versioning the database
 * [ ] More complex querys using dtos, entity manager
+* [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break
 * [ ] Add **QR code generation** for tickets
 * [ ] Add migrations
@@ -44,7 +45,6 @@ The system is designed using a microservices architecture with asynchronous mess
 * [ ] Queue for logs(Kafka or Rabbit)
 * [x] Use **Tilt** for local development with Kubernetes
 * [ ] Use **Terraform** for infrastructure management
-* [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [x] Events do not have a total number of tickets — **implemented**
 * [x] Popular events marking — updates every hour with the 3 best sellers and caches them
 * [x] Implement recommendation service for users based on a given radius
@@ -64,7 +64,20 @@ The system is designed using a microservices architecture with asynchronous mess
 * [ ] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.g., Stripe)
 
+* [ ] Change jwt keys and move them to .env file!!!
 ---
+
+Useful commands for debbuging in a k8s environment:
+
+Loga o que aconteceu num deploy refereciando o manifesto de deployment:
+kubectl logs deployment/booking-deployment
+
+Lista services:
+kubectl get svc
+
+
+
+
 
 ## 📌 References
 
