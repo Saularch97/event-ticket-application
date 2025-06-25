@@ -3,12 +3,17 @@ package com.example.booking.controllers;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.controller.request.EmmitTicketRequest;
+import com.example.booking.domain.entities.Event;
+import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.entities.User;
+import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducerImpl;
-import com.example.booking.repository.EventRepository;
-import com.example.booking.repository.TicketRepository;
+import com.example.booking.repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -26,6 +31,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
@@ -35,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     private static final String API_BASE_URL = "/api";
@@ -52,38 +58,74 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private EventRepository eventRepository;
-    @Autowired private TicketRepository ticketRepository;
-    @Autowired private RedisTemplate<String, String> redisTemplate;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private EventRepository eventRepository;
+    @Autowired
+    private TicketRepository ticketRepository;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+    @Autowired TicketCategoryRepository ticketCategoryRepository;
 
     private String jwt;
     private UUID eventId;
+    private Integer vipCategoryId;
+    private Integer pistaCategoryId;
 
     @BeforeEach
     void setup() throws Exception {
         ticketRepository.deleteAll();
         eventRepository.deleteAll();
+        refreshTokenRepository.deleteAll();
+        ticketCategoryRepository.deleteAll();
+        userRepository.deleteAll();
+
         Assertions.assertNotNull(redisTemplate.getConnectionFactory());
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
 
+        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                .orElseThrow(() -> new IllegalStateException("Role ADMIN não encontrada."));
+
+        User adminUser = new User();
+
+        adminUser.setUserName("admin");
+        adminUser.setPassword(passwordEncoder.encode("123"));
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRoles(Set.of(adminRole));
+        userRepository.save(adminUser);
+
         this.jwt = obtainJwt();
+
         this.eventId = createTestEvent();
+
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new EntityNotFoundException("Event not found!"));
+        vipCategoryId = event.getTicketCategories().stream().filter(ticketCategory -> ticketCategory.getName().equals(CATEGORY_VIP)).findFirst().get().getTicketCategoryId();
+        pistaCategoryId = event.getTicketCategories().stream().filter(ticketCategory -> ticketCategory.getName().equals(CATEGORY_PISTA)).findFirst().get().getTicketCategoryId();
     }
 
     @Test
     void shouldEmmitNewTicketSuccessfully() throws Exception {
-        emmitTicketRequest(1)
+        emmitTicketRequest(vipCategoryId)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketId", notNullValue()))
-                .andExpect(jsonPath("$.ticketCategoryId", is(1)));
+                .andExpect(jsonPath("$.ticketCategoryId", is(vipCategoryId)));
     }
 
     @Test
     void shouldListAllEmittedTickets() throws Exception {
-        emmitTicketRequest(1);
-        emmitTicketRequest(2);
+        emmitTicketRequest(vipCategoryId);
+        emmitTicketRequest(pistaCategoryId);
 
         mockMvc.perform(get(TICKETS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
@@ -94,8 +136,8 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldListOnlyTicketsForAuthenticatedUser() throws Exception {
-        emmitTicketRequest(1);
-        emmitTicketRequest(2);
+        emmitTicketRequest(vipCategoryId);
+        emmitTicketRequest(pistaCategoryId);
 
         mockMvc.perform(get(USER_TICKETS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
@@ -106,10 +148,10 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldDeleteTicketAndRemoveItFromList() throws Exception {
-        MvcResult result = emmitTicketRequest(1).andReturn();
+        MvcResult result = emmitTicketRequest(vipCategoryId).andReturn();
         UUID ticketIdToDelete = getUuidFromMvcResult(result, "ticketId");
 
-        emmitTicketRequest(1);
+        emmitTicketRequest(vipCategoryId);
 
         mockMvc.perform(delete(TICKET_URL + "/" + ticketIdToDelete)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
@@ -124,7 +166,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void shouldReturnCorrectCountOfAvailableTicketsByCategory() throws Exception {
-        emmitTicketRequest(1);
+        emmitTicketRequest(vipCategoryId);
 
         mockMvc.perform(get(AVAILABLE_TICKETS_URL + "/" + eventId)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))

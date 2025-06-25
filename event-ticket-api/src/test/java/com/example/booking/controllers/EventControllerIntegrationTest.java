@@ -2,11 +2,16 @@ package com.example.booking.controllers;
 
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.request.CreateTicketCategoryRequest;
+import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.entities.User;
+import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducerImpl;
 import com.example.booking.repository.EventRepository;
+import com.example.booking.repository.RoleRepository;
+import com.example.booking.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.Assertions;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +19,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "spring.profiles.active=test")
 @AutoConfigureMockMvc
 @Testcontainers
+@Transactional
 class EventControllerIntegrationTest extends AbstractIntegrationTest{
 
     @MockitoBean
@@ -44,11 +52,25 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
-    void cleanUp() {
-        eventRepository.deleteAll();
-        Assertions.assertNotNull(redisTemplate.getConnectionFactory());
-        redisTemplate.getConnectionFactory().getConnection().serverCommands();
+    void setup()  {
+        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                .orElseThrow(() -> new IllegalStateException("Role ADMIN não encontrada."));
+        User adminUser = new User();
+        adminUser.setUserName("admin");
+        adminUser.setPassword(passwordEncoder.encode("123"));
+        adminUser.setEmail("admin@example.com");
+        adminUser.setRoles(Set.of(adminRole));
+        userRepository.save(adminUser);
     }
 
     @Test

@@ -38,7 +38,7 @@ public class User {
     private Set<Order> orders = new HashSet<>();
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "tb_user_roles",
             joinColumns = @JoinColumn(name = "user_id"),

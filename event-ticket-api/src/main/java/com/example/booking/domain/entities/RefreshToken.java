@@ -5,7 +5,7 @@ import java.time.Instant;
 
 import jakarta.persistence.*;
 
-@Entity(name = "refreshtoken")
+@Entity
 @Table(name = "tb_refreshtoken")
 public class RefreshToken {
     @Id
