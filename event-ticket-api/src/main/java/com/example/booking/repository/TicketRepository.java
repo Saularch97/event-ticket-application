@@ -19,5 +19,22 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     Page<Ticket> findAllTicketsByUserId(@Param("id") UUID id, Pageable pageable);
 
     @Query("SELECT t FROM Ticket t WHERE t.emittedAt > :timestamp")
-    List<Ticket> findTicketsEmittedAfter(@Param("timestamp") LocalDateTime timestamp);
+    Page<Ticket> findTicketsEmittedAfter(@Param("timestamp") LocalDateTime timestamp, Pageable pageable);
+
+    @Query(value = """
+    SELECT t.*
+    FROM tb_tickets t
+    INNER JOIN tb_ticket_category tc
+        ON t.ticket_category_id = tc.ticket_category_id
+    WHERE tc.ticket_category_id = ?1
+    """,
+    countQuery = """
+    SELECT count(*)
+    FROM tb_tickets t
+    INNER JOIN tb_ticket_category tc
+        ON t.ticket_category_id = tc.ticket_category_id
+    WHERE tc.ticket_category_id = ?1
+    """,
+    nativeQuery = true)
+    Page<Ticket> findTicketsByCategoryId(Integer categoryId, Pageable pageable);
 }

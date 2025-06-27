@@ -137,6 +137,72 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
     }
 
     @Test
+    void listAllAvailableUserEventsWhenNoEventsAreCreated() throws Exception {
+
+        String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "username": "admin",
+                                            "password": "123"
+                                        }
+                                        """))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("test-jwt")) // ou getHeader("Authorization")
+                .getValue();
+
+
+        mockMvc.perform(get("/api/availableUserEvents").cookie(new Cookie("test-jwt", jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events").isEmpty());
+    }
+
+    @Test
+    void listAllAvailableUserEventsWhenEventsAreCreated() throws Exception {
+
+        String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "username": "admin",
+                                            "password": "123"
+                                        }
+                                        """))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("test-jwt")) // ou getHeader("Authorization")
+                .getValue();
+
+        CreateEventRequest request = new CreateEventRequest(
+                "Show do Legado",
+                "22/04/2025",
+                22,
+                0,
+                "Alfenas",
+                30.0,
+                List.of(
+                        new CreateTicketCategoryRequest("VIP", 200.0, 100),
+                        new CreateTicketCategoryRequest("Pista", 300.0, 100)
+                )
+        );
+
+        mockMvc.perform(post("/api/events")
+                        .cookie(new Cookie("test-jwt", jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.eventName").value("Show do Legado"))
+                .andExpect(jsonPath("$.availableTickets").value(200));
+
+        mockMvc.perform(get("/api/availableUserEvents").cookie(new Cookie("test-jwt", jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events").isNotEmpty());
+    }
+
+    @Test
     void testDeleteEvent() throws Exception {
 
         String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")

@@ -58,8 +58,8 @@ public class EventsServiceImpl implements EventsService {
 
     public EventItemDto createEvent(CreateEventRequest request) {
 
-        String userName = jwtUtils.getAuthenticatedUsername();
-        var user = userService.findEntityByUserName(userName);
+        UUID userId = jwtUtils.getAuthenticatedUserId();
+        var user = userService.findUserEntityById(userId);
 
         var isAdmin = user.getRoles()
                 .stream()
@@ -104,19 +104,19 @@ public class EventsServiceImpl implements EventsService {
     }
 
     public void deleteEvent(UUID eventId) {
-        String userName = jwtUtils.getAuthenticatedUsername();
+        UUID userId = jwtUtils.getAuthenticatedUserId();
 
         if (!eventRepository.existsById(eventId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
         }
 
-        var user = userService.findEntityByUserName(userName);
+        var user = userService.findUserEntityById(userId);
 
         var event = findEventEntityById(eventId);
 
         boolean isAdmin = User.userContainsAEspecificRole(user,ERole.ROLE_ADMIN.name());
 
-        if (isAdmin || event.getEventOwner().getUserName().equals(userName)) {
+        if (isAdmin || event.getEventOwner().getUserId().equals(userId)) {
             eventRepository.deleteById(eventId);
         } else {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to delete this event");
@@ -133,8 +133,8 @@ public class EventsServiceImpl implements EventsService {
 
     public EventsDto listAllUserEvents(int page, int pageSize) {
 
-        String userName = jwtUtils.getAuthenticatedUsername();
-        var user = userService.findEntityByUserName(userName);
+        UUID userID = jwtUtils.getAuthenticatedUserId();
+        var user = userService.findUserEntityById(userID);
 
         var events = eventRepository.findAllEventsByUserId(user.getUserId(),
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
@@ -159,5 +159,15 @@ public class EventsServiceImpl implements EventsService {
     @Override
     public Event findEventEntityById(UUID eventId) {
         return eventRepository.findById(eventId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+    }
+
+    @Override
+    public EventsDto listAllAvailableUserEvents(int page, int pageSize) {
+        UUID userId = jwtUtils.getAuthenticatedUserId();
+        var user = userService.findUserEntityById(userId);
+        var events = eventRepository.findAvailableEventsByOwner(user.getUserId(),
+                PageRequest.of(page, pageSize, Sort.Direction.DESC, "event_date")).map(Event::toEventItemDto);
+
+        return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
 }

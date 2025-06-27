@@ -150,12 +150,12 @@ class UserServiceImplTest {
     }
 
     @Test
-    void findEntityByUserName_ShouldReturnUserEntity_WhenUserExists() {
+    void findEntityByUserName_ShouldReturnUserUserEntity_WhenUserExists() {
         // Arrange
         when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
 
         // Act
-        User result = userService.findEntityByUserName("testuser");
+        User result = userService.findUserEntityByUserName("testuser");
 
         // Assert
         assertNotNull(result);
@@ -165,14 +165,14 @@ class UserServiceImplTest {
     }
 
     @Test
-    void findEntityByUserName_ShouldThrowException_WhenUserNotFound() {
+    void findUserEntityByUserName_ShouldThrowException_WhenUserNotFound() {
         // Arrange
         when(repository.findByUserName("nonexistent")).thenReturn(Optional.empty());
 
         // Act & Assert
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> userService.findEntityByUserName("nonexistent")
+                () -> userService.findUserEntityByUserName("nonexistent")
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());

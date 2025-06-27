@@ -3,6 +3,7 @@ package com.example.booking.util;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 import com.example.booking.domain.entities.User;
 import com.example.booking.services.UserDetailsImpl;
@@ -66,7 +67,7 @@ public class JwtUtils {
     public ResponseCookie getCleanJwtCookie() {
         return ResponseCookie.from(jwtCookie, "")
                 .path("/api")
-                .maxAge(0) // 👈 ESSENCIAL
+                .maxAge(0)
                 .httpOnly(true)
                 .sameSite("None")
                 .secure(true)
@@ -77,7 +78,7 @@ public class JwtUtils {
     public ResponseCookie getCleanJwtRefreshCookie() {
         return ResponseCookie.from(jwtRefreshCookie, "")
                 .path("/api/auth/refreshtoken")
-                .maxAge(0) // 👈 ESSENCIAL
+                .maxAge(0)
                 .httpOnly(true)
                 .sameSite("None")
                 .secure(true)
@@ -124,7 +125,7 @@ public class JwtUtils {
                 .from(name, value)
                 .path(path)
                 .sameSite("None")
-                .secure(true) // take away in prod, ver se true ainda dá pra testar
+                .secure(true)
                 .maxAge(24 * 60 * 60)
                 .httpOnly(true)
                 .build();
@@ -141,9 +142,17 @@ public class JwtUtils {
 
     public String getAuthenticatedUsername() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (principal instanceof UserDetails userDetails) {
+        if (principal instanceof UserDetailsImpl userDetails) {
             return userDetails.getUsername();
+        } else {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated!");
+        }
+    }
+
+    public UUID getAuthenticatedUserId() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetailsImpl userDetails) {
+            return userDetails.getId();
         } else {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated!");
         }

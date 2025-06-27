@@ -36,11 +36,12 @@ The system is designed using a microservices architecture with asynchronous mess
 
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [x] Implement some migrations with flyway for versioning the database
-* [ ] More complex querys using dtos, entity manager
+* [ ] More complex queries using dto's, entity manager
+* [ ] K8s for dev and prod
+* [ ] Include role permission in the controllers
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
-* [ ] Implement Circuit break
+* [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
-* [ ] Add migrations
 * [ ] Add kafka
 * [ ] Queue for logs(Kafka or Rabbit)
 * [x] Use **Tilt** for local development with Kubernetes

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,7 +50,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findEntityByUserName(String username) {
+    public User findUserEntityByUserName(String username) {
         return repository.findByUserName(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
+    }
+
+    @Override
+    public User findUserEntityById(UUID userId) {
+        return repository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
     }
 }

@@ -45,11 +45,12 @@ public class TicketServiceImpl implements TicketService {
         this.cacheManager = cacheManager;
     }
 
+    @Override
     public TicketItemDto emmitTicket(EmmitTicketRequest request) {
 
         String userName = jwtUtils.getAuthenticatedUsername();
 
-        User user = userService.findEntityByUserName(userName);
+        User user = userService.findUserEntityByUserName(userName);
 
         Event event = eventService.findEventEntityById(request.eventId());
 
@@ -84,6 +85,7 @@ public class TicketServiceImpl implements TicketService {
         return Ticket.toTicketItemDto(ticket);
     }
 
+    @Override
     public void deleteEmittedTicket(UUID ticketId) {
         var ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -98,6 +100,7 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.deleteById(ticketId);
     }
 
+    @Override
     public TicketsDto listAllTickets(int page, int pageSize) {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
 
@@ -114,11 +117,11 @@ public class TicketServiceImpl implements TicketService {
         );
     }
 
-
+    @Override
     public TicketsDto listAllUserTickets(int page, int pageSize) {
         String userName = jwtUtils.getAuthenticatedUsername();
 
-        User user = userService.findEntityByUserName(userName);
+        User user = userService.findUserEntityByUserName(userName);
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
 
@@ -130,11 +133,24 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
+    @Override
     public List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId) {
         var event = eventService.findEventEntityById(eventId);
 
         return event.getTicketCategories().stream().map(ticketCategory -> {
             return new RemainingTicketCategoryDto(ticketCategory.getName(), ticketCategory.getAvailableCategoryTickets());
         }).toList();
+    }
+
+    @Override
+    public TicketsDto getTicketsByCategoryId(Integer categoryId, int page, int pageSize) {
+
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticket_id");
+
+        var tickets = ticketRepository
+                .findTicketsByCategoryId(categoryId, pageRequest)
+                .map(Ticket::toTicketItemDto);
+
+        return new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements());
     }
 }

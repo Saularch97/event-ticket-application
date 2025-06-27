@@ -90,4 +90,19 @@ public class TicketController {
     public ResponseEntity<AvailableTicketsResponse> getAvailableTicketsForEvent(@PathVariable(name = "eventId") UUID eventId) {
         return ResponseEntity.ok(new AvailableTicketsResponse(ticketService.getAvailableTicketsByCategoryFromEvent(eventId)));
     }
+
+    @GetMapping("/getTicketsByCategoryId/{categoryId}")
+    public ResponseEntity<TicketsResponse> getTicketsByCategoryId(@PathVariable(name = "categoryId") Integer categoryId,
+                                                                  @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                  @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
+
+        var ticketsDto = ticketService.getTicketsByCategoryId(categoryId, page, pageSize);
+
+        return ResponseEntity.ok(new TicketsResponse(ticketsDto.tickets(),
+                ticketsDto.page(),
+                ticketsDto.pageSize(),
+                ticketsDto.totalPages(),
+                ticketsDto.totalElements())
+        );
+    }
 }

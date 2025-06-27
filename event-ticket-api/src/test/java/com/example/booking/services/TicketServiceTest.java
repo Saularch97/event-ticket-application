@@ -81,7 +81,7 @@ class TicketServiceTest {
         EmmitTicketRequest request = new EmmitTicketRequest(testEventId, testTicketCategoryId);
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
-        when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
+        when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
         when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -188,7 +188,7 @@ class TicketServiceTest {
         Page<Ticket> ticketPage = new PageImpl<>(userTickets, pageRequest, userTickets.size());
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
-        when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
+        when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(ticketRepository.findAllTicketsByUserId(testUserId, pageRequest)).thenReturn(ticketPage);
 
         TicketsDto result = ticketsService.listAllUserTickets(page, pageSize);
@@ -204,7 +204,7 @@ class TicketServiceTest {
         Page<Ticket> emptyPage = new PageImpl<>(List.of(), pageRequest, 0);
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
-        when(userService.findEntityByUserName(testUsername)).thenReturn(testUser);
+        when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(ticketRepository.findAllTicketsByUserId(testUserId, pageRequest)).thenReturn(emptyPage);
 
         TicketsDto result = ticketsService.listAllUserTickets(page, pageSize);

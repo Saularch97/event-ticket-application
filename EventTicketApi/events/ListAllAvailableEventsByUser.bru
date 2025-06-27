@@ -1,0 +1,19 @@
+meta {
+  name: ListAllAvailableEventsByUser
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8081/booking/api/availableUserEvents
+  body: none
+  auth: inherit
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

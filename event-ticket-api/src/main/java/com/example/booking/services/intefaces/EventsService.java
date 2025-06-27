@@ -14,5 +14,6 @@ public interface EventsService {
     EventsDto listAllEvents(int page, int pageSize);
     List<EventItemDto> getTopTrendingEvents();
     Event findEventEntityById(UUID eventId);
-    public EventsDto listAllUserEvents(int page, int pageSize);
+    EventsDto listAllUserEvents(int page, int pageSize);
+    EventsDto listAllAvailableUserEvents(int page, int pageSize);
 }

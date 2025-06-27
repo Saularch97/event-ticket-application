@@ -157,8 +157,8 @@ public class EventServiceTest {
         // Arrange
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
 
-        when(userService.findEntityByUserName("adminUser")).thenReturn(user);
-        when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
+        when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
+        when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
         when(geoService.searchForCityData(event.getEventLocation())).thenReturn(cityDataDto);
         when(eventRepository.save(any(Event.class))).thenReturn(event);
         when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any()))
@@ -182,10 +182,10 @@ public class EventServiceTest {
     @Test
     void createEvent_ShouldReturnAnError_WhenUserIsNotFound() {
         // Arrange
-        when(userService.findEntityByUserName("adminUser"))
+        when(userService.findUserEntityById(user.getUserId()))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 
-        when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
+        when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
 
         // Act & Assert
         ResponseStatusException exception = assertThrows(
@@ -201,7 +201,7 @@ public class EventServiceTest {
     @Test
     void createEvent_ShouldReturnAnError_WhenTokenIsInvalid() {
         // Arrange
-        when(jwtUtils.getAuthenticatedUsername())
+        when(jwtUtils.getAuthenticatedUserId())
                 .thenThrow(new MalformedJwtException("Invalid token"));
 
         // Act & Assert
@@ -235,8 +235,8 @@ public class EventServiceTest {
                 )
         );
 
-        when(userService.findEntityByUserName("adminUser")).thenReturn(user);
-        when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
+        when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
+        when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
         when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
         when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any())).thenReturn(ticketCategories);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
@@ -279,8 +279,8 @@ public class EventServiceTest {
                 )
         );
 
-        when(userService.findEntityByUserName("adminUser")).thenReturn(user);
-        when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
+        when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
+        when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
         when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
         when(ticketCategoryService.createTicketCategoriesForEvent(any(Event.class), any())).thenReturn(ticketCategories);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
@@ -347,8 +347,8 @@ public class EventServiceTest {
         List<Event> eventList = List.of(event1, event2);
         Page<Event> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
 
-        when(jwtUtils.getAuthenticatedUsername()).thenReturn("adminUser");
-        when(userService.findEntityByUserName("adminUser")).thenReturn(user);
+        when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
+        when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
         when(eventRepository.findAllEventsByUserId(eq(user.getUserId()), any(PageRequest.class)))
                 .thenReturn(eventPage);
 
@@ -419,5 +419,43 @@ public class EventServiceTest {
 
         // Assert
         assertEquals(event, res);
+    }
+
+    @Test
+    void listAllAvailableUserEvents_ShouldReturnAnListOfAvailableUserEvents() {
+        // Arrange
+        int page = 0;
+        int pageSize = 2;
+
+        LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
+        Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, user, 150.00, 1000, false);
+        Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, user, 150.00, 2000, false);
+
+        List<Event> eventList = List.of(event1, event2);
+        Page<Event> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
+
+        when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
+        when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
+        when(eventRepository.findAvailableEventsByOwner(eq(user.getUserId()), any(PageRequest.class)))
+                .thenReturn(eventPage);
+
+        EventsDto result = eventsService.listAllAvailableUserEvents(page, pageSize);
+
+        assertNotNull(result);
+        assertEquals(page, result.page());
+        assertEquals(pageSize, result.pageSize());
+        assertEquals(5, result.totalElements());
+        assertEquals(3, result.totalPages());
+        assertEquals(2, result.events().size());
+        assertEquals(1000 , result.events().getFirst().availableTickets());
+        assertEquals(2000 , result.events().getLast().availableTickets());
+
+        ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        verify(eventRepository).findAvailableEventsByOwner(eq(user.getUserId()), pageRequestCaptor.capture());
+
+        PageRequest pr = pageRequestCaptor.getValue();
+        assertEquals(page, pr.getPageNumber());
+        assertEquals(pageSize, pr.getPageSize());
+        assertEquals(Sort.Direction.DESC, Objects.requireNonNull(pr.getSort().getOrderFor("event_date")).getDirection());
     }
 }

@@ -54,6 +54,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
     private static final String JWT_COOKIE_NAME = "test-jwt";
     private static final String CATEGORY_VIP = "VIP";
     private static final String CATEGORY_PISTA = "Pista";
+    private static final String GET_TICKETS_BY_CATEGORY_URL = API_BASE_URL + "/getTicketsByCategoryId";
 
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
@@ -174,6 +175,21 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest{
                 .andExpect(jsonPath("$.availableTickets").isArray())
                 .andExpect(jsonPath("$.availableTickets[?(@.categoryName == 'VIP')].remainingTickets", contains(1)))
                 .andExpect(jsonPath("$.availableTickets[?(@.categoryName == 'Pista')].remainingTickets", contains(3)));
+    }
+
+    @Test
+    void shouldReturnCorrectTheTicketsByCategoryId() throws Exception {
+        emmitTicketRequest(vipCategoryId);
+
+        mockMvc.perform(get(GET_TICKETS_BY_CATEGORY_URL + "/" + vipCategoryId)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tickets").isNotEmpty())
+                .andExpect(jsonPath("$.tickets[0].ticketId").isNotEmpty())
+                .andExpect(jsonPath("$.tickets[0].eventId").isNotEmpty())
+                .andExpect(jsonPath("$.tickets[0].userId").isNotEmpty())
+                .andExpect(jsonPath("$.tickets[0].ticketCategoryId").value(vipCategoryId));
+
     }
 
     private String obtainJwt() throws Exception {

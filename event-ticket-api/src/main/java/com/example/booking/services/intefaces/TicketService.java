@@ -12,7 +12,7 @@ public interface TicketService {
     TicketItemDto emmitTicket(EmmitTicketRequest request);
     void deleteEmittedTicket(UUID ticketId);
     TicketsDto listAllUserTickets(int page, int pageSize);
-    public TicketsDto listAllTickets(int page, int pageSize);
-
+    TicketsDto listAllTickets(int page, int pageSize);
     List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId);
+    TicketsDto getTicketsByCategoryId(Integer categoryId, int page, int pageSize);
 }

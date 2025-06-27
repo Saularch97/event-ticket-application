@@ -84,4 +84,14 @@ public class EventController {
 
         return ResponseEntity.ok(trendingEvents);
     }
+
+    @GetMapping("/availableUserEvents")
+    public ResponseEntity<EventsResponse> listAvailableUserEvents(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
+    ) {
+        var events = eventsService.listAllAvailableUserEvents(page, pageSize);
+
+        return ResponseEntity.ok(new EventsResponse(events.events(), events.page(), events.pageSize(), events.totalPages(), events.totalElements()));
+    }
 }
