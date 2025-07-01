@@ -126,7 +126,7 @@ class TicketServiceTest {
         ticket.setTicketCategory(testCategory);
         testEvent.decrementAvailableTickets();
 
-        when(ticketRepository.findById(ticket.getTicketId())).thenReturn(Optional.of(ticket));
+        when(ticketRepository.findTicketWithEvent(ticket.getTicketId())).thenReturn(Optional.of(ticket));
         when(eventService.findEventEntityById(testEvent.getEventId())).thenReturn(testEvent);
         when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
 
@@ -140,7 +140,7 @@ class TicketServiceTest {
     @Test
     void deleteEmittedTicket_ShouldThrowResponseStatusException_WhenTicketNotFound() {
         UUID id = UUID.randomUUID();
-        when(ticketRepository.findById(id)).thenReturn(Optional.empty());
+        when(ticketRepository.findTicketWithEvent(id)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
                 () -> ticketsService.deleteEmittedTicket(id));
@@ -157,7 +157,7 @@ class TicketServiceTest {
         List<Ticket> tickets = List.of(mockTicket(), mockTicket());
         Page<Ticket> ticketPage = new PageImpl<>(tickets, pageRequest, tickets.size());
 
-        when(ticketRepository.findAll(pageRequest)).thenReturn(ticketPage);
+        when(ticketRepository.findAllWithAssociations(pageRequest)).thenReturn(ticketPage);
 
         TicketsDto result = ticketsService.listAllTickets(page, pageSize);
 
@@ -171,7 +171,7 @@ class TicketServiceTest {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
         Page<Ticket> emptyPage = new PageImpl<>(List.of(), pageRequest, 0);
 
-        when(ticketRepository.findAll(pageRequest)).thenReturn(emptyPage);
+        when(ticketRepository.findAllWithAssociations(pageRequest)).thenReturn(emptyPage);
 
         TicketsDto result = ticketsService.listAllTickets(page, pageSize);
 

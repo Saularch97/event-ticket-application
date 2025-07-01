@@ -87,7 +87,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void deleteEmittedTicket(UUID ticketId) {
-        var ticket = ticketRepository.findById(ticketId)
+        var ticket = ticketRepository.findTicketWithEvent(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         var event = eventService.findEventEntityById(ticket.getEvent().getEventId());
@@ -105,7 +105,7 @@ public class TicketServiceImpl implements TicketService {
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
 
         Page<TicketItemDto> ticketsPage = ticketRepository
-                .findAll(pageRequest)
+                .findAllWithAssociations(pageRequest)
                 .map(Ticket::toTicketItemDto);
 
         return new TicketsDto(
@@ -116,6 +116,7 @@ public class TicketServiceImpl implements TicketService {
                 ticketsPage.getTotalElements()
         );
     }
+
 
     @Override
     public TicketsDto listAllUserTickets(int page, int pageSize) {
@@ -137,9 +138,10 @@ public class TicketServiceImpl implements TicketService {
     public List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId) {
         var event = eventService.findEventEntityById(eventId);
 
-        return event.getTicketCategories().stream().map(ticketCategory -> {
-            return new RemainingTicketCategoryDto(ticketCategory.getName(), ticketCategory.getAvailableCategoryTickets());
-        }).toList();
+        return event.getTicketCategories().stream().map(ticketCategory ->
+                new RemainingTicketCategoryDto(ticketCategory.getName(),
+                ticketCategory.getAvailableCategoryTickets())
+        ).toList();
     }
 
     @Override

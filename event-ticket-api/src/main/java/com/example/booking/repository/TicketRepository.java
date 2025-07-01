@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -37,4 +38,20 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     """,
     nativeQuery = true)
     Page<Ticket> findTicketsByCategoryId(Integer categoryId, Pageable pageable);
+
+    @Query("""
+    SELECT t FROM Ticket t
+    JOIN FETCH t.event
+    WHERE t.ticketId = :ticketId
+    """)
+    Optional<Ticket> findTicketWithEvent(@Param("ticketId") UUID ticketId);
+
+    @Query(value = """
+    SELECT t FROM Ticket t
+    JOIN FETCH t.event e
+    JOIN FETCH t.ticketOwner o
+    JOIN FETCH t.ticketCategory c
+    """,
+    countQuery = "SELECT count(t) FROM Ticket t")
+    Page<Ticket> findAllWithAssociations(Pageable pageable);
 }
