@@ -5,15 +5,15 @@ import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
 import com.example.booking.domain.entities.*;
-import com.example.booking.repository.TicketOrderRepository;
-import com.example.booking.repository.TicketRepository;
+import com.example.booking.repository.OrderRepository;
 import com.example.booking.repository.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
+import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.util.JwtUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -21,40 +21,42 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
-    private final TicketOrderRepository ticketOrderRepository;
+    private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final TicketRepository ticketRepository;
+    private final TicketService ticketService;
     private final JwtUtils jwtUtils;
     private final CacheManager cacheManager;
 
-    public OrderServiceImpl(TicketOrderRepository ticketOrderRepository, UserRepository userRepository, TicketRepository ticketRepository, JwtUtils jwtUtils, CacheManager cacheManager) {
-        this.ticketOrderRepository = ticketOrderRepository;
+    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository, TicketService ticketService, JwtUtils jwtUtils, CacheManager cacheManager) {
+        this.orderRepository = orderRepository;
         this.userRepository = userRepository;
-        this.ticketRepository = ticketRepository;
+        this.ticketService = ticketService;
         this.jwtUtils = jwtUtils;
         this.cacheManager = cacheManager;
     }
 
-    public OrderItemDto createNewOrder(CreateOrderRequest dto, String token) {
+    public OrderItemDto createNewOrder(CreateOrderRequest dto) {
 
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
+        UUID userId = jwtUtils.getAuthenticatedUserId();
+        Optional<User> user = userRepository.findById(userId);
 
-        Optional<User> user = userRepository.findByUserName(userName);
         if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
 
-        Set<Ticket> tickets = new HashSet<>();
+        List<Ticket> tickets = ticketService.findTicketsWithEventDetails(dto.ticketIds());
 
-        for (UUID ticketId : dto.ticketIds()) {
-            var ticket = ticketRepository.findById(ticketId);
-            if (ticket.isEmpty()) throw new EntityNotFoundException("Ticket not found!");
+        if (tickets.size() != dto.ticketIds().size()) {
+            throw new EntityNotFoundException("One or more tickets where not found!");
+        }
 
-            if (ticket.get().getOrder() != null) throw new ResponseStatusException(HttpStatus.CONFLICT, "Ticket already has an order in it!");
-
-            tickets.add(ticket.get());
+        for (Ticket ticket : tickets) {
+            if (ticket.getOrder() != null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "The ticket " + ticket.getTicketId() + " already have an order.");
+            }
         }
 
         var ticketOrder = new Order();
@@ -69,50 +71,67 @@ public class OrderServiceImpl implements OrderService {
         ticketOrder.setOrderPrice(orderPrice);
         ticketOrder.setUser(user.get());
 
-        Order savedOrder = ticketOrderRepository.save(ticketOrder);
+        Order savedOrder = orderRepository.save(ticketOrder);
 
-        tickets.forEach(ticket -> ticket.setOrder(savedOrder));
-        ticketRepository.saveAll(tickets);
-
-        savedOrder.getTickets().forEach(ticket -> {
+        tickets.forEach(ticket -> {
+            ticket.setOrder(savedOrder);
             Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
         });
 
-        return Order.toOrderItemDto(savedOrder);
+        Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).clear();
+
+        return new OrderItemDto(
+                savedOrder.getOrderId(),
+                savedOrder.getOrderPrice(),
+                tickets.stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
+                User.toUserDto(user.get())
+        );
     }
 
+    // TODO validate this cache logic in the unit tests
+    @Override
+    public OrdersDto getUserOrders(int page, int pageSize) {
+        UUID userId = jwtUtils.getAuthenticatedUserId();
 
-    @Cacheable(
-            value = CacheNames.ORDERS,
-            key = "{#userName}"
-    )
-    public OrdersDto getUserOrders(int page, int pageSize, String userName) {
+        Cache cache = cacheManager.getCache(CacheNames.ORDERS);
+        Objects.requireNonNull(cache, "Orders cache not configured!");
+
+        String cacheKey = userId.toString() + "-" + page + "-" + pageSize;
+
+        OrdersDto cachedOrders = cache.get(cacheKey, OrdersDto.class);
+
+        if (cachedOrders != null) {
+            return cachedOrders;
+        }
 
         PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
 
-        var orders = ticketOrderRepository
-                .findOrderByUserName(userName, pageRequest)
+        var ordersPage = orderRepository
+                .findOrdersByUserIdWithAssociations(userId, pageRequest)
                 .map(Order::toOrderItemDto);
 
-        return new OrdersDto(orders.getContent(), page, pageSize, orders.getTotalPages(), orders.getTotalElements());
+        OrdersDto resultToCache = new OrdersDto(ordersPage.getContent(), page, pageSize, ordersPage.getTotalPages(), ordersPage.getTotalElements());
+
+        cache.put(cacheKey, resultToCache);
+
+        return resultToCache;
     }
 
     @Transactional
-    public void deleteOrder(UUID orderId, String userName) {
+    public void deleteOrder(UUID orderId) {
 
-        var order = ticketOrderRepository.findById(orderId)
+        Order order = orderRepository.findByIdWithFullAssociations(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
-        for (var ticket: order.getTickets()) {
-            var event = ticket.getEvent();
+        for (Ticket ticket: order.getTickets()) {
+            Event event = ticket.getEvent();
             Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(event.getEventId());
             event.incrementAvailableTickets();
             ticket.getTicketCategory().incrementTicketCategory();
         }
 
-        Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).evict(userName);
+        Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).clear();
 
-        ticketOrderRepository.deleteById(orderId);
+        orderRepository.deleteById(orderId);
     }
-
 }

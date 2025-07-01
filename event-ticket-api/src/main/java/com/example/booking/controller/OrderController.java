@@ -4,8 +4,6 @@ import com.example.booking.controller.request.CreateOrderRequest;
 import com.example.booking.controller.dto.OrderItemDto;
 import com.example.booking.controller.dto.OrdersDto;
 import com.example.booking.services.intefaces.OrderService;
-import com.example.booking.util.JwtUtils;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +17,18 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
-    private final JwtUtils jwtUtils;
 
-    public OrderController(OrderService orderService, JwtUtils jwtUtils) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.jwtUtils = jwtUtils;
     }
 
-    @Transactional
     @PostMapping("/order")
     public ResponseEntity<OrderItemDto> createNewOrder(
             @Valid
-            @RequestBody CreateOrderRequest dto,
-            @RequestHeader(name = "Cookie") String token
+            @RequestBody CreateOrderRequest request
     )  {
 
-        var savedOrder = orderService.createNewOrder(dto, token);
+        var savedOrder = orderService.createNewOrder(request);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -47,19 +41,16 @@ public class OrderController {
 
     @GetMapping("/orders")
     public ResponseEntity<OrdersDto> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
-                                                   @RequestParam(value = "pageSize", defaultValue = "10") int pageSize,
-                                                   @RequestHeader(name = "Cookie") String token) {
+                                                   @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        var ordersDto = orderService.getUserOrders(page, pageSize, userName);
+        var ordersDto = orderService.getUserOrders(page, pageSize);
         return ResponseEntity.ok(ordersDto);
     }
 
     @DeleteMapping("/order/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable("id") UUID orderId,
                                          @RequestHeader(name = "Cookie") String token) {
-        String userName = jwtUtils.getUserNameFromJwtToken(token.split(";")[0].split("=")[1]);
-        orderService.deleteOrder(orderId, userName);
+        orderService.deleteOrder(orderId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -15,8 +15,17 @@ import java.util.UUID;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
-
-    @Query("SELECT t FROM Ticket t WHERE t.ticketOwner.userId = :id")
+    @Query(value = """
+    SELECT t FROM Ticket t
+    JOIN FETCH t.event
+    JOIN FETCH t.ticketOwner
+    JOIN FETCH t.ticketCategory
+    WHERE t.ticketOwner.userId = :id
+    """,
+    countQuery = """
+    SELECT count(t) FROM Ticket t
+    WHERE t.ticketOwner.userId = :id
+    """)
     Page<Ticket> findAllTicketsByUserId(@Param("id") UUID id, Pageable pageable);
 
     @Query("SELECT t FROM Ticket t WHERE t.emittedAt > :timestamp")
@@ -54,4 +63,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     """,
     countQuery = "SELECT count(t) FROM Ticket t")
     Page<Ticket> findAllWithAssociations(Pageable pageable);
+
+    @Query("SELECT t FROM Ticket t JOIN FETCH t.event WHERE t.ticketId IN :ids")
+    List<Ticket> findAllByIdWithEvent(@Param("ids") List<UUID> ids);
 }

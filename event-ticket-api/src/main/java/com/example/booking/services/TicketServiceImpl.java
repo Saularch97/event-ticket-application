@@ -155,4 +155,9 @@ public class TicketServiceImpl implements TicketService {
 
         return new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements());
     }
+
+    @Override
+    public List<Ticket> findTicketsWithEventDetails(List<UUID> ticketIds) {
+        return ticketRepository.findAllByIdWithEvent(ticketIds);
+    }
 }

@@ -38,6 +38,7 @@ The system is designed using a microservices architecture with asynchronous mess
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [x] Implement some migrations with flyway for versioning the database
 * [ ] More complex queries using dto's projections, entity manager
+* [ ] Add http status codes such as 409, 422
 * [ ] Refactor controller dto's(only use controller dto for request/response)
 * [ ] Add .env.example and change the jwt authkeys(use .env dependencie)
 * [ ] Change integer id's for UUID
