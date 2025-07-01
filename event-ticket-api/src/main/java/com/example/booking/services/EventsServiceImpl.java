@@ -10,6 +10,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repository.EventRepository;
 import com.example.booking.services.intefaces.EventsService;
@@ -22,6 +23,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -126,7 +128,7 @@ public class EventsServiceImpl implements EventsService {
     public EventsDto listAllEvents(int page, int pageSize) {
         var events = eventRepository.findAll(
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
-        ).map(Event::toEventItemDto);
+        ).map(Event::toEventSummaryDto);
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
@@ -138,7 +140,7 @@ public class EventsServiceImpl implements EventsService {
 
         var events = eventRepository.findAllEventsByUserId(user.getUserId(),
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
-        ).map(Event::toEventItemDto);
+        ).map(Event::toEventSummaryDto);
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
@@ -164,9 +166,12 @@ public class EventsServiceImpl implements EventsService {
     @Override
     public EventsDto listAllAvailableUserEvents(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
+
         var user = userService.findUserEntityById(userId);
-        var events = eventRepository.findAvailableEventsByOwner(user.getUserId(),
-                PageRequest.of(page, pageSize, Sort.Direction.DESC, "event_date")).map(Event::toEventItemDto);
+
+        Page<EventSummaryDto> events = eventRepository.findAvailableEventsByOwner(user.getUserId(),
+            PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
+        );
 
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }

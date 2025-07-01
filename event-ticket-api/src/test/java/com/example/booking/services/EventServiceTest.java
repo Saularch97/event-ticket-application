@@ -14,6 +14,7 @@ import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.services.intefaces.GeoService;
 import com.example.booking.services.intefaces.TicketCategoryService;
 import io.jsonwebtoken.MalformedJwtException;
@@ -431,8 +432,12 @@ public class EventServiceTest {
         Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, user, 150.00, 1000, false);
         Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, user, 150.00, 2000, false);
 
-        List<Event> eventList = List.of(event1, event2);
-        Page<Event> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
+        List<EventSummaryDto> eventList = List.of(
+                new EventSummaryDto(event1.getEventId(), event1.getEventName(), event1.getEventLocation(), event1.getAvailableTickets(), event1.getEventDate()),
+                new EventSummaryDto(event2.getEventId(), event2.getEventName(), event2.getEventLocation(), event2.getAvailableTickets(), event.getEventDate())
+        );
+
+        Page<EventSummaryDto> eventPage = new PageImpl<>(eventList, PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate"), 5);
 
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
         when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
@@ -456,6 +461,6 @@ public class EventServiceTest {
         PageRequest pr = pageRequestCaptor.getValue();
         assertEquals(page, pr.getPageNumber());
         assertEquals(pageSize, pr.getPageSize());
-        assertEquals(Sort.Direction.DESC, Objects.requireNonNull(pr.getSort().getOrderFor("event_date")).getDirection());
+        assertEquals(Sort.Direction.DESC, Objects.requireNonNull(pr.getSort().getOrderFor("eventDate")).getDirection());
     }
 }

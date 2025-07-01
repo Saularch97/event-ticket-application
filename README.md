@@ -34,9 +34,16 @@ The system is designed using a microservices architecture with asynchronous mess
 
 ## ✅ TODO
 
+
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [x] Implement some migrations with flyway for versioning the database
 * [ ] More complex queries using dto's projections, entity manager
+* [ ] Refactor controller dto's(only use controller dto for request/response)
+* [ ] Add .env.example and change the jwt authkeys(use .env dependencie)
+* [ ] Change integer id's for UUID
+* [ ] Treat all the exceptions in the exception global exception handler
+* [ ] Improve logging
+* [ ] Improve permissioning
 * [ ] K8s for dev and prod
 * [ ] Include role permission in the controllers
 * [ ] Use **Virtual Threads** (Project Loom) where applicable

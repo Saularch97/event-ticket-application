@@ -61,11 +61,15 @@ public class EventController {
 
         var events = eventsService.listAllEvents(page, pageSize);
 
-        return ResponseEntity.ok(new EventsResponse(events.events(),
-                events.page(),
-                events.pageSize(),
-                events.totalPages(),
-                events.totalElements()));
+        return ResponseEntity.ok(
+                new EventsResponse(
+                    events.events(),
+                    events.page(),
+                    events.pageSize(),
+                    events.totalPages(),
+                    events.totalElements()
+                )
+        );
     }
 
     @GetMapping("/userEvents")

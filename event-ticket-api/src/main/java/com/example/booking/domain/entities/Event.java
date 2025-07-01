@@ -1,6 +1,7 @@
 package com.example.booking.domain.entities;
 
 import com.example.booking.controller.dto.EventItemDto;
+import com.example.booking.dto.EventSummaryDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
@@ -184,6 +185,16 @@ public class Event {
                 event.getEventTicketPrice(),
                 event.getAvailableTickets(),
                 event.getTicketCategories().stream().map(TicketCategory::toTicketCategoryDto).toList()
+        );
+    }
+
+    public static EventSummaryDto toEventSummaryDto(Event event) {
+        return new EventSummaryDto(
+                event.getEventId(),
+                event.getEventName(),
+                event.getEventLocation(),
+                event.getAvailableTickets(),
+                event.getEventDate()
         );
     }
 
