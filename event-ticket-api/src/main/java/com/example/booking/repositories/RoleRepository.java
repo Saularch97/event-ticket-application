@@ -1,4 +1,4 @@
-package com.example.booking.repository;
+package com.example.booking.repositories;
 
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.enums.ERole;

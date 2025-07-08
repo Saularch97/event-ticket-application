@@ -3,9 +3,8 @@ package com.example.booking.services;
 
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.enums.ERole;
-import com.example.booking.repository.RoleRepository;
+import com.example.booking.repositories.RoleRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

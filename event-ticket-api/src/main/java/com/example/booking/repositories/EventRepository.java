@@ -1,4 +1,4 @@
-package com.example.booking.repository;
+package com.example.booking.repositories;
 
 import com.example.booking.domain.entities.Event;
 import com.example.booking.dto.EventSummaryDto;
@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
-public interface EventRepository extends JpaRepository<Event, UUID> {
+public interface EventRepository extends JpaRepository<Event, UUID>, CustomEventRepository {
 
     @Query("SELECT e FROM Event e WHERE e.eventOwner.userId = :id")
     Page<Event> findAllEventsByUserId(@Param("id") UUID name, Pageable pageable);

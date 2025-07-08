@@ -1,4 +1,4 @@
-package com.example.booking.repository;
+package com.example.booking.repositories;
 
 import java.util.Optional;
 import java.util.UUID;

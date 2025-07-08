@@ -1,0 +1,26 @@
+meta {
+  name: SearchEvents
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8081/booking/api/events/search?startDate=2025-01-01T00:00:00&endDate=2025-12-31T23:59:59&page=0&pageSize=10
+  body: none
+  auth: inherit
+}
+
+params:query {
+  startDate: 2025-01-01T00:00:00
+  endDate: 2025-12-31T23:59:59
+  page: 0
+  pageSize: 10
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

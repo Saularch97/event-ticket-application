@@ -39,6 +39,8 @@ The system is designed using a microservices architecture with asynchronous mess
 * [x] Implement some migrations with flyway for versioning the database
 * [ ] More complex queries using dto's projections, entity manager
 * [ ] Add http status codes such as 409, 422
+* [ ] Add @Schemas to request and responses from controllers
+* [ ] Add SonarQube
 * [ ] Refactor controller dto's(only use controller dto for request/response)
 * [ ] Add .env.example and change the jwt authkeys(use .env dependencie)
 * [ ] Change integer id's for UUID
@@ -69,10 +71,10 @@ The system is designed using a microservices architecture with asynchronous mess
 
 * [x] Add **tests** (unit and integration)
 * [ ] Setup **deployment** pipeline
-* [ ] Add **CI/CD** (Jenkins, CircleCI, GitHub Actions, etc.)
 * [ ] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.g., Stripe)
 
+VERY VERY IMPORTANT
 * [ ] Change jwt keys and move them to .env file!!!
 ---
 

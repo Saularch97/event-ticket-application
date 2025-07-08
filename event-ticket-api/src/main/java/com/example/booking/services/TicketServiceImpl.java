@@ -9,7 +9,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
-import com.example.booking.repository.TicketRepository;
+import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;

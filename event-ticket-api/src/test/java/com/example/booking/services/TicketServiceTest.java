@@ -6,7 +6,7 @@ import com.example.booking.controller.dto.TicketItemDto;
 import com.example.booking.controller.dto.TicketsDto;
 import com.example.booking.controller.request.EmmitTicketRequest;
 import com.example.booking.domain.entities.*;
-import com.example.booking.repository.TicketRepository;
+import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;

@@ -2,7 +2,7 @@ package com.example.booking.services.scheduler;
 
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.domain.entities.Event;
-import com.example.booking.repository.EventRepository;
+import com.example.booking.repositories.EventRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;

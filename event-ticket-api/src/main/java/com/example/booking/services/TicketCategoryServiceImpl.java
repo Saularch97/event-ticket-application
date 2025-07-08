@@ -4,7 +4,7 @@ import com.example.booking.controller.dto.TicketCategoryDto;
 import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
-import com.example.booking.repository.TicketCategoryRepository;
+import com.example.booking.repositories.TicketCategoryRepository;
 import com.example.booking.services.intefaces.TicketCategoryService;
 import org.springframework.stereotype.Service;
 

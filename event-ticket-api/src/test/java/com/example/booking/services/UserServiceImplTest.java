@@ -5,7 +5,7 @@ import com.example.booking.controller.dto.UserDto;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
-import com.example.booking.repository.UserRepository;
+import com.example.booking.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -16,7 +16,7 @@ import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.exception.TokenRefreshException;
-import com.example.booking.repository.UserRepository;
+import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.AuthService;
 import com.example.booking.services.intefaces.RoleService;
 import com.example.booking.util.JwtUtils;

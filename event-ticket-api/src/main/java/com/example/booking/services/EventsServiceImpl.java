@@ -12,7 +12,7 @@ import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.messaging.EventRequestProducer;
-import com.example.booking.repository.EventRepository;
+import com.example.booking.repositories.EventRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.GeoService;
 import com.example.booking.services.intefaces.TicketCategoryService;
@@ -173,6 +173,32 @@ public class EventsServiceImpl implements EventsService {
             PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
         );
 
-        return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
+        return new EventsDto(
+                events.getContent(),
+                page,
+                pageSize,
+                events.getTotalPages(),
+                events.getTotalElements()
+        );
+    }
+
+    @Override
+    public EventsDto searchEvents(String name, String location, LocalDateTime start, LocalDateTime end, int page, int pageSize) {
+
+        Page<EventSummaryDto> eventsPage = eventRepository.findByCriteria(
+                name,
+                location,
+                start,
+                end,
+                PageRequest.of(page, pageSize)
+        );
+
+        return new EventsDto(
+                eventsPage.getContent(),
+                page,
+                pageSize,
+                eventsPage.getTotalPages(),
+                eventsPage.getTotalElements()
+        );
     }
 }

@@ -1,15 +1,20 @@
 package com.example.booking.controller;
 
+import com.example.booking.controller.dto.EventsDto;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.response.EventResponse;
 import com.example.booking.controller.response.EventsResponse;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.UriUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -97,5 +102,52 @@ public class EventController {
         var events = eventsService.listAllAvailableUserEvents(page, pageSize);
 
         return ResponseEntity.ok(new EventsResponse(events.events(), events.page(), events.pageSize(), events.totalPages(), events.totalElements()));
+    }
+
+    @Operation(
+            summary = "Search new events with dynamic filters",
+            description = "Returns a list of events based on optional search criteria such as name, location, and date range."
+    )
+    @GetMapping("/events/search")
+    public ResponseEntity<EventsResponse> searchEvents(
+            @Parameter(
+                    description = "Complete of partial name for search",
+                    example = "Show do Legado"
+            )
+            @RequestParam(required = false) String name,
+
+            @Parameter(
+                    description = "Event Location",
+                    example = "Alfenas"
+            )
+            @RequestParam(required = false) String location,
+
+            @Parameter(
+                    description = "Start period from the search (format ISO: YYYY-MM-DDTHH:MM:SS).",
+                    example = "2025-01-01T00:00:00"
+            )
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+
+            @Parameter(
+                    description = "End period from the search (format ISO: YYYY-MM-DDTHH:MM:SS).",
+                    example = "2025-12-31T23:59:59"
+            )
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+
+            @Parameter(
+                    description = "page position",
+                    example = "10"
+            )
+            @RequestParam(value = "page", defaultValue = "0") int page,
+
+            @Parameter(
+                    description = "page size",
+                    example = "10"
+            )
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
+    ) {
+        EventsDto events = eventsService.searchEvents(name, location, startDate, endDate, page, pageSize);
+
+        return ResponseEntity.ok(new EventsResponse(events.events(), page, pageSize, events.totalPages(), events.totalElements()));
     }
 }

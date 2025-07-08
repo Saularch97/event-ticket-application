@@ -1,4 +1,4 @@
-package com.example.booking.repository;
+package com.example.booking.repositories;
 
 import com.example.booking.domain.entities.Ticket;
 import org.springframework.data.domain.Page;

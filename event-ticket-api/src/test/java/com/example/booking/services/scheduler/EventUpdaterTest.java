@@ -2,7 +2,7 @@ package com.example.booking.services.scheduler;
 
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
-import com.example.booking.repository.EventRepository;
+import com.example.booking.repositories.EventRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

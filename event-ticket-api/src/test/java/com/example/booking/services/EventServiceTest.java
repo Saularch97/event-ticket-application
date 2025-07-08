@@ -29,13 +29,10 @@ import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.messaging.EventRequestProducer;
-import com.example.booking.repository.EventRepository;
+import com.example.booking.repositories.EventRepository;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -155,7 +152,6 @@ public class EventServiceTest {
 
     @Test
     void createEvent_ShouldReturnAnEventItemDto_WhenRequestIsValid() {
-        // Arrange
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
 
         when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
@@ -171,10 +167,8 @@ public class EventServiceTest {
                         1))
                 );
 
-        // Act
         EventItemDto result = eventsService.createEvent(createEventRequest);
 
-        // Assert
         verify(eventRepository).save(any(Event.class));
         assertNotNull(result);
         assertEquals(eventItemDto, result);
@@ -182,13 +176,11 @@ public class EventServiceTest {
 
     @Test
     void createEvent_ShouldReturnAnError_WhenUserIsNotFound() {
-        // Arrange
         when(userService.findUserEntityById(user.getUserId()))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
 
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
 
-        // Act & Assert
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
                 () -> eventsService.createEvent(createEventRequest)
@@ -201,11 +193,9 @@ public class EventServiceTest {
 
     @Test
     void createEvent_ShouldReturnAnError_WhenTokenIsInvalid() {
-        // Arrange
         when(jwtUtils.getAuthenticatedUserId())
                 .thenThrow(new MalformedJwtException("Invalid token"));
 
-        // Act & Assert
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
                 () -> eventsService.createEvent(createEventRequest)
@@ -216,7 +206,6 @@ public class EventServiceTest {
 
     @Test
     void createEvent_ShouldReturnAnEventItemDtoWithMoreThanOneTicketCategory_WhenMoreThanOneTicketCategoryIsProvided() {
-        // Arrange
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
         List<TicketCategory> ticketCategories = List.of(
                 new TicketCategory(20, event, 20.0, "prime_ticket", 1),
@@ -246,10 +235,8 @@ public class EventServiceTest {
             return e;
         });
 
-        // Act
         EventItemDto result = eventsService.createEvent(createRequest);
 
-        // Assert
         verify(eventRepository).save(any(Event.class));
         assertNotNull(result);
         assertEquals("Festival de Verão", result.eventName());
@@ -260,7 +247,6 @@ public class EventServiceTest {
 
     @Test
     void createEvent_ShouldHaveTheRightAmountOfAvailableAndOriginalTickets_WhenCreateEventWithAGivenAmountOfTicketCategories() {
-        // Arrange
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
         List<TicketCategory> ticketCategories = List.of(
                 new TicketCategory(50, event, 20.0, "prime_ticket", 1),
@@ -290,13 +276,11 @@ public class EventServiceTest {
             return e;
         });
 
-        // Act
         EventItemDto result = eventsService.createEvent(createRequest);
 
         verify(eventRepository).save(eventCaptor.capture());
         Event savedEvent = eventCaptor.getValue();
 
-        // Assert
         assertNotNull(result);
         assertEquals(100, result.availableTickets());
         assertEquals(100, savedEvent.getOriginalAmountOfTickets());
@@ -304,7 +288,6 @@ public class EventServiceTest {
 
     @Test
     void listAllEvents_ShouldReturnPaginatedEvents() {
-        // Arrange
         int page = 0;
         int pageSize = 2;
 
@@ -337,7 +320,6 @@ public class EventServiceTest {
 
     @Test
     void listAllUserEvents_ShouldReturnPaginatedEvents() {
-        // Arrange
         int page = 0;
         int pageSize = 2;
 
@@ -373,40 +355,33 @@ public class EventServiceTest {
 
     @Test
     void getTopTrendingEvents_ShouldReturnTrendingEventsCorrectly() {
-        // Arrange
         LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
         Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, null, 150.00, 1000, false);
         Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, null, 150.00, 1000, true);
 
         when(eventRepository.findAll()).thenReturn(List.of(event1, event2));
 
-        // Act
         List<EventItemDto> trendingEvents = eventsService.getTopTrendingEvents();
 
-        // Assert
         assertEquals(1, trendingEvents.size());
         assertEquals(event2.getEventName(), trendingEvents.getFirst().eventName());
     }
 
     @Test
     void getTopTrendingEvents_ShouldReturnAnEmptyListWhenNoEventsAreTrending() {
-        // Arrange
         LocalDateTime eventDate = LocalDateTime.of(2025, 8, 15, 20, 30);
         Event event1 = createSimpleEvent("Show de Rock", "Alfenas", eventDate, null, 150.00, 1000, false);
         Event event2 = createSimpleEvent("Show de Rock", "Botelhos", eventDate, null, 150.00, 1000, false);
 
         when(eventRepository.findAll()).thenReturn(List.of(event1, event2));
 
-        // Act
         List<EventItemDto> trendingEvents = eventsService.getTopTrendingEvents();
 
-        // Assert
         assertEquals(0, trendingEvents.size());
     }
 
     @Test
     void findEventById_ShouldReturnAnEventGivenHisId() {
-        // Arrange
         UUID id = UUID.randomUUID();
         Event event = createSimpleEvent("Show de Rock", "Alfenas",
                 LocalDateTime.of(2025, 8, 15, 20, 30),
@@ -415,16 +390,13 @@ public class EventServiceTest {
 
         when(eventRepository.findById(id)).thenReturn(Optional.of(event));
 
-        // Act
         var res = eventsService.findEventEntityById(id);
 
-        // Assert
         assertEquals(event, res);
     }
 
     @Test
     void listAllAvailableUserEvents_ShouldReturnAnListOfAvailableUserEvents() {
-        // Arrange
         int page = 0;
         int pageSize = 2;
 
@@ -462,5 +434,39 @@ public class EventServiceTest {
         assertEquals(page, pr.getPageNumber());
         assertEquals(pageSize, pr.getPageSize());
         assertEquals(Sort.Direction.DESC, Objects.requireNonNull(pr.getSort().getOrderFor("eventDate")).getDirection());
+    }
+
+    @Test
+    void testSearchEventsShouldCallRepositoryAndReturnDto() {
+
+        String name = "Show";
+        String location = "Alfenas";
+        LocalDateTime startDate = LocalDateTime.now();
+        LocalDateTime endDate = startDate.plusDays(3);
+        int page = 0;
+        int pageSize = 10;
+        Pageable pageRequest = PageRequest.of(page, pageSize);
+
+        List<EventSummaryDto> fakeEventList = List.of(
+                new EventSummaryDto(UUID.randomUUID(), "Show de Rock", "Alfenas", 150, startDate),
+                new EventSummaryDto(UUID.randomUUID(), "Show de Pagode", "Varginha", 200, startDate)
+        );
+        Page<EventSummaryDto> fakePage = new PageImpl<>(fakeEventList, pageRequest, fakeEventList.size());
+
+        when(eventRepository.findByCriteria(name, location, startDate, endDate, pageRequest))
+                .thenReturn(fakePage);
+
+        EventsDto result = eventsService.searchEvents(name, location, startDate, endDate, page, pageSize);
+
+        verify(eventRepository, times(1)).findByCriteria(name, location, startDate, endDate, pageRequest);
+
+        assertNotNull(result);
+        assertEquals(2, result.events().size());
+        assertEquals(page, result.page());
+        assertEquals(pageSize, result.pageSize());
+        assertEquals(1, result.totalPages());
+        assertEquals(2, result.totalElements());
+        assertEquals("Show de Rock", result.events().getFirst().name());
+        assertEquals("Show de Pagode", result.events().get(1).name());
     }
 }
