@@ -1,16 +1,16 @@
 package com.example.booking.services;
 
 import com.example.booking.dto.CityDataDto;
-import com.example.booking.services.client.NominatimClient;
+import com.example.booking.services.client.GeoSearchClient;
 import com.example.booking.services.intefaces.GeoService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GeoServiceImpl implements GeoService {
 
-    private final NominatimClient client;
+    private final GeoSearchClient client;
 
-    public GeoServiceImpl(NominatimClient client) {
+    public GeoServiceImpl(GeoSearchClient client) {
         this.client = client;
     }
 

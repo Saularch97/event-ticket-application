@@ -1,6 +1,6 @@
 package com.example.booking.controller.response;
 
-public record NominatimResponse(
+public record GeoSearchResponse(
          Double lat,
          Double lon
 ) {
