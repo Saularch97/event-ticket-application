@@ -1,4 +1,4 @@
-package com.example.booking.controller.request;
+package com.example.booking.controller.request.order;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;

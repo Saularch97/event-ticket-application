@@ -2,10 +2,10 @@ package com.example.booking.services.intefaces;
 
 import com.example.booking.dto.CookieParDto;
 import com.example.booking.dto.UserDto;
-import com.example.booking.controller.request.LoginRequest;
-import com.example.booking.controller.request.SignupRequest;
-import com.example.booking.controller.response.AuthResponse;
-import com.example.booking.controller.response.RefreshTokenResponse;
+import com.example.booking.controller.request.auth.LoginRequest;
+import com.example.booking.controller.request.auth.SignupRequest;
+import com.example.booking.controller.response.auth.AuthResponse;
+import com.example.booking.controller.response.auth.RefreshTokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface AuthService {

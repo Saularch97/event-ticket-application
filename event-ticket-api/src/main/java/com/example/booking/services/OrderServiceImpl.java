@@ -1,9 +1,9 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
-import com.example.booking.controller.request.CreateOrderRequest;
+import com.example.booking.controller.request.order.CreateOrderRequest;
 import com.example.booking.dto.OrderItemDto;
-import com.example.booking.dto.OrdersDto;
+import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.domain.entities.*;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.repositories.UserRepository;
@@ -90,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
 
     // TODO validate this cache logic in the unit tests
     @Override
-    public OrdersDto getUserOrders(int page, int pageSize) {
+    public OrdersResponse getUserOrders(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
 
         Cache cache = cacheManager.getCache(CacheNames.ORDERS);
@@ -98,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
 
         String cacheKey = userId.toString() + "-" + page + "-" + pageSize;
 
-        OrdersDto cachedOrders = cache.get(cacheKey, OrdersDto.class);
+        OrdersResponse cachedOrders = cache.get(cacheKey, OrdersResponse.class);
 
         if (cachedOrders != null) {
             return cachedOrders;
@@ -110,7 +110,7 @@ public class OrderServiceImpl implements OrderService {
                 .findOrdersByUserIdWithAssociations(userId, pageRequest)
                 .map(Order::toOrderItemDto);
 
-        OrdersDto resultToCache = new OrdersDto(ordersPage.getContent(), page, pageSize, ordersPage.getTotalPages(), ordersPage.getTotalElements());
+        OrdersResponse resultToCache = new OrdersResponse(ordersPage.getContent(), page, pageSize, ordersPage.getTotalPages(), ordersPage.getTotalElements());
 
         cache.put(cacheKey, resultToCache);
 

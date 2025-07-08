@@ -1,8 +1,9 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.request.CreateOrderRequest;
+import com.example.booking.controller.request.order.CreateOrderRequest;
+import com.example.booking.controller.response.order.CreateOrderResponse;
+import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.dto.OrderItemDto;
-import com.example.booking.dto.OrdersDto;
 import com.example.booking.services.intefaces.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class OrderController {
     }
 
     @PostMapping("/order")
-    public ResponseEntity<OrderItemDto> createNewOrder(
+    public ResponseEntity<CreateOrderResponse> createNewOrder(
             @Valid
             @RequestBody CreateOrderRequest request
     )  {
@@ -36,19 +37,19 @@ public class OrderController {
                 .buildAndExpand(savedOrder.orderId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(savedOrder);
+        return ResponseEntity.created(location).body(new CreateOrderResponse(savedOrder.orderId()));
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<OrdersDto> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
-                                                   @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
+    public ResponseEntity<OrdersResponse> getUserOrders(@RequestParam(value = "page", defaultValue = "0") int page,
+                                                        @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
 
         var ordersDto = orderService.getUserOrders(page, pageSize);
         return ResponseEntity.ok(ordersDto);
     }
 
     @DeleteMapping("/order/{id}")
-    public ResponseEntity<?> deleteOrder(@PathVariable("id") UUID orderId,
+    public ResponseEntity<Void> deleteOrder(@PathVariable("id") UUID orderId,
                                          @RequestHeader(name = "Cookie") String token) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.noContent().build();

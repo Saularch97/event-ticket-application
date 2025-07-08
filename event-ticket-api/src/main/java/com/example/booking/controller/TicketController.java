@@ -1,10 +1,10 @@
 package com.example.booking.controller;
 
 import com.example.booking.dto.TicketsDto;
-import com.example.booking.controller.request.EmmitTicketRequest;
-import com.example.booking.controller.response.AvailableTicketsResponse;
-import com.example.booking.controller.response.CreateTicketResponse;
-import com.example.booking.controller.response.TicketsResponse;
+import com.example.booking.controller.request.ticket.EmmitTicketRequest;
+import com.example.booking.controller.response.ticket.AvailableTicketsResponse;
+import com.example.booking.controller.response.ticket.CreateTicketResponse;
+import com.example.booking.controller.response.ticket.TicketsResponse;
 import com.example.booking.services.TicketServiceImpl;
 import com.example.booking.services.intefaces.TicketService;
 import jakarta.validation.Valid;

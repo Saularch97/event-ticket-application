@@ -1,6 +1,6 @@
 package com.example.booking.services.intefaces;
 
-import com.example.booking.controller.request.PaymentInfoRequest;
+import com.example.booking.controller.request.order.PaymentInfoRequest;
 import com.example.booking.domain.entities.Payment;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;

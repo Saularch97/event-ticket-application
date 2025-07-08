@@ -2,7 +2,7 @@ package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.dto.CityDataDto;
-import com.example.booking.controller.request.CreateEventRequest;
+import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventsDto;
 import com.example.booking.dto.RecomendEventDto;

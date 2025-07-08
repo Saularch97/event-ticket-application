@@ -1,4 +1,4 @@
-package com.example.booking.controller.request;
+package com.example.booking.controller.request.auth;
 
 import jakarta.validation.constraints.NotBlank;
 

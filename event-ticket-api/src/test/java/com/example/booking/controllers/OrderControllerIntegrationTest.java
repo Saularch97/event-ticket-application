@@ -1,9 +1,9 @@
 package com.example.booking.controllers;
 
-import com.example.booking.controller.request.CreateEventRequest;
-import com.example.booking.controller.request.CreateOrderRequest;
-import com.example.booking.controller.request.CreateTicketCategoryRequest;
-import com.example.booking.controller.request.EmmitTicketRequest;
+import com.example.booking.controller.request.event.CreateEventRequest;
+import com.example.booking.controller.request.order.CreateOrderRequest;
+import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
+import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
@@ -124,10 +124,7 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
                         .content(objectMapper.writeValueAsString(createOrderRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", containsString(ORDER_URL + "/")))
-                .andExpect(jsonPath("$.orderId", notNullValue()))
-                .andExpect(jsonPath("$.tickets.length()", is(1)))
-                .andExpect(jsonPath("$.tickets[0].ticketId", is(notNullValue())))
-                .andExpect(jsonPath("$.user.userName", is("admin")));
+                .andExpect(jsonPath("$.orderId", notNullValue()));
     }
 
     @Test

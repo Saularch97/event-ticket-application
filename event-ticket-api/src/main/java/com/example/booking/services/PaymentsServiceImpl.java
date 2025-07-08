@@ -1,7 +1,7 @@
 /*
 package com.example.booking.services;
 
-import com.example.booking.controller.request.PaymentInfoRequest;
+import com.example.booking.controller.request.order.PaymentInfoRequest;
 import com.example.booking.domain.entities.Payment;
 import com.example.booking.repository.PaymentRepository;
 import com.example.booking.services.intefaces.PaymentService;

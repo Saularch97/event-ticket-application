@@ -1,8 +1,8 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.request.LoginRequest;
-import com.example.booking.controller.response.AuthMessageResponse;
-import com.example.booking.controller.request.SignupRequest;
+import com.example.booking.controller.request.auth.LoginRequest;
+import com.example.booking.controller.response.auth.AuthMessageResponse;
+import com.example.booking.controller.request.auth.SignupRequest;
 import com.example.booking.services.intefaces.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

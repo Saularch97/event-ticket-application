@@ -3,7 +3,7 @@ package com.example.booking.services.intefaces;
 import com.example.booking.dto.RemainingTicketCategoryDto;
 import com.example.booking.dto.TicketItemDto;
 import com.example.booking.dto.TicketsDto;
-import com.example.booking.controller.request.EmmitTicketRequest;
+import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.Ticket;
 
 import java.util.List;

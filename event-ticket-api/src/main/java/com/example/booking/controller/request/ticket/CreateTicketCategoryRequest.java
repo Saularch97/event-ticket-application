@@ -1,4 +1,4 @@
-package com.example.booking.controller.request;
+package com.example.booking.controller.request.ticket;
 
 import jakarta.validation.constraints.*;
 

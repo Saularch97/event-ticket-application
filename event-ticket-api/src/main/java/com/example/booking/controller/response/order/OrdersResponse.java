@@ -1,9 +1,11 @@
-package com.example.booking.dto;
+package com.example.booking.controller.response.order;
+
+import com.example.booking.dto.OrderItemDto;
 
 import java.io.Serializable;
 import java.util.List;
 
-public record OrdersDto(
+public record OrdersResponse(
         List<OrderItemDto> orders,
         int page,
         int pageSize,

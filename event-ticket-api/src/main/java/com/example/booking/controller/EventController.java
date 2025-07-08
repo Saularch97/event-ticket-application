@@ -1,9 +1,9 @@
 package com.example.booking.controller;
 
 import com.example.booking.dto.EventsDto;
-import com.example.booking.controller.request.CreateEventRequest;
-import com.example.booking.controller.response.EventResponse;
-import com.example.booking.controller.response.EventsResponse;
+import com.example.booking.controller.request.event.CreateEventRequest;
+import com.example.booking.controller.response.event.EventResponse;
+import com.example.booking.controller.response.event.EventsResponse;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.util.UriUtil;
 import io.swagger.v3.oas.annotations.Operation;

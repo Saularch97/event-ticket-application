@@ -4,7 +4,7 @@ import com.example.booking.config.cache.CacheNames;
 import com.example.booking.dto.RemainingTicketCategoryDto;
 import com.example.booking.dto.TicketItemDto;
 import com.example.booking.dto.TicketsDto;
-import com.example.booking.controller.request.EmmitTicketRequest;
+import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.TicketCategory;

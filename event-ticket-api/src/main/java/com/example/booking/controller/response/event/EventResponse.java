@@ -1,4 +1,4 @@
-package com.example.booking.controller.response;
+package com.example.booking.controller.response.event;
 
 import java.util.UUID;
 

@@ -1,8 +1,8 @@
 package com.example.booking.controllers;
 
-import com.example.booking.controller.request.CreateEventRequest;
-import com.example.booking.controller.request.CreateTicketCategoryRequest;
-import com.example.booking.controller.request.EmmitTicketRequest;
+import com.example.booking.controller.request.event.CreateEventRequest;
+import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
+import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;

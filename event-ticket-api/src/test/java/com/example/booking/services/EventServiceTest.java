@@ -25,8 +25,8 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.booking.dto.EventItemDto;
-import com.example.booking.controller.request.CreateEventRequest;
-import com.example.booking.controller.request.CreateTicketCategoryRequest;
+import com.example.booking.controller.request.event.CreateEventRequest;
+import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repositories.EventRepository;

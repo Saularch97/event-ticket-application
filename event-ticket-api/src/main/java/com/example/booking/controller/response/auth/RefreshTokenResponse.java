@@ -1,4 +1,4 @@
-package com.example.booking.controller.response;
+package com.example.booking.controller.response.auth;
 
 import org.springframework.http.ResponseCookie;
 

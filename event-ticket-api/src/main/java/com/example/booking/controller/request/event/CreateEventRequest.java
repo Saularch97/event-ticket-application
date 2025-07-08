@@ -1,5 +1,6 @@
-package com.example.booking.controller.request;
+package com.example.booking.controller.request.event;
 
+import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;

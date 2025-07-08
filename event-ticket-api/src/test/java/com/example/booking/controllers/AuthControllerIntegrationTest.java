@@ -1,7 +1,7 @@
 package com.example.booking.controllers;
 
-import com.example.booking.controller.request.LoginRequest;
-import com.example.booking.controller.request.SignupRequest;
+import com.example.booking.controller.request.auth.LoginRequest;
+import com.example.booking.controller.request.auth.SignupRequest;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.repositories.RefreshTokenRepository;

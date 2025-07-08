@@ -1,6 +1,6 @@
 package com.example.booking.services.intefaces;
 
-import com.example.booking.controller.request.CreateTicketCategoryRequest;
+import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 

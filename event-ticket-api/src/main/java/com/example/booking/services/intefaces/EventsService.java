@@ -1,6 +1,6 @@
 package com.example.booking.services.intefaces;
 
-import com.example.booking.controller.request.CreateEventRequest;
+import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventsDto;
 import com.example.booking.domain.entities.Event;

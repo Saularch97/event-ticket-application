@@ -1,4 +1,4 @@
-package com.example.booking.controller.response;
+package com.example.booking.controller.response.auth;
 
 import java.util.List;
 import java.util.UUID;
