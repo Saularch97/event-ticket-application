@@ -1,6 +1,6 @@
 package com.example.booking.controller.response;
 
-import com.example.booking.controller.dto.RemainingTicketCategoryDto;
+import com.example.booking.dto.RemainingTicketCategoryDto;
 
 import java.util.List;
 

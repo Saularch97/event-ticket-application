@@ -4,7 +4,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.stereotype.Component;
 
-import com.example.booking.controller.dto.RecomendEventDto;
+import com.example.booking.dto.RecomendEventDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

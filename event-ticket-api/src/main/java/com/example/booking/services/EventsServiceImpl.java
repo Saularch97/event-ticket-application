@@ -1,11 +1,11 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
-import com.example.booking.controller.dto.CityDataDto;
+import com.example.booking.dto.CityDataDto;
 import com.example.booking.controller.request.CreateEventRequest;
-import com.example.booking.controller.dto.EventItemDto;
-import com.example.booking.controller.dto.EventsDto;
-import com.example.booking.controller.dto.RecomendEventDto;
+import com.example.booking.dto.EventItemDto;
+import com.example.booking.dto.EventsDto;
+import com.example.booking.dto.RecomendEventDto;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;

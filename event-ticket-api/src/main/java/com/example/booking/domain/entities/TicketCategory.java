@@ -1,6 +1,6 @@
 package com.example.booking.domain.entities;
 
-import com.example.booking.controller.dto.TicketCategoryDto;
+import com.example.booking.dto.TicketCategoryDto;
 import jakarta.persistence.*;
 
 @Entity

@@ -1,4 +1,4 @@
-package com.example.booking.controller.dto;
+package com.example.booking.dto;
 
 public record CityDataDto(Double latitude, Double longitude) {
 }

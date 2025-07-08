@@ -4,8 +4,8 @@ package com.example.booking.services;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.example.booking.controller.dto.CookieParDto;
-import com.example.booking.controller.dto.UserDto;
+import com.example.booking.dto.CookieParDto;
+import com.example.booking.dto.UserDto;
 import com.example.booking.controller.request.LoginRequest;
 import com.example.booking.controller.request.SignupRequest;
 import com.example.booking.controller.response.AuthResponse;

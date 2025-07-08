@@ -1,8 +1,8 @@
 package com.example.booking.services.intefaces;
 
 import com.example.booking.controller.request.CreateOrderRequest;
-import com.example.booking.controller.dto.OrderItemDto;
-import com.example.booking.controller.dto.OrdersDto;
+import com.example.booking.dto.OrderItemDto;
+import com.example.booking.dto.OrdersDto;
 
 import java.util.UUID;
 

@@ -1,6 +1,4 @@
-package com.example.booking.controller.dto;
-
-import com.example.booking.dto.EventSummaryDto;
+package com.example.booking.dto;
 
 import java.util.List;
 

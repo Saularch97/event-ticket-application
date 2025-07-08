@@ -1,6 +1,6 @@
 package com.example.booking.services;
 
-import com.example.booking.controller.dto.CityDataDto;
+import com.example.booking.dto.CityDataDto;
 import com.example.booking.services.client.NominatimClient;
 import com.example.booking.services.intefaces.GeoService;
 import org.springframework.stereotype.Service;

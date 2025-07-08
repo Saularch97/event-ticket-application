@@ -1,6 +1,6 @@
 package com.example.booking.domain.entities;
 
-import com.example.booking.controller.dto.EventItemDto;
+import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventSummaryDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;

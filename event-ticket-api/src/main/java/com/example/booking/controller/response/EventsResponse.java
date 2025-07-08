@@ -1,6 +1,5 @@
 package com.example.booking.controller.response;
 
-import com.example.booking.controller.dto.EventItemDto;
 import com.example.booking.dto.EventSummaryDto;
 
 import java.util.List;

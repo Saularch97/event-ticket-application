@@ -1,7 +1,7 @@
 package com.example.booking.services;
 
 import com.example.booking.controller.request.CreateUserRequest;
-import com.example.booking.controller.dto.UserDto;
+import com.example.booking.dto.UserDto;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;

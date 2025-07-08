@@ -1,4 +1,4 @@
-package com.example.booking.controller.dto;
+package com.example.booking.dto;
 
 import java.io.Serializable;
 import java.util.List;

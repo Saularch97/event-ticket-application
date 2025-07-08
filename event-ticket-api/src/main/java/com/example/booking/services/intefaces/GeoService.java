@@ -1,6 +1,6 @@
 package com.example.booking.services.intefaces;
 
-import com.example.booking.controller.dto.CityDataDto;
+import com.example.booking.dto.CityDataDto;
 
 public interface GeoService {
     CityDataDto searchForCityData(String cityName);

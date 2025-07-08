@@ -1,8 +1,8 @@
 package com.example.booking.controller;
 
 import com.example.booking.controller.request.CreateOrderRequest;
-import com.example.booking.controller.dto.OrderItemDto;
-import com.example.booking.controller.dto.OrdersDto;
+import com.example.booking.dto.OrderItemDto;
+import com.example.booking.dto.OrdersDto;
 import com.example.booking.services.intefaces.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

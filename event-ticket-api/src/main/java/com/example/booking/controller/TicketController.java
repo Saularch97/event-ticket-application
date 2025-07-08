@@ -1,6 +1,6 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.TicketsDto;
+import com.example.booking.dto.TicketsDto;
 import com.example.booking.controller.request.EmmitTicketRequest;
 import com.example.booking.controller.response.AvailableTicketsResponse;
 import com.example.booking.controller.response.CreateTicketResponse;

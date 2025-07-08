@@ -1,4 +1,4 @@
-package com.example.booking.controller.dto;
+package com.example.booking.dto;
 
 import org.springframework.http.ResponseCookie;
 

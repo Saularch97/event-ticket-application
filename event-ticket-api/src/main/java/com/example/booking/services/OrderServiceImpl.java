@@ -2,8 +2,8 @@ package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.CreateOrderRequest;
-import com.example.booking.controller.dto.OrderItemDto;
-import com.example.booking.controller.dto.OrdersDto;
+import com.example.booking.dto.OrderItemDto;
+import com.example.booking.dto.OrdersDto;
 import com.example.booking.domain.entities.*;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.repositories.UserRepository;

@@ -1,6 +1,6 @@
 package com.example.booking.controller;
 
-import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.dto.EventsDto;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.response.EventResponse;
 import com.example.booking.controller.response.EventsResponse;

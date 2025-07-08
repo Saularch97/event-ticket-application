@@ -8,8 +8,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import com.example.booking.controller.dto.CityDataDto;
-import com.example.booking.controller.dto.EventsDto;
+import com.example.booking.dto.CityDataDto;
+import com.example.booking.dto.EventsDto;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.booking.controller.dto.EventItemDto;
+import com.example.booking.dto.EventItemDto;
 import com.example.booking.controller.request.CreateEventRequest;
 import com.example.booking.controller.request.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
