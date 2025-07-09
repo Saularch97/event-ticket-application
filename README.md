@@ -44,7 +44,7 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add http status codes such as 409, 422
 * [x] Add @Schemas to request and responses from controllers
 * [x] Refactor controller dto's(only use controller dto for request/response)
-* [] Add .env.example and change the jwt authkeys(use .env dependencie)
+* [x] Add .env.example and change the jwt authkeys(use .env dependencie)
 * [] Verify if cache is working(make unit tests just for the cache)
 * [ ] Change integer id's for UUID
 * [ ] Treat all the exceptions in the exception global exception handler
