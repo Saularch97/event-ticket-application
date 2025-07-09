@@ -84,7 +84,6 @@ class UserServiceImplTest {
 
     @Test
     void listAllUsers_ShouldReturnListOfUserDtos_WhenUsersExist() {
-        // Arrange
         User user2 = new User();
         user2.setUserName("anotheruser");
         user2.setEmail("another@example.com");
@@ -92,10 +91,8 @@ class UserServiceImplTest {
 
         when(repository.findAll()).thenReturn(List.of(user, user2));
 
-        // Act
         List<UserDto> result = userService.listAllUsers();
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(user.getUserName(), result.get(0).userName());
@@ -105,13 +102,10 @@ class UserServiceImplTest {
 
     @Test
     void listAllUsers_ShouldReturnEmptyList_WhenNoUsersExist() {
-        // Arrange
         when(repository.findAll()).thenReturn(List.of());
 
-        // Act
         List<UserDto> result = userService.listAllUsers();
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(repository).findAll();
@@ -119,13 +113,10 @@ class UserServiceImplTest {
 
     @Test
     void findByUserName_ShouldReturnUserDto_WhenUserExists() {
-        // Arrange
         when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
 
-        // Act
         UserDto result = userService.findByUserName("testuser");
 
-        // Assert
         assertNotNull(result);
         assertEquals(user.getUserName(), result.userName());
         assertEquals(user.getEmail(), result.email());
@@ -135,10 +126,8 @@ class UserServiceImplTest {
 
     @Test
     void findByUserName_ShouldThrowException_WhenUserNotFound() {
-        // Arrange
         when(repository.findByUserName("nonexistent")).thenReturn(Optional.empty());
 
-        // Act & Assert
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
                 () -> userService.findByUserName("nonexistent")
@@ -151,13 +140,10 @@ class UserServiceImplTest {
 
     @Test
     void findEntityByUserName_ShouldReturnUserUserEntity_WhenUserExists() {
-        // Arrange
         when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
 
-        // Act
         User result = userService.findUserEntityByUserName("testuser");
 
-        // Assert
         assertNotNull(result);
         assertEquals(user.getUserName(), result.getUserName());
         assertEquals(user.getEmail(), result.getEmail());
@@ -166,10 +152,8 @@ class UserServiceImplTest {
 
     @Test
     void findUserEntityByUserName_ShouldThrowException_WhenUserNotFound() {
-        // Arrange
         when(repository.findByUserName("nonexistent")).thenReturn(Optional.empty());
 
-        // Act & Assert
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
                 () -> userService.findUserEntityByUserName("nonexistent")
@@ -182,7 +166,6 @@ class UserServiceImplTest {
 
     @Test
     void saveUser_ShouldSetCorrectProperties_WhenCreatingNewUser() {
-        // Arrange
         CreateUserRequest request = new CreateUserRequest(
                 "newuser",
                 "new@example.com",
@@ -196,12 +179,8 @@ class UserServiceImplTest {
             return savedUser;
         });
 
-
-
-        // Act
         UserDto result = userService.saveUser(request);
 
-        // Assert
         verify(repository).save(argThat(user ->
                 user.getUserName().equals("newuser") &&
                         user.getEmail().equals("new@example.com") &&
@@ -214,16 +193,13 @@ class UserServiceImplTest {
 
     @Test
     void findByUserName_ShouldIncludeRolesInResponse() {
-        // Arrange
         Role adminRole = new Role(ERole.ROLE_ADMIN);
         user.setRoles(Set.of(adminRole));
 
         when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
 
-        // Act
         UserDto result = userService.findByUserName("testuser");
 
-        // Assert
         assertEquals(1, result.scopes().size());
         assertEquals("ROLE_ADMIN", result.scopes().getFirst().name());
     }

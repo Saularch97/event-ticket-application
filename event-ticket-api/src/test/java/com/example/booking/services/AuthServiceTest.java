@@ -95,7 +95,6 @@ class AuthServiceTest {
 
     @Test
     void authenticateUser_ShouldReturnAuthResponse_WhenCredentialsAreValid() {
-        // Arrange
         Authentication authentication = mock(Authentication.class);
 
         List<GrantedAuthority> roles = List.of(new SimpleGrantedAuthority("ROLE_USER"));
@@ -114,10 +113,8 @@ class AuthServiceTest {
         when(jwtUtils.generateRefreshJwtCookie(any())).thenReturn(refreshCookie);
         when(refreshTokenService.createRefreshToken(user.getUserId())).thenReturn(refreshToken);
 
-        // Act
         AuthResponse response = authServiceImpl.authenticateUser(loginRequest);
 
-        // Assert
         assertNotNull(response);
         assertEquals(jwtCookie, response.jwtCookie());
         assertEquals(refreshCookie, response.jwtRefreshCookie());
@@ -136,17 +133,14 @@ class AuthServiceTest {
 
     @Test
     void registerUser_ShouldReturnUserDto_WhenRegistrationIsSuccessful() {
-        // Arrange
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(signupRequest.email())).thenReturn(false);
         when(passwordEncoder.encode(signupRequest.password())).thenReturn("encodedPassword");
         when(roleService.findRoleEntityByName(ERole.ROLE_USER)).thenReturn(userRole);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        // Act
         UserDto result = authServiceImpl.registerUser(signupRequest);
 
-        // Assert
         assertNotNull(result);
         assertEquals(user.getUserId(), result.userId());
         assertEquals(user.getUserName(), result.userName());
@@ -161,11 +155,9 @@ class AuthServiceTest {
 
     @Test
     void registerUser_ShouldThrowException_WhenUsernameIsTaken() {
-        // Arrange
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(true);
 
-        // Act & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
             () -> authServiceImpl.registerUser(signupRequest));
         
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
@@ -178,12 +170,10 @@ class AuthServiceTest {
 
     @Test
     void registerUser_ShouldThrowException_WhenEmailIsTaken() {
-        // Arrange
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(signupRequest.email())).thenReturn(true);
 
-        // Act & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
             () -> authServiceImpl.registerUser(signupRequest));
         
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
@@ -196,7 +186,6 @@ class AuthServiceTest {
 
     @Test
     void registerUser_ShouldAssignAdminRole_WhenAdminRoleIsRequested() {
-        // Arrange
         SignupRequest adminSignupRequest = new SignupRequest("admin", "admin@example.com", Set.of("admin"), "password");
 
         when(userRepository.existsByUserName(adminSignupRequest.username())).thenReturn(false);
@@ -213,10 +202,8 @@ class AuthServiceTest {
 
         when(userRepository.save(any(User.class))).thenReturn(adminUser);
 
-        // Act
         UserDto result = authServiceImpl.registerUser(adminSignupRequest);
 
-        // Assert
         assertNotNull(result);
         assertEquals(adminUser.getUserId(), result.userId());
         assertEquals(adminUser.getUserName(), result.userName());
@@ -227,7 +214,6 @@ class AuthServiceTest {
 
     @Test
     void logoutUser_ShouldReturnCleanCookies_WhenUserIsAuthenticated() {
-        // Arrange
         Authentication authentication = mock(Authentication.class);
         UserDetailsImpl userDetails = mock(UserDetailsImpl.class);
         
@@ -241,10 +227,8 @@ class AuthServiceTest {
         when(jwtUtils.getCleanJwtCookie()).thenReturn(cleanJwtCookie);
         when(jwtUtils.getCleanJwtRefreshCookie()).thenReturn(cleanRefreshCookie);
 
-        // Act
         CookieParDto result = authServiceImpl.logoutUser();
 
-        // Assert
         assertNotNull(result);
         assertEquals(cleanJwtCookie, result.jwt());
         assertEquals(cleanRefreshCookie, result.refresh());
@@ -256,7 +240,6 @@ class AuthServiceTest {
 
     @Test
     void logoutUser_ShouldReturnCleanCookies_WhenUserIsAnonymous() {
-        // Arrange
         Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn("anonymousUser");
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -267,10 +250,8 @@ class AuthServiceTest {
         when(jwtUtils.getCleanJwtCookie()).thenReturn(cleanJwtCookie);
         when(jwtUtils.getCleanJwtRefreshCookie()).thenReturn(cleanRefreshCookie);
 
-        // Act
         CookieParDto result = authServiceImpl.logoutUser();
 
-        // Assert
         assertNotNull(result);
         assertEquals(cleanJwtCookie, result.jwt());
         assertEquals(cleanRefreshCookie, result.refresh());
@@ -282,7 +263,6 @@ class AuthServiceTest {
 
     @Test
     void refreshToken_ShouldReturnNewJwtCookie_WhenRefreshTokenIsValid() {
-        // Arrange
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(jwtUtils.getJwtRefreshFromCookies(request)).thenReturn("validRefreshToken");
         
@@ -293,10 +273,8 @@ class AuthServiceTest {
         ResponseCookie newJwtCookie = ResponseCookie.from("jwt", "newToken").build();
         when(jwtUtils.generateJwtCookie(refreshToken.getUser())).thenReturn(newJwtCookie);
 
-        // Act
         RefreshTokenResponse result = authServiceImpl.refreshToken(request);
 
-        // Assert
         assertNotNull(result);
         assertEquals(newJwtCookie, result.jwtCookie());
         
@@ -308,12 +286,10 @@ class AuthServiceTest {
 
     @Test
     void refreshToken_ShouldThrowException_WhenRefreshTokenIsEmpty() {
-        // Arrange
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(jwtUtils.getJwtRefreshFromCookies(request)).thenReturn("");
 
-        // Act & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, 
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
             () -> authServiceImpl.refreshToken(request));
         
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
@@ -325,12 +301,10 @@ class AuthServiceTest {
 
     @Test
     void refreshToken_ShouldThrowException_WhenRefreshTokenIsNotFound() {
-        // Arrange
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(jwtUtils.getJwtRefreshFromCookies(request)).thenReturn("invalidToken");
         when(refreshTokenService.findByToken("invalidToken")).thenReturn(Optional.empty());
 
-        // Act & Assert
         TokenRefreshException exception = assertThrows(TokenRefreshException.class,
             () -> authServiceImpl.refreshToken(request));
 
