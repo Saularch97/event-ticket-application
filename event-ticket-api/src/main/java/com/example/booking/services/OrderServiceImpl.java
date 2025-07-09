@@ -65,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
         var orderPrice = 0.0;
 
         for (Ticket ticket : tickets) {
-            orderPrice += ticket.getEvent().getEventTicketPrice();
+            orderPrice += ticket.getTicketCategory().getPrice();
         }
 
         ticketOrder.setOrderPrice(orderPrice);

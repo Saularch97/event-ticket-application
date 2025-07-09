@@ -10,7 +10,6 @@ public record EventItemDto(
         String eventDate,
         Integer eventHour,
         Integer eventMinute,
-        Double eventPrice,
         Integer availableTickets,
         List<TicketCategoryDto> ticketCategories
 ) implements Serializable {

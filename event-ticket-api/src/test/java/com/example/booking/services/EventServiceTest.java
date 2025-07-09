@@ -99,7 +99,6 @@ public class EventServiceTest {
                 event.getEventDate().toString(),
                 event.getEventDate().getHour(),
                 event.getEventDate().getMinute(),
-                event.getEventTicketPrice(),
                 event.getAvailableTickets(),
                 event.getTicketCategories().stream().map(TicketCategory::toTicketCategoryDto).toList());
     }
@@ -109,7 +108,6 @@ public class EventServiceTest {
         event.setEventName("event");
         event.setEventLocation("National Stadium");
         event.setEventDate(date);
-        event.setEventTicketPrice(120.0);
 
         List<TicketCategory> ticketCategories = new ArrayList<>();
         TicketCategory ticketCategory = new TicketCategory();
@@ -143,7 +141,6 @@ public class EventServiceTest {
                 date,
                 new HashSet<>(),
                 owner,
-                150.0,
                 tickets,
                 new ArrayList<>(),
                 trending,

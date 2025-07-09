@@ -45,7 +45,6 @@ public class EventController {
                     eventItemDto.eventDate(),
                     eventItemDto.eventHour(),
                     eventItemDto.eventMinute(),
-                    eventItemDto.eventPrice(),
                     eventItemDto.availableTickets()
                 )
         );

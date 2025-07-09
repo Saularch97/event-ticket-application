@@ -71,6 +71,7 @@ The system is designed using a microservices architecture with asynchronous mess
 * [x] Implement `@RestControllerAdvice` for error handling
 
 * [x] Add **tests** (unit and integration)
+* [ ] Refactor tests to reuse some methdos(**dry**)
 * [ ] Setup **deployment** pipeline
 * [ ] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.g., Stripe)

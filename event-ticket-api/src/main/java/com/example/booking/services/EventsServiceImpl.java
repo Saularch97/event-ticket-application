@@ -77,7 +77,6 @@ public class EventsServiceImpl implements EventsService {
         var event = new Event();
         event.setEventOwner(user);
         event.setEventName(request.eventName());
-        event.setEventTicketPrice(request.eventPrice());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate date = LocalDate.parse(request.eventDate(), formatter);

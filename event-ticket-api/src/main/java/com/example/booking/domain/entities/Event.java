@@ -22,9 +22,6 @@ public class Event {
     private String eventName;
     @Column(name = "event_date")
     private LocalDateTime eventDate;
-    // TODO limar coluna eventTicketPrice
-    @Column(name = "event_ticket_price")
-    private Double eventTicketPrice;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "event", orphanRemoval = true)
     private List<TicketCategory> ticketCategories = new ArrayList<>();
@@ -59,7 +56,6 @@ public class Event {
                  LocalDateTime eventDate,
                  Set<Ticket> tickets,
                  User eventOwner,
-                 Double eventTicketPrice,
                  Integer availableTickets,
                  List<TicketCategory> ticketCategories,
                  Boolean isTrending,
@@ -70,7 +66,6 @@ public class Event {
         this.eventDate = eventDate;
         this.tickets = tickets;
         this.eventOwner = eventOwner;
-        this.eventTicketPrice = eventTicketPrice;
         this.availableTickets = availableTickets;
         this.ticketCategories = ticketCategories;
         this.isTrending = isTrending;
@@ -125,14 +120,6 @@ public class Event {
         this.eventOwner = eventOwner;
     }
 
-    public Double getEventTicketPrice() {
-        return eventTicketPrice;
-    }
-
-    public void setEventTicketPrice(Double eventTicketPrice) {
-        this.eventTicketPrice = eventTicketPrice;
-    }
-
     public Integer getAvailableTickets() {
         return availableTickets;
     }
@@ -183,7 +170,6 @@ public class Event {
                 event.getEventDate().toString(),
                 event.getEventDate().getHour(),
                 event.getEventDate().getMinute(),
-                event.getEventTicketPrice(),
                 event.getAvailableTickets(),
                 event.getTicketCategories().stream().map(TicketCategory::toTicketCategoryDto).toList()
         );
