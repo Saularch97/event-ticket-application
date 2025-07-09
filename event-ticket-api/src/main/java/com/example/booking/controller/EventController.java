@@ -1,5 +1,6 @@
 package com.example.booking.controller;
 
+import com.example.booking.controller.request.event.UpdateEventRequest;
 import com.example.booking.dto.EventsDto;
 import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.controller.response.event.EventResponse;
@@ -108,6 +109,7 @@ public class EventController {
             summary = "Search new events with dynamic filters",
             description = "Returns a list of events based on optional search criteria such as name, location, and date range."
     )
+
     @GetMapping("/events/search")
     public ResponseEntity<EventsResponse> searchEvents(
             @Parameter(
@@ -149,5 +151,18 @@ public class EventController {
         EventsDto events = eventsService.searchEvents(name, location, startDate, endDate, page, pageSize);
 
         return ResponseEntity.ok(new EventsResponse(events.events(), page, pageSize, events.totalPages(), events.totalElements()));
+    }
+
+    @PutMapping("/events/{id}")
+    public ResponseEntity<Void> updateEvent(
+            @Parameter(
+                    description = "Event id to be updated",
+                    example = "0df1a809-b6cf-49ee-9081-78adafefef27"
+            )
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateEventRequest request
+    ) {
+        eventsService.updateEvent(id, request);
+        return ResponseEntity.noContent().build(); // 204 No Content
     }
 }

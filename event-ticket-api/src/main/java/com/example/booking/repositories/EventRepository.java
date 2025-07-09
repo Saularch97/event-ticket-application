@@ -25,4 +25,7 @@ public interface EventRepository extends JpaRepository<Event, UUID>, CustomEvent
     AND e.availableTickets > 0
     """)
     Page<EventSummaryDto> findAvailableEventsByOwner(UUID ownerId, Pageable pageable);
+
+
+
 }

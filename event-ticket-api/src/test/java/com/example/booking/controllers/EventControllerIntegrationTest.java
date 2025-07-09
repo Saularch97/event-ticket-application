@@ -1,6 +1,7 @@
 package com.example.booking.controllers;
 
 import com.example.booking.controller.request.event.CreateEventRequest;
+import com.example.booking.controller.request.event.UpdateEventRequest;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
@@ -24,9 +25,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -243,5 +248,70 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
 
         mockMvc.perform(delete("/api/events/" + eventId).cookie(new Cookie("test-jwt", jwt)))
                 .andExpect(status().isNoContent());
+    }
+
+
+    @Test
+    void testUpdateEvent() throws Exception {
+
+        String jwt = Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "username": "admin",
+                                            "password": "123"
+                                        }
+                                        """))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getCookie("test-jwt"))
+                .getValue();
+
+        CreateEventRequest createRequest = new CreateEventRequest(
+                "Show do Legado",
+                "22/04/2025",
+                22,
+                0,
+                "Alfenas",
+                30.0,
+                List.of(
+                        new CreateTicketCategoryRequest("VIP", 200.0, 100),
+                        new CreateTicketCategoryRequest("Pista", 300.0, 100)
+                )
+        );
+
+        String createdEventJson = mockMvc.perform(post("/api/events")
+                        .cookie(new Cookie("test-jwt", jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        UUID eventId = UUID.fromString(objectMapper.readTree(createdEventJson).get("eventId").asText());
+
+        LocalDateTime newDate = LocalDateTime.now().plusYears(1).withHour(23).withMinute(30);
+
+        UpdateEventRequest updateRequest = new UpdateEventRequest(
+                "Show do Legado - Edição Especial",
+                newDate,
+                "São Paulo",
+                300.0,
+                List.of(
+                        new CreateTicketCategoryRequest("VIP", 200.0, 100),
+                        new CreateTicketCategoryRequest("Pista", 300.0, 100)
+                )
+        );
+
+        mockMvc.perform(put("/api/events/" + eventId)
+                        .cookie(new Cookie("test-jwt", jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/events").cookie(new Cookie("test-jwt", jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events[0].name").value("Show do Legado - Edição Especial"))
+                .andExpect(jsonPath("$.events[0].location").value("São Paulo"));
     }
 }

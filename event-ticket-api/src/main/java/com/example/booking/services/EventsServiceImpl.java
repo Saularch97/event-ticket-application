@@ -1,6 +1,8 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
+import com.example.booking.controller.request.event.UpdateEventRequest;
+import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.dto.CityDataDto;
 import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.dto.EventItemDto;
@@ -19,6 +21,7 @@ import com.example.booking.services.intefaces.TicketCategoryService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,4 +204,28 @@ public class EventsServiceImpl implements EventsService {
                 eventsPage.getTotalElements()
         );
     }
+
+    @Override
+    @Transactional
+    public void updateEvent(UUID eventId, UpdateEventRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+
+        event.setEventDate(request.eventDateTime());
+        event.setEventLocation(request.eventLocation());
+        event.setEventName(request.eventName());
+
+        event.getTicketCategories().clear();
+
+        for (CreateTicketCategoryRequest ticketRequest : request.ticketCategories()) {
+            TicketCategory ticketCategory = new TicketCategory();
+            ticketCategory.setName(ticketRequest.name());
+            ticketCategory.setAvailableCategoryTickets(ticketRequest.availableCategoryTickets());
+            ticketCategory.setPrice(ticketRequest.price());
+            ticketCategory.setEvent(event);
+
+            event.getTicketCategories().add(ticketCategory);
+        }
+    }
 }
+

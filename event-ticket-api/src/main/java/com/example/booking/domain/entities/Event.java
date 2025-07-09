@@ -22,6 +22,7 @@ public class Event {
     private String eventName;
     @Column(name = "event_date")
     private LocalDateTime eventDate;
+    // TODO limar coluna eventTicketPrice
     @Column(name = "event_ticket_price")
     private Double eventTicketPrice;
 
