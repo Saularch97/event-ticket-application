@@ -52,7 +52,7 @@ class AuthControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testLogin() throws Exception {
+    void shouldLoginAndReturnJwtCookie() throws Exception {
         LoginRequest login = new LoginRequest(testUsername, testPassword);
 
         mockMvc.perform(post("/api/auth/signin")
@@ -63,9 +63,8 @@ class AuthControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.username").value(testUsername));
     }
 
-
     @Test
-    void testLogoutClearsCookies() throws Exception {
+    void shouldClearCookiesOnLogout() throws Exception {
         LoginRequest login = new LoginRequest(testUsername, testPassword);
 
         String authCookie = mockMvc.perform(post("/api/auth/signin")
@@ -83,9 +82,8 @@ class AuthControllerIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.message").value("You've been signed out!"));
     }
 
-
     @Test
-    void testRefreshTokenSuccessfully() throws Exception {
+    void shouldRefreshTokenWhenValidRefreshCookieIsPresent() throws Exception {
         LoginRequest loginRequest = new LoginRequest(testUsername, testPassword);
 
         MvcResult loginResult = mockMvc.perform(post("/api/auth/signin")

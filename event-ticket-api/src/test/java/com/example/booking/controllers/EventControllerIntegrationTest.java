@@ -62,7 +62,7 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testCreateEvent() throws Exception {
+    void shouldCreateEventSuccessfully() throws Exception {
         CreateEventRequest request = createSampleEventRequest();
 
         mockMvc.perform(post("/api/events")
@@ -74,21 +74,21 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testListTrendingEventsInitiallyEmpty() throws Exception {
+    void shouldReturnEmptyTrendingEventsInitially() throws Exception {
         mockMvc.perform(get("/api/events/trending").cookie(new Cookie(BOOKING_JWT_NAME, jwt)))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[]"));
     }
 
     @Test
-    void listAllAvailableUserEventsWhenNoEventsAreCreated() throws Exception {
+    void shouldListNoUserEventsWhenNoneAreCreated() throws Exception {
         mockMvc.perform(get("/api/events/my-events").cookie(new Cookie(BOOKING_JWT_NAME, jwt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.events").isEmpty());
     }
 
     @Test
-    void listAllAvailableUserEventsWhenEventsAreCreated() throws Exception {
+    void shouldListUserEventsWhenCreated() throws Exception {
         CreateEventRequest request = createSampleEventRequest();
         mockMvc.perform(post("/api/events")
                         .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
@@ -102,7 +102,7 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testDeleteEvent() throws Exception {
+    void shouldDeleteEventSuccessfully() throws Exception {
         CreateEventRequest request = createSampleEventRequest();
         String content = mockMvc.perform(post("/api/events")
                         .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
