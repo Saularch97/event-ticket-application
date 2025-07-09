@@ -35,7 +35,7 @@ public class TicketController {
 
     @Operation(
             summary = "Emit a new ticket",
-            description = "Creates a new ticket for a specific event and category. The user is identified by the authentication token.",
+            description = "Creates a new ticket for a specific event and category. The userid is identified by the authentication token.",
             responses = {
                     @ApiResponse(
                             responseCode = "201",
@@ -73,7 +73,7 @@ public class TicketController {
 
     @Operation(
             summary = "Delete an emitted ticket",
-            description = "Deletes a ticket by its ID. Requires user to be the ticket owner or an ADMIN.",
+            description = "Deletes a ticket by its ID. Requires userid to be the ticket owner or an ADMIN.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Ticket deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "Ticket not found"),
@@ -112,8 +112,8 @@ public class TicketController {
     }
 
     @Operation(
-            summary = "List authenticated user's tickets",
-            description = "Retrieves a paginated list of all tickets belonging to the authenticated user."
+            summary = "List authenticated userid's tickets",
+            description = "Retrieves a paginated list of all tickets belonging to the authenticated userid."
     )
     @GetMapping("/my-tickets")
     public ResponseEntity<TicketsResponse> listAllUserTickets(

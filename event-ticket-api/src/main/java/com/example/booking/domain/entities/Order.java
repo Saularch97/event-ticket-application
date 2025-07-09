@@ -73,7 +73,7 @@ public class Order {
                 order.getOrderId(),
                 order.getOrderPrice(),
                 order.getTickets().stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
-                User.toUserDto(order.getUser())
+                order.getUser().getUserId()
         );
     }
 }

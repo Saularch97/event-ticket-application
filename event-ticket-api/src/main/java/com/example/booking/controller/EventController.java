@@ -46,7 +46,7 @@ public class EventController {
                             )
                     ),
                     @ApiResponse(responseCode = "400", description = "Invalid request data"),
-                    @ApiResponse(responseCode = "403", description = "Forbidden, user is not an ADMIN")
+                    @ApiResponse(responseCode = "403", description = "Forbidden, userid is not an ADMIN")
             }
     )
     @PostMapping
@@ -69,10 +69,10 @@ public class EventController {
 
     @Operation(
             summary = "Delete an event",
-            description = "Deletes an event by its ID. Requires user to be the event owner or an ADMIN.",
+            description = "Deletes an event by its ID. Requires userid to be the event owner or an ADMIN.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Event deleted successfully"),
-                    @ApiResponse(responseCode = "403", description = "Forbidden, user is not allowed to delete this event"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden, userid is not allowed to delete this event"),
                     @ApiResponse(responseCode = "404", description = "Event not found")
             }
     )
@@ -107,7 +107,7 @@ public class EventController {
     }
 
 
-    @Operation(summary = "List all events created by the authenticated user")
+    @Operation(summary = "List all events created by the authenticated userid")
     @GetMapping("/my-events")
     public ResponseEntity<EventsResponse> listAllEventsByUser(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
@@ -124,7 +124,7 @@ public class EventController {
         return ResponseEntity.ok(trendingEvents);
     }
 
-    @Operation(summary = "List all available events not created by the authenticated user")
+    @Operation(summary = "List all available events not created by the authenticated userid")
     @GetMapping("/available")
     public ResponseEntity<EventsResponse> listAvailableUserEvents(
             @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
@@ -153,7 +153,7 @@ public class EventController {
 
     @Operation(
             summary = "Update an existing event",
-            description = "Updates the details of an existing event. Requires user to be the event owner or an ADMIN.",
+            description = "Updates the details of an existing event. Requires userid to be the event owner or an ADMIN.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Event updated successfully"),
                     @ApiResponse(responseCode = "404", description = "Event not found"),

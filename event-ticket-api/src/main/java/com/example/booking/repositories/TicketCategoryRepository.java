@@ -11,5 +11,5 @@ import java.util.UUID;
 public interface TicketCategoryRepository extends JpaRepository<TicketCategory, Long> {
 
     @Query(value = "SELECT * FROM tb_ticket_category WHERE event_id = ?1", nativeQuery = true)
-    List<TicketCategory> findAllByEventIdNative(UUID eventId);
+    List<TicketCategory> findAllTicketCategoriesByEventId(UUID eventId);
 }

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Authentication", description = "Endpoints for user registration, sign-in, and token management.")
+@Tag(name = "Authentication", description = "Endpoints for userid registration, sign-in, and token management.")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true", maxAge = 3600)
@@ -36,7 +36,7 @@ public class AuthController {
 
     @Operation(
             summary = "Authenticate User",
-            description = "Authenticates a user with username and password. On success, it returns user info in the body and sets JWT and refresh tokens in secure, HttpOnly cookies.",
+            description = "Authenticates a userid with username and password. On success, it returns userid info in the body and sets JWT and refresh tokens in secure, HttpOnly cookies.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Authentication successful",
                             content = @Content(mediaType = "application/json",
@@ -57,7 +57,7 @@ public class AuthController {
 
     @Operation(
             summary = "Register New User",
-            description = "Registers a new user in the system.",
+            description = "Registers a new userid in the system.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "User registered successfully",
                             content = @Content(mediaType = "application/json",
@@ -75,7 +75,7 @@ public class AuthController {
 
     @Operation(
             summary = "Sign Out User",
-            description = "Logs out the user by clearing the authentication cookies.",
+            description = "Logs out the userid by clearing the authentication cookies.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Sign-out successful",
                             content = @Content(

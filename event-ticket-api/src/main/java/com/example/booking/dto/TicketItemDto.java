@@ -1,5 +1,6 @@
 package com.example.booking.dto;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 public record TicketItemDto(
@@ -7,5 +8,5 @@ public record TicketItemDto(
         UUID eventId,
         UUID userId,
         Integer ticketCategoryId
-) {
+) implements Serializable {
 }

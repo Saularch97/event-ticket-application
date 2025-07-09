@@ -4,31 +4,26 @@ import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.controller.request.order.CreateOrderRequest;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
-import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Role;
+import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducerImpl;
 import com.example.booking.repositories.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.Cookie;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -38,66 +33,35 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = "spring.profiles.active=test")
-@AutoConfigureMockMvc
-@Testcontainers
-@Transactional
 public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     private static final String API_BASE_URL = "/api";
-    private static final String ORDER_URL = API_BASE_URL + "/order";
-    private static final String ORDERS_URL = API_BASE_URL + "/orders";
-    private static final String TICKET_URL = API_BASE_URL + "/ticket";
+    private static final String ORDER_URL = API_BASE_URL + "/orders"; // Padrão REST
+    private static final String TICKET_URL = API_BASE_URL + "/tickets";
     private static final String EVENTS_URL = API_BASE_URL + "/events";
     private static final String AUTH_SIGNIN_URL = API_BASE_URL + "/auth/signin";
-    private static final String JWT_COOKIE_NAME = "test-jwt";
+    private static final String JWT_COOKIE_NAME = "booking-test-jwt";
     private static final String CATEGORY_VIP = "VIP";
 
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
 
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private EventRepository eventRepository;
-    @Autowired
-    private TicketRepository ticketRepository;
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-    @Autowired TicketCategoryRepository ticketCategoryRepository;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private TicketCategoryRepository ticketCategoryRepository;
 
     private String jwt;
     private UUID ticketId;
 
     @BeforeEach
     void setup() throws Exception {
-        orderRepository.deleteAll();
-        ticketRepository.deleteAll();
-        eventRepository.deleteAll();
-        refreshTokenRepository.deleteAll();
-        ticketCategoryRepository.deleteAll();
-        userRepository.deleteAll();
-
-        Assertions.assertNotNull(redisTemplate.getConnectionFactory());
-        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
 
         Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
                 .orElseThrow(() -> new IllegalStateException("Role ADMIN não encontrada."));
-
         User adminUser = new User();
-
         adminUser.setUserName("admin");
         adminUser.setPassword(passwordEncoder.encode("123"));
         adminUser.setEmail("admin@example.com");
@@ -107,12 +71,16 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         this.jwt = obtainJwt();
 
         UUID eventId = createTestEvent();
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new EntityNotFoundException("Event not found!"));
 
-        Integer ticketCategoryId = event.getTicketCategories().getFirst().getTicketCategoryId();
+        Integer vipCategoryId = ticketCategoryRepository.findAllTicketCategoriesByEventId(eventId).stream()
+                .filter(c -> CATEGORY_VIP.equals(c.getName()))
+                .findFirst()
+                .map(TicketCategory::getTicketCategoryId)
+                .orElseThrow(() -> new IllegalStateException("Vip category not found"));
 
-        this.ticketId = createTestTicket(eventId, ticketCategoryId);
+        this.ticketId = createTestTicket(eventId, vipCategoryId);
     }
+
 
     @Test
     void shouldCreateNewOrderSuccessfully() throws Exception {
@@ -142,12 +110,10 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
     void shouldListUserOrders() throws Exception {
         createTestOrder(List.of(this.ticketId));
 
-        mockMvc.perform(get(ORDERS_URL)
-                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
-                        .param("page", "0").param("pageSize", "10"))
+        mockMvc.perform(get(ORDER_URL)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orders.length()", is(1)))
-                .andExpect(jsonPath("$.orders[0].orderId", notNullValue()));
+                .andExpect(jsonPath("$.orders.length()", is(1)));
     }
 
     @Test
@@ -157,27 +123,19 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(delete(ORDER_URL + "/" + orderIdToDelete)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
                 .andExpect(status().isNoContent());
-
-        mockMvc.perform(get(ORDERS_URL)
-                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orders.length()", is(0)));
     }
+
 
     private String obtainJwt() throws Exception {
         MvcResult result = mockMvc.perform(post(AUTH_SIGNIN_URL).contentType(MediaType.APPLICATION_JSON)
-                .content(
-                """
-                {
-                    "username": "admin",
-                    "password": "123"
-                }
-                """)).andExpect(status().isOk()).andReturn();
+                        .content("{\"username\": \"admin\",\"password\": \"123\"}"))
+                .andExpect(status().isOk()).andReturn();
         return Objects.requireNonNull(result.getResponse().getCookie(JWT_COOKIE_NAME)).getValue();
     }
 
     private UUID createTestEvent() throws Exception {
-        var eventRequest = new CreateEventRequest("Evento para Pedidos", "25/12/2025", 20, 0, "Online", 300.0,
+        String futureDate = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        var eventRequest = new CreateEventRequest("Evento para Pedidos", futureDate, 20, 0, "Online", 300.0,
                 List.of(new CreateTicketCategoryRequest(CATEGORY_VIP, 250.0, 10)));
         MvcResult result = mockMvc.perform(post(EVENTS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))

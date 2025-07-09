@@ -33,7 +33,7 @@ public class OrderController {
 
     @Operation(
             summary = "Create a new order",
-            description = "Creates a new order from a list of ticket IDs. The user is identified by the authentication token.",
+            description = "Creates a new order from a list of ticket IDs. The userid is identified by the authentication token.",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Order created successfully",
                             content = @Content(
@@ -82,7 +82,7 @@ public class OrderController {
 
     @Operation(
             summary = "Delete an order",
-            description = "Deletes an order by its ID. The user must be the owner of the order.",
+            description = "Deletes an order by its ID. The userid must be the owner of the order.",
             responses = {
                     @ApiResponse(responseCode = "204", description = "Order deleted successfully"),
                     @ApiResponse(responseCode = "404", description = "Order not found"),

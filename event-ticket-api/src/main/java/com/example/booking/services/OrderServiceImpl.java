@@ -9,6 +9,7 @@ import com.example.booking.repositories.OrderRepository;
 import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.services.intefaces.TicketService;
+import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -27,14 +28,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final TicketService ticketService;
     private final JwtUtils jwtUtils;
     private final CacheManager cacheManager;
 
-    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository, TicketService ticketService, JwtUtils jwtUtils, CacheManager cacheManager) {
+    public OrderServiceImpl(OrderRepository orderRepository, UserService userService, TicketService ticketService, JwtUtils jwtUtils, CacheManager cacheManager) {
         this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.ticketService = ticketService;
         this.jwtUtils = jwtUtils;
         this.cacheManager = cacheManager;
@@ -43,9 +44,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderItemDto createNewOrder(CreateOrderRequest dto) {
 
         UUID userId = jwtUtils.getAuthenticatedUserId();
-        Optional<User> user = userRepository.findById(userId);
-
-        if (user.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        User user = userService.findUserEntityById(userId);
 
         List<Ticket> tickets = ticketService.findTicketsWithEventDetails(dto.ticketIds());
 
@@ -69,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         ticketOrder.setOrderPrice(orderPrice);
-        ticketOrder.setUser(user.get());
+        ticketOrder.setUser(user);
 
         Order savedOrder = orderRepository.save(ticketOrder);
 
@@ -84,7 +83,7 @@ public class OrderServiceImpl implements OrderService {
                 savedOrder.getOrderId(),
                 savedOrder.getOrderPrice(),
                 tickets.stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
-                User.toUserDto(user.get())
+                user.getUserId()
         );
     }
 

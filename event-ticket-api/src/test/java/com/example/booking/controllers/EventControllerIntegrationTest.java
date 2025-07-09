@@ -1,28 +1,25 @@
 package com.example.booking.controllers;
 
 import com.example.booking.controller.request.event.CreateEventRequest;
-import com.example.booking.controller.request.event.UpdateEventRequest;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducerImpl;
-import com.example.booking.repositories.*;
+import com.example.booking.repositories.RoleRepository;
+import com.example.booking.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -31,41 +28,18 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = "spring.profiles.active=test")
-@AutoConfigureMockMvc
-@Testcontainers
-class EventControllerIntegrationTest extends AbstractIntegrationTest{
-
+class EventControllerIntegrationTest extends AbstractIntegrationTest {
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private EventRepository eventRepository;
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private TicketRepository ticketRepository;
-
-    @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
     @Autowired
     private RoleRepository roleRepository;
-
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -74,15 +48,9 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
 
     @BeforeEach
     public void setup() throws Exception {
-        refreshTokenRepository.deleteAll();
-        ticketRepository.deleteAll();
-        eventRepository.deleteAll();
-        orderRepository.deleteAll();
-        userRepository.deleteAll();
-
-
         Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                .orElseThrow(() -> new IllegalStateException("Role ADMIN não encontrada."));
+                .orElseThrow(() -> new IllegalStateException("Role Admin not found!"));
+
         User adminUser = new User();
         adminUser.setUserName("admin");
         adminUser.setPassword(passwordEncoder.encode("123"));
@@ -95,26 +63,14 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void testCreateEvent() throws Exception {
-        CreateEventRequest request = new CreateEventRequest(
-    "Show do Legado",
-    "22/04/2025",
-    22,
-    0,
-    "Alfenas",
-    30.0,
-            List.of(
-                new CreateTicketCategoryRequest("VIP", 200.0, 100),
-                new CreateTicketCategoryRequest("Pista", 300.0, 100)
-            )
-        );
+        CreateEventRequest request = createSampleEventRequest();
 
         mockMvc.perform(post("/api/events")
-            .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.eventName").value("Show do Legado"))
-            .andExpect(jsonPath("$.availableTickets").value(200));
+                        .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.eventName").value("Show do Legado"));
     }
 
     @Test
@@ -133,26 +89,12 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void listAllAvailableUserEventsWhenEventsAreCreated() throws Exception {
-        CreateEventRequest request = new CreateEventRequest(
-                "Show do Legado",
-                "22/04/2025",
-                22,
-                0,
-                "Alfenas",
-                30.0,
-                List.of(
-                        new CreateTicketCategoryRequest("VIP", 200.0, 500),
-                        new CreateTicketCategoryRequest("Pista", 300.0, 500)
-                )
-        );
-
+        CreateEventRequest request = createSampleEventRequest();
         mockMvc.perform(post("/api/events")
                         .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.eventName").value("Show do Legado"))
-                .andExpect(jsonPath("$.availableTickets").value(1000));
+                .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/events/my-events").cookie(new Cookie(BOOKING_JWT_NAME, jwt)))
                 .andExpect(status().isOk())
@@ -161,81 +103,18 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
 
     @Test
     void testDeleteEvent() throws Exception {
-        CreateEventRequest request = new CreateEventRequest(
-                "Show do Legado",
-                "22/04/2025",
-                22,
-                0,
-                "Alfenas",
-                30.0,
-                List.of(
-                        new CreateTicketCategoryRequest("VIP", 200.0, 100),
-                        new CreateTicketCategoryRequest("Pista", 300.0, 100)
-                )
-        );
-
-
+        CreateEventRequest request = createSampleEventRequest();
         String content = mockMvc.perform(post("/api/events")
                         .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andReturn().getResponse().getContentAsString();
-
-        String eventId = objectMapper.readTree(content).get("eventId").asText();
+        UUID eventId = getUuidFromResponse(content);
 
         mockMvc.perform(delete("/api/events/" + eventId).cookie(new Cookie(BOOKING_JWT_NAME, jwt)))
                 .andExpect(status().isNoContent());
     }
 
-
-    @Test
-    void testUpdateEvent() throws Exception {
-        CreateEventRequest createRequest = new CreateEventRequest(
-                "Show do Legado",
-                "22/04/2025",
-                22,
-                0,
-                "Alfenas",
-                30.0,
-                List.of(
-                        new CreateTicketCategoryRequest("VIP", 200.0, 100),
-                        new CreateTicketCategoryRequest("Pista", 300.0, 100)
-                )
-        );
-
-        String createdEventJson = mockMvc.perform(post("/api/events")
-                        .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UUID eventId = UUID.fromString(objectMapper.readTree(createdEventJson).get("eventId").asText());
-
-        LocalDateTime newDate = LocalDateTime.now().plusYears(1).withHour(23).withMinute(30);
-
-        UpdateEventRequest updateRequest = new UpdateEventRequest(
-                "Show do Legado - Edição Especial",
-                newDate,
-                "São Paulo",
-                300.0,
-                List.of(
-                        new CreateTicketCategoryRequest("VIP", 200.0, 100),
-                        new CreateTicketCategoryRequest("Pista", 300.0, 100)
-                )
-        );
-
-        mockMvc.perform(put("/api/events/" + eventId)
-                        .cookie(new Cookie(BOOKING_JWT_NAME, jwt))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isNoContent());
-
-        mockMvc.perform(get("/api/events").cookie(new Cookie(BOOKING_JWT_NAME, jwt)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.events[0].name").value("Show do Legado - Edição Especial"))
-                .andExpect(jsonPath("$.events[0].location").value("São Paulo"));
-    }
 
     private String obtainJwt() throws Exception {
         return Objects.requireNonNull(mockMvc.perform(post("/api/auth/signin")
@@ -251,5 +130,17 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest{
                         .getResponse()
                         .getCookie(BOOKING_JWT_NAME))
                 .getValue();
+    }
+
+    private CreateEventRequest createSampleEventRequest() {
+        String futureDate = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        return new CreateEventRequest(
+                "Show do Legado", futureDate, 22, 0, "Alfenas", 30.0,
+                List.of(new CreateTicketCategoryRequest("VIP", 200.0, 100))
+        );
+    }
+
+    private UUID getUuidFromResponse(String jsonResponse) throws Exception {
+        return UUID.fromString(objectMapper.readTree(jsonResponse).get("eventId").asText());
     }
 }

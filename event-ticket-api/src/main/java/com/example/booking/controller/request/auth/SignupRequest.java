@@ -9,7 +9,7 @@ import java.util.Set;
 
 public record SignupRequest(
 
-        @NotBlank(message = "The user name is obligatory")
+        @NotBlank(message = "The userid name is obligatory")
         @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
         String username,
 
