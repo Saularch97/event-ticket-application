@@ -26,6 +26,8 @@ spec:
           value: "redis"
         - name: SPRING_RABBITMQ_HOST
           value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:

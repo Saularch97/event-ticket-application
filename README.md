@@ -42,9 +42,10 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Implement some migrations with flyway for versioning the database
 * [x] More complex queries using dto's projections, entity manager
 * [x] Add http status codes such as 409, 422
-* [ ] Add @Schemas to request and responses from controllers
+* [x] Add @Schemas to request and responses from controllers
 * [x] Refactor controller dto's(only use controller dto for request/response)
-* [ ] Add .env.example and change the jwt authkeys(use .env dependencie)
+* [] Add .env.example and change the jwt authkeys(use .env dependencie)
+* [] Verify if cache is working(make unit tests just for the cache)
 * [ ] Change integer id's for UUID
 * [ ] Treat all the exceptions in the exception global exception handler
 * [ ] Improve logging(Add logging functionallity with spring cloud about logs, research about it)

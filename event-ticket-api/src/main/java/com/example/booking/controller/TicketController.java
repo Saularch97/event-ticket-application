@@ -100,7 +100,15 @@ public class TicketController {
             @Parameter(description = "Number of tickets per page") @RequestParam(defaultValue = "10") int pageSize
     ) {
         TicketsDto ticketsDto = ticketService.listAllTickets(page, pageSize);
-        return ResponseEntity.ok(new TicketsResponse(ticketsDto.tickets(), ticketsDto.page(), ticketsDto.pageSize(), ticketsDto.totalPages(), ticketsDto.totalElements()));
+        return ResponseEntity.ok(
+            new TicketsResponse(
+                ticketsDto.tickets(),
+                ticketsDto.page(),
+                ticketsDto.pageSize(),
+                ticketsDto.totalPages(),
+                ticketsDto.totalElements()
+            )
+        );
     }
 
     @Operation(
