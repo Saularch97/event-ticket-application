@@ -127,7 +127,6 @@ class TicketServiceTest {
         testEvent.decrementAvailableTickets();
 
         when(ticketRepository.findTicketWithEvent(ticket.getTicketId())).thenReturn(Optional.of(ticket));
-        when(eventService.findEventEntityById(testEvent.getEventId())).thenReturn(testEvent);
         when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
 
         ticketsService.deleteEmittedTicket(ticket.getTicketId());
