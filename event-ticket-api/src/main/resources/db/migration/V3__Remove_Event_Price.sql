@@ -1,0 +1,1 @@
+ALTER TABLE tb_events DROP COLUMN event_ticket_price;

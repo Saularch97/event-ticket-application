@@ -1,5 +1,3 @@
--- V1__Create_Initial_Tables.sql
-
 CREATE TABLE tb_users (
     user_id UUID PRIMARY KEY,
     user_name VARCHAR(255) UNIQUE NOT NULL,

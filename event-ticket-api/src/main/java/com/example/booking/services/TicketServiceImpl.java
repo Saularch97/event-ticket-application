@@ -89,13 +89,11 @@ public class TicketServiceImpl implements TicketService {
     public void deleteEmittedTicket(UUID ticketId) {
         var ticket = ticketRepository.findTicketWithEvent(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        var event = eventService.findEventEntityById(ticket.getEvent().getEventId());
-
+        
         Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
 
         ticket.getTicketCategory().incrementTicketCategory();
-        event.incrementAvailableTickets();
+        ticket.getEvent().incrementAvailableTickets();
 
         ticketRepository.deleteById(ticketId);
     }

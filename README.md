@@ -36,8 +36,6 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 
 ## ✅ TODO
 
-* limar coluna eventTicketPrice(apagar do  reamde dps)
-
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [x] Implement some migrations with flyway for versioning the database
 * [x] More complex queries using dto's projections, entity manager
