@@ -7,6 +7,8 @@ import com.example.booking.domain.entities.User;
 import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.UserService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,7 +20,9 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final  UserRepository repository;
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
+    private final UserRepository repository;
 
     public UserServiceImpl(UserRepository repository) {
         this.repository = repository;
@@ -26,6 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto saveUser(CreateUserRequest createUserRequest) {
+        log.info("Creating new user with username={}", createUserRequest.username());
 
         var user = new User();
         user.setUserName(createUserRequest.username());
@@ -34,28 +39,51 @@ public class UserServiceImpl implements UserService {
 
         var res = repository.save(user);
 
+        log.info("User created successfully with id={}", res.getUserId());
+
         return User.toUserDto(res);
     }
 
     @Override
     public List<UserDto> listAllUsers() {
-        return repository.findAll().stream().map(User::toUserDto).collect(Collectors.toList());
+        log.info("Listing all users");
+        return repository.findAll().stream()
+                .peek(u -> log.debug("User found: id={}, username={}", u.getUserId(), u.getUserName()))
+                .map(User::toUserDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public UserDto findByUserName(String username) {
-        var user = repository.findByUserName(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
-        
-        return new UserDto(user.getUserId(), user.getUserName(), user.getEmail(), user.getRoles().stream().map(Role::toRoleItemDto).toList());
+        log.info("Searching for user by username={}", username);
+        var user = repository.findByUserName(username).orElseThrow(() -> {
+            log.warn("User not found with username={}", username);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        });
+
+        log.info("User found: id={}, username={}", user.getUserId(), user.getUserName());
+
+        return new UserDto(user.getUserId(), user.getUserName(), user.getEmail(),
+                user.getRoles().stream().map(Role::toRoleItemDto).toList());
     }
 
     @Override
     public User findUserEntityByUserName(String username) {
-        return repository.findByUserName(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
+        log.debug("Finding user entity by username={}", username);
+
+        return repository.findByUserName(username).orElseThrow(() -> {
+            log.warn("User entity not found with username={}", username);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        });
     }
 
     @Override
     public User findUserEntityById(UUID userId) {
-        return repository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!"));
+        log.debug("Finding user entity by id={}", userId);
+
+        return repository.findById(userId).orElseThrow(() -> {
+            log.warn("User entity not found with id={}", userId);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        });
     }
 }

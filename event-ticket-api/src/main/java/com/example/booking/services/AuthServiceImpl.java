@@ -1,9 +1,9 @@
 package com.example.booking.services;
 
-
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.example.booking.config.security.UserDetailsImpl;
 import com.example.booking.dto.CookieParDto;
 import com.example.booking.dto.UserDto;
 import com.example.booking.controller.request.auth.LoginRequest;
@@ -25,7 +25,8 @@ import com.example.booking.services.intefaces.RoleService;
 import com.example.booking.util.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,10 +36,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import org.springframework.web.server.ResponseStatusException;
-
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final RoleService roleService;
@@ -61,6 +63,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public AuthResponse authenticateUser(LoginRequest loginRequest) {
+        log.info("Login attempt for username={}", loginRequest.username());
+
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password()));
 
@@ -75,6 +79,8 @@ public class AuthServiceImpl implements AuthService {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
+        log.info("Login successful for userId={} username={}", userDetails.getId(), userDetails.getUsername());
+
         UserInfoResponse userInfo = new UserInfoResponse(
                 userDetails.getId(),
                 userDetails.getUsername(),
@@ -86,11 +92,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public UserDto registerUser(SignupRequest signUpRequest) {
+        log.info("Register attempt with username={} email={}", signUpRequest.username(), signUpRequest.email());
+
         if (userRepository.existsByUserName(signUpRequest.username())) {
+            log.warn("Registration failed: username '{}' already exists", signUpRequest.username());
             throw new UserNameAlreadyExistsException();
         }
 
         if (userRepository.existsByEmail(signUpRequest.email())) {
+            log.warn("Registration failed: email '{}' already exists", signUpRequest.email());
             throw new EmailAlreadyExistsException();
         }
 
@@ -103,10 +113,12 @@ public class AuthServiceImpl implements AuthService {
         Set<Role> roles = new HashSet<>();
 
         if (strRoles == null) {
+            log.info("No role specified, assigning ROLE_USER to username={}", signUpRequest.username());
             Role userRole = roleService.findRoleEntityByName(ERole.ROLE_USER);
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
+                log.info("Assigning role '{}' to username={}", role, signUpRequest.username());
                 switch (role) {
                     case "admin":
                         Role adminRole = roleService.findRoleEntityByName(ERole.ROLE_ADMIN);
@@ -125,7 +137,11 @@ public class AuthServiceImpl implements AuthService {
 
         user.setRoles(roles);
 
-        return User.toUserDto(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+
+        log.info("User registered successfully with userId={} username={}", savedUser.getUserId(), savedUser.getUserName());
+
+        return User.toUserDto(savedUser);
     }
 
     public CookieParDto logoutUser() {
@@ -134,6 +150,10 @@ public class AuthServiceImpl implements AuthService {
         if (!"anonymousUser".equals(principal.toString())) {
             UUID userId = ((UserDetailsImpl) principal).getId();
             refreshTokenService.deleteByUserId(userId);
+
+            log.info("User logged out with userId={}", userId);
+        } else {
+            log.warn("Logout called but no authenticated user found");
         }
 
         return new CookieParDto(jwtUtils.getCleanJwtCookie(), jwtUtils.getCleanJwtRefreshCookie());
@@ -143,12 +163,18 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtUtils.getJwtRefreshFromCookies(request);
 
         if (refreshToken == null || refreshToken.isEmpty()) {
+            log.warn("Refresh token missing in refresh token request");
             throw new RefreshTokenEmptyException();
         }
 
         RefreshToken token = refreshTokenService.findByToken(refreshToken)
                 .map(refreshTokenService::verifyExpiration)
-                .orElseThrow(() -> new TokenRefreshException(refreshToken, "Refresh token is not in database!"));
+                .orElseThrow(() -> {
+                    log.warn("Refresh token '{}' not found or expired", refreshToken);
+                    return new TokenRefreshException(refreshToken, "Refresh token is not in database!");
+                });
+
+        log.info("Refresh token verified successfully for userId={}", token.getUser().getUserId());
 
         ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(token.getUser());
         return new RefreshTokenResponse(jwtCookie);

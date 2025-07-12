@@ -44,16 +44,18 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Refactor controller dto's(only use controller dto for request/response)
 * [x] Add .env.example and change the jwt authkeys(use .env dependencie)
 * [x] Change integer id's for UUID
-* [ ] Treat all the exceptions in the exception global exception handler
+* [x] Treat all the exceptions in the exception global exception handler
 * [ ] Improve logging(Add logging functionallity with spring cloud about logs, research about it SL4J)
+* [ ] Add kafka for logs processing
+* [ ] Grafana for visualization of logs
 * [ ] Include role permission in the controllers
 * [ ] K8s for dev and prod
 * [ ] Add micrometer
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
-* [ ] Add kafka
-* [ ] Queue for logs(Kafka or Rabbit)
+
+* [ ] Queue 
 * [x] Use **Tilt** for local development with Kubernetes
 * [ ] Use **Terraform** for infrastructure management
 * [x] Events do not have a total number of tickets — **implemented**

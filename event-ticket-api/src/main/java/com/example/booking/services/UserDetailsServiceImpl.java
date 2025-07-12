@@ -1,5 +1,6 @@
 package com.example.booking.services;
 
+import com.example.booking.config.security.UserDetailsImpl;
 import com.example.booking.domain.entities.User;
 import com.example.booking.repositories.UserRepository;
 import jakarta.transaction.Transactional;

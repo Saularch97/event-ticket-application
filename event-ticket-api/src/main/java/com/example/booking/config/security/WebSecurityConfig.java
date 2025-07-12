@@ -1,5 +1,7 @@
-package com.example.booking.config;
+package com.example.booking.config.security;
 
+import com.example.booking.config.AuthEntryPointJwt;
+import com.example.booking.config.AuthTokenFilter;
 import com.example.booking.util.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

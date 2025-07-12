@@ -1,4 +1,4 @@
-package com.example.booking.services;
+package com.example.booking.config.security;
 
 
 import java.io.Serial;

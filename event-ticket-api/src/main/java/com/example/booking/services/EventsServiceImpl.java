@@ -52,7 +52,6 @@ public class EventsServiceImpl implements EventsService {
 
     private static final Logger log = LoggerFactory.getLogger(EventsServiceImpl.class);
 
-
     public EventsServiceImpl(EventRepository eventRepository, UserService userRepository, JwtUtils jwtUtils, GeoService geoService, TicketCategoryService ticketCategoryService, EventRequestProducer producer) {
         this.eventRepository = eventRepository;
         this.userService = userRepository;
@@ -63,8 +62,9 @@ public class EventsServiceImpl implements EventsService {
     }
 
     public EventItemDto createEvent(CreateEventRequest request) {
-
         UUID userId = jwtUtils.getAuthenticatedUserId();
+        log.info("Creating event. UserId={}, EventName={}", userId, request.eventName());
+
         var user = userService.findUserEntityById(userId);
 
         var event = new Event();
@@ -93,22 +93,27 @@ public class EventsServiceImpl implements EventsService {
         try {
             RecomendEventDto recomendEventDto = new RecomendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
             producer.publishEventRecommendation(recomendEventDto);
+            log.info("Event recommendation published for eventId={}", savedEvent.getEventId());
         } catch (JsonProcessingException e) {
-            log.warn("Failed to send event recommendation to queue", e);
+            log.warn("Failed to send event recommendation to queue for eventId={}", savedEvent.getEventId(), e);
         }
 
+        log.info("Event created successfully. EventId={}, OwnerId={}", savedEvent.getEventId(), userId);
         return Event.toEventItemDto(savedEvent);
     }
 
     public void deleteEvent(UUID eventId) {
+        log.info("Delete event requested. EventId={}", eventId);
         if (!eventRepository.existsById(eventId)) {
+            log.warn("Delete failed: Event not found. EventId={}", eventId);
             throw new EventNotFoundException();
         }
-
         eventRepository.deleteById(eventId);
+        log.info("Event deleted successfully. EventId={}", eventId);
     }
 
     public EventsDto listAllEvents(int page, int pageSize) {
+        log.info("Listing all events. Page={}, PageSize={}", page, pageSize);
         var events = eventRepository.findAll(
                 PageRequest.of(page, pageSize, Sort.Direction.DESC, "eventDate")
         ).map(Event::toEventSummaryDto);
@@ -117,8 +122,9 @@ public class EventsServiceImpl implements EventsService {
     }
 
     public EventsDto listAllUserEvents(int page, int pageSize) {
-
         UUID userID = jwtUtils.getAuthenticatedUserId();
+        log.info("Listing all events for user. UserId={}, Page={}, PageSize={}", userID, page, pageSize);
+
         var user = userService.findUserEntityById(userID);
 
         var events = eventRepository.findAllEventsByUserId(user.getUserId(),
@@ -133,22 +139,32 @@ public class EventsServiceImpl implements EventsService {
             key = "'topTrending'"
     )
     public List<EventItemDto> getTopTrendingEvents() {
+        log.info("Fetching top trending events");
 
-        if(eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList().isEmpty()) {
+        var trendingEvents = eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList();
+
+        if(trendingEvents.isEmpty()) {
+            log.info("No trending events found");
             return new ArrayList<>();
         }
 
-        return eventRepository.findAll().stream().filter(Event::getTrending).map(Event::toEventItemDto).toList();
+        log.info("Found {} trending events", trendingEvents.size());
+        return trendingEvents;
     }
 
     @Override
     public Event findEventEntityById(UUID eventId) {
-        return eventRepository.findById(eventId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        log.info("Fetching event entity by id. EventId={}", eventId);
+        return eventRepository.findById(eventId).orElseThrow(() -> {
+            log.warn("Event not found. EventId={}", eventId);
+            return new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
+        });
     }
 
     @Override
     public EventsDto listAllAvailableUserEvents(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
+        log.info("Listing all available user events. UserId={}, Page={}, PageSize={}", userId, page, pageSize);
 
         var user = userService.findUserEntityById(userId);
 
@@ -167,6 +183,8 @@ public class EventsServiceImpl implements EventsService {
 
     @Override
     public EventsDto searchEvents(String name, String location, LocalDateTime start, LocalDateTime end, int page, int pageSize) {
+        log.info("Searching events with criteria. Name='{}', Location='{}', Start='{}', End='{}', Page={}, PageSize={}",
+                name, location, start, end, page, pageSize);
 
         Page<EventSummaryDto> eventsPage = eventRepository.findByCriteria(
                 name,
@@ -188,8 +206,13 @@ public class EventsServiceImpl implements EventsService {
     @Override
     @Transactional
     public void updateEvent(UUID eventId, UpdateEventRequest request) {
+        log.info("Updating event. EventId={}", eventId);
+
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
+                .orElseThrow(() -> {
+                    log.warn("Update failed: Event not found. EventId={}", eventId);
+                    return new EntityNotFoundException("Event not found with ID: " + eventId);
+                });
 
         event.setEventDate(request.eventDateTime());
         event.setEventLocation(request.eventLocation());
@@ -206,6 +229,7 @@ public class EventsServiceImpl implements EventsService {
 
             event.getTicketCategories().add(ticketCategory);
         }
+
+        log.info("Event updated successfully. EventId={}", eventId);
     }
 }
-

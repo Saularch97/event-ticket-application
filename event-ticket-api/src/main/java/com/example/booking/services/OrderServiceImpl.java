@@ -9,20 +9,18 @@ import com.example.booking.exception.OrderNotFoundException;
 import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
 import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.OrderRepository;
-import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +28,9 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final TicketService ticketService;
@@ -45,18 +46,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public OrderItemDto createNewOrder(CreateOrderRequest dto) {
-
         UUID userId = jwtUtils.getAuthenticatedUserId();
-        User user = userService.findUserEntityById(userId);
+        log.info("Creating new order for userId={}, ticketIds={}", userId, dto.ticketIds());
 
+        User user = userService.findUserEntityById(userId);
         List<Ticket> tickets = ticketService.findTicketsWithEventDetails(dto.ticketIds());
 
         if (tickets.size() != dto.ticketIds().size()) {
+            log.warn("Some tickets not found. Expected={}, Found={}", dto.ticketIds().size(), tickets.size());
             throw new TicketNotFoundException();
         }
 
         for (Ticket ticket : tickets) {
             if (ticket.getOrder() != null) {
+                log.warn("Ticket with ID={} already has an associated order", ticket.getTicketId());
                 throw new TicketAlreadyHaveAnOrderException(ticket.getTicketId() + " not found for!");
             }
         }
@@ -64,8 +67,7 @@ public class OrderServiceImpl implements OrderService {
         var ticketOrder = new Order();
         ticketOrder.setTickets(new HashSet<>(tickets));
 
-        var orderPrice = 0.0;
-
+        double orderPrice = 0.0;
         for (Ticket ticket : tickets) {
             orderPrice += ticket.getTicketCategory().getPrice();
         }
@@ -74,13 +76,17 @@ public class OrderServiceImpl implements OrderService {
         ticketOrder.setUser(user);
 
         Order savedOrder = orderRepository.save(ticketOrder);
+        log.info("Order created successfully. orderId={}, userId={}, totalPrice={}", savedOrder.getOrderId(), user.getUserId(), orderPrice);
 
         tickets.forEach(ticket -> {
             ticket.setOrder(savedOrder);
-            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
+            UUID eventId = ticket.getEvent().getEventId();
+            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(eventId);
+            log.debug("Evicted REMAINING_TICKETS cache for eventId={} in method createNewOrder", eventId);
         });
 
         Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).clear();
+        log.debug("Cleared ORDERS cache after new order creation");
 
         return new OrderItemDto(
                 savedOrder.getOrderId(),
@@ -93,15 +99,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrdersResponse getUserOrders(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
+        log.info("Fetching orders for userId={}, page={}, pageSize={}", userId, page, pageSize);
 
         Cache cache = cacheManager.getCache(CacheNames.ORDERS);
         Objects.requireNonNull(cache, "Orders cache not configured!");
 
-        String cacheKey = userId.toString() + "-" + page + "-" + pageSize;
-
+        String cacheKey = userId + "-" + page + "-" + pageSize;
         OrdersResponse cachedOrders = cache.get(cacheKey, OrdersResponse.class);
 
         if (cachedOrders != null) {
+            log.debug("Returning orders from cache. cacheKey={}", cacheKey);
             return cachedOrders;
         }
 
@@ -111,28 +118,44 @@ public class OrderServiceImpl implements OrderService {
                 .findOrdersByUserIdWithAssociations(userId, pageRequest)
                 .map(Order::toOrderItemDto);
 
-        OrdersResponse resultToCache = new OrdersResponse(ordersPage.getContent(), page, pageSize, ordersPage.getTotalPages(), ordersPage.getTotalElements());
+        OrdersResponse resultToCache = new OrdersResponse(
+                ordersPage.getContent(),
+                page,
+                pageSize,
+                ordersPage.getTotalPages(),
+                ordersPage.getTotalElements()
+        );
 
         cache.put(cacheKey, resultToCache);
+        log.debug("Cached user orders. cacheKey={}", cacheKey);
 
         return resultToCache;
     }
 
     @Transactional
     public void deleteOrder(UUID orderId) {
+        log.info("Attempting to delete orderId={}", orderId);
 
         Order order = orderRepository.findByIdWithFullAssociations(orderId)
-                .orElseThrow(OrderNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("Order not found with id={}", orderId);
+                    return new OrderNotFoundException();
+                });
 
-        for (Ticket ticket: order.getTickets()) {
+        for (Ticket ticket : order.getTickets()) {
             Event event = ticket.getEvent();
-            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(event.getEventId());
-            event.incrementAvailableTickets();
             ticket.getTicketCategory().incrementTicketCategory();
+            event.incrementAvailableTickets();
+
+            UUID eventId = event.getEventId();
+            Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(eventId);
+            log.debug("Evicted REMAINING_TICKETS cache for eventId={}", eventId);
         }
 
         Objects.requireNonNull(cacheManager.getCache(CacheNames.ORDERS)).clear();
+        log.debug("Cleared ORDERS cache after deleting orderId={}", orderId);
 
         orderRepository.deleteById(orderId);
+        log.info("Order deleted successfully. orderId={}", orderId);
     }
 }
