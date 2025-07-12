@@ -2,6 +2,7 @@ package com.example.booking.services;
 
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.exception.RoleNotFoundException;
 import com.example.booking.repositories.RoleRepository;
 import com.example.booking.services.intefaces.RoleService;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     public Role findRoleEntityByName(ERole name) {
-        return roleRepository.findByName(name).orElseThrow(() -> new EntityNotFoundException("Role not found!"));
+        return roleRepository.findByName(name).orElseThrow(RoleNotFoundException::new);
     }
 }

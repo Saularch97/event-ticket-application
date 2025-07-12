@@ -63,8 +63,8 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
 
     private String jwt;
     private UUID eventId;
-    private Integer vipCategoryId;
-    private Integer pistaCategoryId;
+    private Long vipCategoryId;
+    private Long pistaCategoryId;
 
     @BeforeEach
     void setup() throws Exception {
@@ -89,7 +89,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
         emmitTicketRequest(this.vipCategoryId)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.ticketId", notNullValue()))
-                .andExpect(jsonPath("$.ticketCategoryId", is(this.vipCategoryId)));
+                .andExpect(jsonPath("$.ticketCategoryId", is(this.vipCategoryId.intValue())));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
         return getUuidFromMvcResult(result);
     }
 
-    private ResultActions emmitTicketRequest(Integer ticketCategoryId) throws Exception {
+    private ResultActions emmitTicketRequest(Long ticketCategoryId) throws Exception {
         var emmitRequest = new EmmitTicketRequest(eventId, ticketCategoryId);
         return mockMvc.perform(post(TICKET_URL)
                 .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
@@ -148,7 +148,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsString(emmitRequest)));
     }
 
-    private Integer findCategoryIdByName(List<TicketCategory> categories, String name) {
+    private Long findCategoryIdByName(List<TicketCategory> categories, String name) {
         return categories.stream()
                 .filter(c -> name.equals(c.getName()))
                 .findFirst()

@@ -72,7 +72,7 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
         UUID eventId = createTestEvent();
 
-        Integer vipCategoryId = ticketCategoryRepository.findAllTicketCategoriesByEventId(eventId).stream()
+        Long vipCategoryId = ticketCategoryRepository.findAllTicketCategoriesByEventId(eventId).stream()
                 .filter(c -> CATEGORY_VIP.equals(c.getName()))
                 .findFirst()
                 .map(TicketCategory::getTicketCategoryId)
@@ -145,7 +145,7 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         return getUuidFromMvcResult(result, "eventId");
     }
 
-    private UUID createTestTicket(UUID eventId, Integer ticketCategoryId) throws Exception {
+    private UUID createTestTicket(UUID eventId, Long ticketCategoryId) throws Exception {
         var emmitRequest = new EmmitTicketRequest(eventId, ticketCategoryId);
         MvcResult result = mockMvc.perform(post(TICKET_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))

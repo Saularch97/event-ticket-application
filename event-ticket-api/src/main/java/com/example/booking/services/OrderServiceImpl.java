@@ -5,6 +5,9 @@ import com.example.booking.controller.request.order.CreateOrderRequest;
 import com.example.booking.dto.OrderItemDto;
 import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.domain.entities.*;
+import com.example.booking.exception.OrderNotFoundException;
+import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
+import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.OrderService;
@@ -49,12 +52,12 @@ public class OrderServiceImpl implements OrderService {
         List<Ticket> tickets = ticketService.findTicketsWithEventDetails(dto.ticketIds());
 
         if (tickets.size() != dto.ticketIds().size()) {
-            throw new EntityNotFoundException("One or more tickets where not found!");
+            throw new TicketNotFoundException();
         }
 
         for (Ticket ticket : tickets) {
             if (ticket.getOrder() != null) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "The ticket " + ticket.getTicketId() + " already have an order.");
+                throw new TicketAlreadyHaveAnOrderException(ticket.getTicketId() + " not found for!");
             }
         }
 
@@ -87,7 +90,6 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    // TODO validate this cache logic in the unit tests
     @Override
     public OrdersResponse getUserOrders(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
@@ -120,7 +122,7 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(UUID orderId) {
 
         Order order = orderRepository.findByIdWithFullAssociations(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
+                .orElseThrow(OrderNotFoundException::new);
 
         for (Ticket ticket: order.getTickets()) {
             Event event = ticket.getEvent();

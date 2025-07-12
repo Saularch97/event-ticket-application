@@ -7,6 +7,6 @@ public record TicketItemDto(
         UUID ticketId,
         UUID eventId,
         UUID userId,
-        Integer ticketCategoryId
+        Long ticketCategoryId
 ) implements Serializable {
 }

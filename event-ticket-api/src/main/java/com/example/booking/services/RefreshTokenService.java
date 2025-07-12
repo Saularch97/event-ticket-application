@@ -10,6 +10,7 @@ import com.example.booking.exception.TokenRefreshException;
 import com.example.booking.exception.UserNotFoundException;
 import com.example.booking.repositories.RefreshTokenRepository;
 import com.example.booking.repositories.UserRepository;
+import com.example.booking.services.intefaces.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class RefreshTokenService {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
@@ -45,21 +46,16 @@ public class RefreshTokenService {
             }
         }
 
-        Optional<User> userOpt = userRepository.findById(userId);
+        User user = userService.findUserEntityById(userId);
 
-        if(userOpt.isPresent()) {
-            RefreshToken refreshToken = new RefreshToken();
+        RefreshToken refreshToken = new RefreshToken();
 
-            refreshToken.setUser(userOpt.get());
-            refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-            refreshToken.setToken(UUID.randomUUID().toString());
+        refreshToken.setUser(user);
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
+        refreshToken.setToken(UUID.randomUUID().toString());
 
-            refreshToken = refreshTokenRepository.save(refreshToken);
-            return refreshToken;
-        } else {
-            throw new UserNotFoundException("User not found!");
-        }
-
+        refreshToken = refreshTokenRepository.save(refreshToken);
+        return refreshToken;
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {
@@ -73,6 +69,6 @@ public class RefreshTokenService {
 
     @Transactional
     public void deleteByUserId(UUID userId) {
-        refreshTokenRepository.deleteByUser(userRepository.findById(userId).get());
+        refreshTokenRepository.deleteByUser(userService.findUserEntityById(userId));
     }
 }

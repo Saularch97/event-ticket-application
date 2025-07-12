@@ -43,13 +43,12 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add @Schemas to request and responses from controllers
 * [x] Refactor controller dto's(only use controller dto for request/response)
 * [x] Add .env.example and change the jwt authkeys(use .env dependencie)
-* [] Verify if cache is working(make unit tests just for the cache)
-* [ ] Change integer id's for UUID
+* [x] Change integer id's for UUID
 * [ ] Treat all the exceptions in the exception global exception handler
-* [ ] Improve logging(Add logging functionallity with spring cloud about logs, research about it)
-* [ ] Improve permissioning
-* [ ] K8s for dev and prod
+* [ ] Improve logging(Add logging functionallity with spring cloud about logs, research about it SL4J)
 * [ ] Include role permission in the controllers
+* [ ] K8s for dev and prod
+* [ ] Add micrometer
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
@@ -69,15 +68,16 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
     ⚠️ **Important:** Use **proactive invalidation**, not only TTL, since data changes frequently.
 * [x] Add Spring Validation (`spring-boot-starter-validation`) for DTOs
 * [x] Implement `@RestControllerAdvice` for error handling
-
+* [ ] See possibility to add grafana to monitor some things
+* [ ] Possibility to decouple auth to an service to make an api gateway to authentication
 * [x] Add **tests** (unit and integration)
-* [ ] Refactor tests to reuse some methdos(**dry**)
+* [x] Refactor tests to reuse some methdos(**dry**)
 * [ ] Setup **deployment** pipeline
 * [ ] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.g., Stripe)
 
-VERY VERY IMPORTANT
-* [ ] Change jwt keys and move them to .env file!!!
+VERY VERY IMPORTANT MAKE AN BETTER README!!!
+[ ]
 ---
 
 Useful commands for debbuging in a k8s environment:

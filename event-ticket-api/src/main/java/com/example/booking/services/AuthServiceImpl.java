@@ -15,7 +15,10 @@ import com.example.booking.domain.entities.RefreshToken;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.exception.EmailAlreadyExistsException;
+import com.example.booking.exception.RefreshTokenEmptyException;
 import com.example.booking.exception.TokenRefreshException;
+import com.example.booking.exception.UserNameAlreadyExistsException;
 import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.AuthService;
 import com.example.booking.services.intefaces.RoleService;
@@ -84,11 +87,11 @@ public class AuthServiceImpl implements AuthService {
 
     public UserDto registerUser(SignupRequest signUpRequest) {
         if (userRepository.existsByUserName(signUpRequest.username())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is already taken");
+            throw new UserNameAlreadyExistsException();
         }
 
         if (userRepository.existsByEmail(signUpRequest.email())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already in use");
+            throw new EmailAlreadyExistsException();
         }
 
         User user = new User();
@@ -140,7 +143,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtUtils.getJwtRefreshFromCookies(request);
 
         if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is empty");
+            throw new RefreshTokenEmptyException();
         }
 
         RefreshToken token = refreshTokenService.findByToken(refreshToken)

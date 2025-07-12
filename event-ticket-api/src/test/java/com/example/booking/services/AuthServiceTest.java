@@ -11,7 +11,10 @@ import com.example.booking.domain.entities.RefreshToken;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.exception.EmailAlreadyExistsException;
+import com.example.booking.exception.RefreshTokenEmptyException;
 import com.example.booking.exception.TokenRefreshException;
+import com.example.booking.exception.UserNameAlreadyExistsException;
 import com.example.booking.repositories.UserRepository;
 import com.example.booking.services.intefaces.RoleService;
 import com.example.booking.util.JwtUtils;
@@ -157,12 +160,8 @@ class AuthServiceTest {
     void registerUser_ShouldThrowException_WhenUsernameIsTaken() {
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(true);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-            () -> authServiceImpl.registerUser(signupRequest));
-        
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Username is already taken", exception.getReason());
-        
+        assertThrows(UserNameAlreadyExistsException.class, () -> authServiceImpl.registerUser(signupRequest));
+
         verify(userRepository).existsByUserName(signupRequest.username());
         verify(userRepository, never()).existsByEmail(any());
         verify(userRepository, never()).save(any());
@@ -173,12 +172,9 @@ class AuthServiceTest {
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(signupRequest.email())).thenReturn(true);
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        assertThrows(EmailAlreadyExistsException.class,
             () -> authServiceImpl.registerUser(signupRequest));
-        
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Email is already in use", exception.getReason());
-        
+
         verify(userRepository).existsByUserName(signupRequest.username());
         verify(userRepository).existsByEmail(signupRequest.email());
         verify(userRepository, never()).save(any());
@@ -289,12 +285,9 @@ class AuthServiceTest {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(jwtUtils.getJwtRefreshFromCookies(request)).thenReturn("");
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        assertThrows(RefreshTokenEmptyException.class,
             () -> authServiceImpl.refreshToken(request));
-        
-        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-        assertEquals("Refresh token is empty", exception.getReason());
-        
+
         verify(jwtUtils).getJwtRefreshFromCookies(request);
         verify(refreshTokenService, never()).findByToken(any());
     }

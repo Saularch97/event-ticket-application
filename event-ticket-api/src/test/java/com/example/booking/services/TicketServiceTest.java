@@ -6,6 +6,9 @@ import com.example.booking.dto.TicketItemDto;
 import com.example.booking.dto.TicketsDto;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.*;
+import com.example.booking.exception.TicketCategoryNotFoundException;
+import com.example.booking.exception.TicketCategorySoldOutException;
+import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.UserService;
@@ -47,7 +50,7 @@ class TicketServiceTest {
     private Event testEvent;
     private TicketCategory testCategory;
     private UUID testEventId;
-    private Integer testTicketCategoryId;
+    private Long testTicketCategoryId;
     private UUID testUserId;
     private String testUsername;
 
@@ -56,7 +59,7 @@ class TicketServiceTest {
         testUsername = "testUser";
         testUserId = UUID.randomUUID();
         testEventId = UUID.randomUUID();
-        testTicketCategoryId = 1;
+        testTicketCategoryId = 1L;
 
         testUser = new User();
         testUser.setUserId(testUserId);
@@ -93,27 +96,25 @@ class TicketServiceTest {
     }
 
     @Test
-    void emmitTicket_ShouldThrowIllegalArgumentException_WhenCategoryNotFound() {
-        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, 2);
+    void emmitTicket_ShouldTicketCategoryNotFoundException_WhenCategoryNotFound() {
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, 2L);
 
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        assertThrows(TicketCategoryNotFoundException.class,
                 () -> ticketsService.emmitTicket(request));
-
-        assertEquals("Ticket category not found for id: 2", exception.getMessage());
 
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
     @Test
-    void emmitTicket_ShouldThrowException_WhenNoTicketsAvailableInCategory() {
+    void emmitTicket_ShouldThrowTicketSoldOutException_WhenNoTicketsAvailableInCategory() {
         testEvent.getTicketCategories().getFirst().setAvailableCategoryTickets(0);
         EmmitTicketRequest request = new EmmitTicketRequest(testEventId, testTicketCategoryId);
 
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
-        assertThrows(IllegalStateException.class, () -> ticketsService.emmitTicket(request));
+        assertThrows(TicketCategorySoldOutException.class, () -> ticketsService.emmitTicket(request));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
@@ -137,14 +138,13 @@ class TicketServiceTest {
     }
 
     @Test
-    void deleteEmittedTicket_ShouldThrowResponseStatusException_WhenTicketNotFound() {
+    void deleteEmittedTicket_ShouldThrowTicketNotFoundException_WhenTicketNotFound() {
         UUID id = UUID.randomUUID();
         when(ticketRepository.findTicketWithEvent(id)).thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+        assertThrows(TicketNotFoundException.class,
                 () -> ticketsService.deleteEmittedTicket(id));
 
-        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         verify(ticketRepository, never()).deleteById(any());
     }
 

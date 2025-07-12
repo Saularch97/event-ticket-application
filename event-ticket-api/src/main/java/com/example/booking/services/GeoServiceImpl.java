@@ -1,6 +1,7 @@
 package com.example.booking.services;
 
 import com.example.booking.dto.CityDataDto;
+import com.example.booking.exception.CityDataNotFoundException;
 import com.example.booking.services.client.GeoSearchClient;
 import com.example.booking.services.intefaces.GeoService;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ public class GeoServiceImpl implements GeoService {
     @Override
     public CityDataDto searchForCityData(String cityName) {
         var response = client.search(cityName, "json", 1).getFirst();
+
+        if(response == null) throw new CityDataNotFoundException();
+
         return new CityDataDto(response.lat(), response.lon());
     }
 }

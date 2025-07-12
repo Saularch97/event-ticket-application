@@ -10,7 +10,7 @@ public class TicketCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ticket_category_id")
-    private Integer ticketCategoryId;
+    private Long ticketCategoryId;
 
     private String name;
     private Double price;
@@ -25,7 +25,7 @@ public class TicketCategory {
     public TicketCategory() {
     }
 
-    public TicketCategory(Integer availableCategoryTickets, Event event, Double price, String name, Integer ticketCategoryId) {
+    public TicketCategory(Integer availableCategoryTickets, Event event, Double price, String name, Long ticketCategoryId) {
         this.availableCategoryTickets = availableCategoryTickets;
         this.event = event;
         this.price = price;
@@ -33,11 +33,11 @@ public class TicketCategory {
         this.ticketCategoryId = ticketCategoryId;
     }
 
-    public Integer getTicketCategoryId() {
+    public Long getTicketCategoryId() {
         return ticketCategoryId;
     }
 
-    public void setTicketCategoryId(Integer ticketCategoryId) {
+    public void setTicketCategoryId(Long ticketCategoryId) {
         this.ticketCategoryId = ticketCategoryId;
     }
 

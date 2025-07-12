@@ -13,6 +13,7 @@ import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.dto.EventSummaryDto;
+import com.example.booking.exception.EventNotFoundException;
 import com.example.booking.messaging.EventRequestProducer;
 import com.example.booking.repositories.EventRepository;
 import com.example.booking.services.intefaces.EventsService;
@@ -66,14 +67,6 @@ public class EventsServiceImpl implements EventsService {
         UUID userId = jwtUtils.getAuthenticatedUserId();
         var user = userService.findUserEntityById(userId);
 
-        var isAdmin = user.getRoles()
-                .stream()
-                .anyMatch(role -> role.getName().name().equalsIgnoreCase(ERole.ROLE_ADMIN.name()));
-
-        if (!isAdmin) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-      
         var event = new Event();
         event.setEventOwner(user);
         event.setEventName(request.eventName());
@@ -108,23 +101,11 @@ public class EventsServiceImpl implements EventsService {
     }
 
     public void deleteEvent(UUID eventId) {
-        UUID userId = jwtUtils.getAuthenticatedUserId();
-
         if (!eventRepository.existsById(eventId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
+            throw new EventNotFoundException();
         }
 
-        var user = userService.findUserEntityById(userId);
-
-        var event = findEventEntityById(eventId);
-
-        boolean isAdmin = User.userContainsAEspecificRole(user,ERole.ROLE_ADMIN.name());
-
-        if (isAdmin || event.getEventOwner().getUserId().equals(userId)) {
-            eventRepository.deleteById(eventId);
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not allowed to delete this event");
-        }
+        eventRepository.deleteById(eventId);
     }
 
     public EventsDto listAllEvents(int page, int pageSize) {

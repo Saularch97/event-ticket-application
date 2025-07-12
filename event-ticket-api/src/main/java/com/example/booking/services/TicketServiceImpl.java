@@ -9,6 +9,9 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
+import com.example.booking.exception.TicketCategoryNotFoundException;
+import com.example.booking.exception.TicketCategorySoldOutException;
+import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.TicketService;
@@ -20,9 +23,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Objects;
@@ -64,11 +65,11 @@ public class TicketServiceImpl implements TicketService {
                 .stream()
                 .filter(tc -> tc.getTicketCategoryId().equals(request.ticketCategoryId()))
                 .findFirst().orElseThrow(() ->
-                new IllegalArgumentException("Ticket category not found for id: " + request.ticketCategoryId())
+                new TicketCategoryNotFoundException(request.ticketCategoryId())
         );
 
         if (category.getAvailableCategoryTickets() == 0) {
-            throw new IllegalStateException("Category sold out!");
+            throw new TicketCategorySoldOutException();
         }
 
         category.decrementTicketCategory();
@@ -87,8 +88,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void deleteEmittedTicket(UUID ticketId) {
-        var ticket = ticketRepository.findTicketWithEvent(ticketId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var ticket = ticketRepository.findTicketWithEvent(ticketId).orElseThrow(TicketNotFoundException::new);
         
         Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
 

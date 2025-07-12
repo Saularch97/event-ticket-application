@@ -162,7 +162,7 @@ public class EventServiceTest {
                         event,
                         20.0,
                         "prime_ticket",
-                        1))
+                        1L))
                 );
 
         EventItemDto result = eventsService.createEvent(createEventRequest);
@@ -206,8 +206,8 @@ public class EventServiceTest {
     void createEvent_ShouldReturnAnEventItemDtoWithMoreThanOneTicketCategory_WhenMoreThanOneTicketCategoryIsProvided() {
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
         List<TicketCategory> ticketCategories = List.of(
-                new TicketCategory(20, event, 20.0, "prime_ticket", 1),
-                new TicketCategory(30, event, 40.0, "ultra_ticket", 2)
+                new TicketCategory(20, event, 20.0, "prime_ticket", 1L),
+                new TicketCategory(30, event, 40.0, "ultra_ticket", 2L)
         );
 
         CreateEventRequest createRequest = new CreateEventRequest(
@@ -247,8 +247,8 @@ public class EventServiceTest {
     void createEvent_ShouldHaveTheRightAmountOfAvailableAndOriginalTickets_WhenCreateEventWithAGivenAmountOfTicketCategories() {
         CityDataDto cityDataDto = new CityDataDto(10.0, 20.0);
         List<TicketCategory> ticketCategories = List.of(
-                new TicketCategory(50, event, 20.0, "prime_ticket", 1),
-                new TicketCategory(50, event, 40.0, "ultra_ticket", 2)
+                new TicketCategory(50, event, 20.0, "prime_ticket", 1L),
+                new TicketCategory(50, event, 40.0, "ultra_ticket", 2L)
         );
 
         CreateEventRequest createRequest = new CreateEventRequest(

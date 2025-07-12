@@ -10,5 +10,5 @@ public record EmmitTicketRequest(
         UUID eventId,
 
         @NotNull(message = "Ticket category id is required!")
-        Integer ticketCategoryId
+        Long ticketCategoryId
 ) {}

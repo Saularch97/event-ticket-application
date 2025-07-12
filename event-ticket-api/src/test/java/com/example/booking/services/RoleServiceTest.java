@@ -3,6 +3,8 @@ package com.example.booking.services;
 
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.exception.RoleNotFoundException;
+import com.example.booking.exception.base.NotFoundException;
 import com.example.booking.repositories.RoleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -44,17 +46,15 @@ class RoleServiceTest {
     }
 
     @Test
-    void findRoleEntityByName_ShouldThrowEntityNotFoundException_WhenRoleDoesNotExist() {
+    void findRoleEntityByName_ShouldThrowRoleNotFoundException_WhenRoleDoesNotExist() {
 
         ERole roleNameToFind = ERole.ROLE_ADMIN;
 
         when(roleRepository.findByName(roleNameToFind)).thenReturn(Optional.empty());
 
-        EntityNotFoundException thrownException = assertThrows(EntityNotFoundException.class, () -> {
+        assertThrows(RoleNotFoundException.class, () -> {
             roleService.findRoleEntityByName(roleNameToFind);
         });
-
-        assertEquals("Role not found!", thrownException.getMessage());
 
         verify(roleRepository, times(1)).findByName(roleNameToFind);
     }
