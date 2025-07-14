@@ -39,14 +39,15 @@ dependencies {
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
-
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-
+	implementation 'org.springframework.kafka:spring-kafka'
 	implementation "com.stripe:stripe-java:26.11.0"
 	implementation "me.paulschwarz:spring-dotenv:4.0.0"
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 	runtimeOnly 'org.postgresql:postgresql'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.springframework.amqp:spring-rabbit-test'
@@ -55,6 +56,7 @@ dependencies {
 	testImplementation 'org.testcontainers:testcontainers:1.21.1'
 	testImplementation 'org.testcontainers:junit-jupiter:1.21.1'
 	testImplementation 'org.testcontainers:postgresql:1.21.1'
+
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	compileOnly("org.springframework.boot:spring-boot-devtools")
