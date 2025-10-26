@@ -59,7 +59,7 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add **tests** (unit and integration)
 
 Things to come:
-* [ ] Add kafka for logs processing(elk + k stack)
+* [ ] Have dev and prod environments in kubernetes
 * [ ] Add micrometer + Grafana + Prometheus
 * [ ] Include role permission in the controllers
 * [ ] K8s for dev and prod
@@ -72,4 +72,42 @@ Things to come:
 * [ ] Setup **deployment** pipeline
 * [ ] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.g., Stripe)
+* [ ] Study about hazelcast
 ---
+// TODO averiguar necessidade de adicionar essa key
+🧾 Stop Breaking Things. Make Your Java APIs Idempotent.
+
+Ever retried a POST request and accidentally created two records?
+Yeah, that’s what happens when your API isn’t idempotent.
+
+🎯 What’s idempotency?
+Calling the same operation multiple times won’t change the result.
+
+This is critical in:
+💳 Payments
+✉️ Email sending
+📦 Order creation
+🔄 Webhooks
+✅ Anything with side effects
+
+You store the result tied to the key.
+Next time the same key comes in, return the cached response.
+
+💡 Pro Tip:
+In Java, you can implement this with:
+
+Spring Interceptors or Filters
+
+A custom IdempotencyService backed by Redis/PostgreSQL
+
+Response caching using hash of the body + idempotency key
+
+Idempotency makes your APIs resilient, retryable, and production-safe.
+
+It’s not a luxury, it’s a necessity in modern backend design.
+
+How do you handle retries in your Java APIs today?
+
+
+Idenpotency for paymnts:
+![img_1.png](img_1.png)

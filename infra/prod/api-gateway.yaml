@@ -13,13 +13,13 @@ spec:
         app: apigateway
     spec:
       containers:
-      - name: apigateway-app
-        image: event-ticket-application_apigateway
-        ports:
-        - containerPort: 8081
-        env:
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery-service:8761/eureka/"
+        - name: apigateway-app
+          image: saul97arch/apigateway
+          ports:
+            - containerPort: 8081
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://discovery-service:8761/eureka/"
 ---
 apiVersion: v1
 kind: Service
@@ -29,6 +29,6 @@ spec:
   selector:
     app: apigateway
   ports:
-  - port: 80
-    targetPort: 8081
+    - port: 80
+      targetPort: 8081
   type: LoadBalancer
