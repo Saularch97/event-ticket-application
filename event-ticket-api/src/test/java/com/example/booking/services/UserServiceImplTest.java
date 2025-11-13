@@ -35,7 +35,7 @@ class UserServiceImplTest {
 
     private User user;
     private CreateUserRequest createUserRequest;
-
+    // TODO colocar strings em constantes para serem usadas
     @BeforeEach
     void setUp() {
         user = new User();
@@ -54,13 +54,10 @@ class UserServiceImplTest {
 
     @Test
     void saveUser_ShouldReturnUserDto_WhenRequestIsValid() {
-        // Arrange
         when(repository.save(any(User.class))).thenReturn(user);
 
-        // Act
         UserDto result = userService.saveUser(createUserRequest);
 
-        // Assert
         assertNotNull(result);
         assertEquals(user.getUserName(), result.userName());
         assertEquals(user.getEmail(), result.email());
@@ -69,13 +66,10 @@ class UserServiceImplTest {
 
     @Test
     void saveUser_ShouldMapAllFieldsCorrectly() {
-        // Arrange
         when(repository.save(any(User.class))).thenReturn(user);
 
-        // Act
         UserDto result = userService.saveUser(createUserRequest);
 
-        // Assert
         assertEquals(createUserRequest.username(), result.userName());
         assertEquals(createUserRequest.email(), result.email());
         assertEquals(1, result.scopes().size());

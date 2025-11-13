@@ -11,7 +11,6 @@ import com.example.booking.dto.RecomendEventDto;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
-import com.example.booking.domain.enums.ERole;
 import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.exception.EventNotFoundException;
 import com.example.booking.messaging.EventRequestProducer;
@@ -30,9 +29,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -52,9 +49,9 @@ public class EventsServiceImpl implements EventsService {
 
     private static final Logger log = LoggerFactory.getLogger(EventsServiceImpl.class);
 
-    public EventsServiceImpl(EventRepository eventRepository, UserService userRepository, JwtUtils jwtUtils, GeoService geoService, TicketCategoryService ticketCategoryService, EventRequestProducer producer) {
+    public EventsServiceImpl(EventRepository eventRepository, UserService userService, JwtUtils jwtUtils, GeoService geoService, TicketCategoryService ticketCategoryService, EventRequestProducer producer) {
         this.eventRepository = eventRepository;
-        this.userService = userRepository;
+        this.userService = userService;
         this.jwtUtils = jwtUtils;
         this.geoService = geoService;
         this.ticketCategoryService = ticketCategoryService;
@@ -67,36 +64,14 @@ public class EventsServiceImpl implements EventsService {
 
         var user = userService.findUserEntityById(userId);
 
-        var event = new Event();
-        event.setEventOwner(user);
-        event.setEventName(request.eventName());
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        LocalDate date = LocalDate.parse(request.eventDate(), formatter);
-        LocalDateTime dateTime = date.atTime(request.eventHour(), request.eventMinute());
-        event.setEventDate(dateTime);
-        event.setEventLocation(request.eventLocation());
+        var event = buildEventForRequest(request, user);
 
         CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
+        bindTicketCategories(request, event);
 
-        Integer availableTickets = 0;
-        List<TicketCategory> ticketCategories = ticketCategoryService.createTicketCategoriesForEvent(event, request.ticketCategories());
-
-        for (var ticketCategory : ticketCategories) {
-            availableTickets += ticketCategory.getAvailableCategoryTickets();
-        }
-
-        event.setAvailableTickets(availableTickets);
-        event.setTicketCategories(ticketCategories);
         Event savedEvent = eventRepository.save(event);
 
-        try {
-            RecomendEventDto recomendEventDto = new RecomendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
-            producer.publishEventRecommendation(recomendEventDto);
-            log.info("Event recommendation published for eventId={}", savedEvent.getEventId());
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to send event recommendation to queue for eventId={}", savedEvent.getEventId(), e);
-        }
+        publishEventRecommendation(savedEvent, cityData);
 
         log.info("Event created successfully. EventId={}, OwnerId={}", savedEvent.getEventId(), userId);
         return Event.toEventItemDto(savedEvent);
@@ -157,7 +132,7 @@ public class EventsServiceImpl implements EventsService {
         log.info("Fetching event entity by id. EventId={}", eventId);
         return eventRepository.findById(eventId).orElseThrow(() -> {
             log.warn("Event not found. EventId={}", eventId);
-            return new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found");
+            return new EventNotFoundException();
         });
     }
 
@@ -231,5 +206,43 @@ public class EventsServiceImpl implements EventsService {
         }
 
         log.info("Event updated successfully. EventId={}", eventId);
+    }
+
+    private void publishEventRecommendation(Event savedEvent, CityDataDto cityData) {
+        try {
+            RecomendEventDto recomendEventDto = new RecomendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
+            producer.publishEventRecommendation(recomendEventDto);
+            log.info("Event recommendation published for eventId={}", savedEvent.getEventId());
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to send event recommendation to queue for eventId={}", savedEvent.getEventId(), e);
+        }
+    }
+
+    private Event buildEventForRequest(CreateEventRequest request, User user) {
+        var event = new Event();
+        event.setEventOwner(user);
+        event.setEventName(request.eventName());
+        LocalDateTime dateTime = formatDate(request);
+        event.setEventDate(dateTime);
+        event.setEventLocation(request.eventLocation());
+        return event;
+    }
+
+    private void bindTicketCategories(CreateEventRequest request, Event event) {
+        Integer availableTickets = 0;
+        List<TicketCategory> ticketCategories = ticketCategoryService.createTicketCategoriesForEvent(event, request.ticketCategories());
+
+        for (var ticketCategory : ticketCategories) {
+            availableTickets += ticketCategory.getAvailableCategoryTickets();
+        }
+
+        event.setAvailableTickets(availableTickets);
+        event.setTicketCategories(ticketCategories);
+    }
+
+    private  LocalDateTime formatDate(CreateEventRequest request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate date = LocalDate.parse(request.eventDate(), formatter);
+        return date.atTime(request.eventHour(), request.eventMinute());
     }
 }

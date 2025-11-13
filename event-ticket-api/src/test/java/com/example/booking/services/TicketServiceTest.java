@@ -22,8 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -37,14 +35,21 @@ class TicketServiceTest {
     private static final String CATEGORY_NAME = "Pista Premium";
     private static final String TEST_LOCATION = "Estádio Nacional";
 
-    @Mock private TicketRepository ticketRepository;
-    @Mock private UserService userService;
-    @Mock private EventsService eventService;
-    @Mock private JwtUtils jwtUtils;
-    @Mock private CacheManager cacheManager;
-    @Mock private Cache cache;
+    @Mock
+    private TicketRepository ticketRepository;
+    @Mock
+    private UserService userService;
+    @Mock
+    private EventsService eventService;
+    @Mock
+    private JwtUtils jwtUtils;
+    @Mock
+    private CacheManager cacheManager;
+    @Mock
+    private Cache cache;
 
-    @InjectMocks private TicketServiceImpl ticketsService;
+    @InjectMocks
+    private TicketServiceImpl ticketsService;
 
     private User testUser;
     private Event testEvent;

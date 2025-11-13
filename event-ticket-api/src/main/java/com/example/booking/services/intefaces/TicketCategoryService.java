@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface TicketCategoryService {
 
-    public List<TicketCategory> createTicketCategoriesForEvent(Event event, List<CreateTicketCategoryRequest> requests);
+    List<TicketCategory> createTicketCategoriesForEvent(Event event, List<CreateTicketCategoryRequest> requests);
 }

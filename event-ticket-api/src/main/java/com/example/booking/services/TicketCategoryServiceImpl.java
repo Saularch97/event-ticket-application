@@ -1,6 +1,5 @@
 package com.example.booking.services;
 
-import com.example.booking.dto.TicketCategoryDto;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
@@ -32,19 +31,15 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         for (var req : requests) {
             log.debug("Creating ticket category with name '{}' and price {} for event ID {}", req.name(), req.price(), event.getEventId());
 
-            TicketCategory tc = new TicketCategory();
-            tc.setEvent(event);
-            tc.setName(req.name());
-            tc.setPrice(req.price());
-            tc.setAvailableCategoryTickets(req.availableCategoryTickets());
-            ticketCategories.add(tc);
+            var ticketCategory = createTicketCategory(req, event);
+            ticketCategories.add(ticketCategory);
         }
 
         log.info("Created {} ticket categories for event with ID {}", ticketCategories.size(), event.getEventId());
         return ticketCategories;
     }
 
-    public TicketCategoryDto createTicketCategory(CreateTicketCategoryRequest request, Event event) {
+    private TicketCategory createTicketCategory(CreateTicketCategoryRequest request, Event event) {
         log.info("Creating single ticket category '{}' for event with ID {}", request.name(), event.getEventId());
 
         var ticketCategory = new TicketCategory();
@@ -56,6 +51,6 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         var savedCategory = repository.save(ticketCategory);
         log.info("Ticket category '{}' created with ID {}", savedCategory.getName(), savedCategory.getTicketCategoryId());
 
-        return TicketCategory.toTicketCategoryDto(savedCategory);
+        return savedCategory;
     }
 }

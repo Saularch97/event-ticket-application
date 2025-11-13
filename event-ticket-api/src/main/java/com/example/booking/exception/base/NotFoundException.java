@@ -1,7 +1,10 @@
 package com.example.booking.exception.base;
 
-public class NotFoundException extends RuntimeException {
-    public NotFoundException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+public class NotFoundException extends ResponseStatusException {
+    public NotFoundException(HttpStatus status, String message) {
+        super(status, message);
     }
 }
