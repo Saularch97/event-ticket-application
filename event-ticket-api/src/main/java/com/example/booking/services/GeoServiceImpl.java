@@ -23,7 +23,7 @@ public class GeoServiceImpl implements GeoService {
     public CityDataDto searchForCityData(String cityName) {
         log.info("Searching city data for '{}'", cityName);
 
-        var response = client.search(cityName, "json", 1).getFirst();
+        var response = client.search(cityName, "json", 1);
 
         if (response == null) {
             log.warn("City data not found for '{}'", cityName);
@@ -31,8 +31,8 @@ public class GeoServiceImpl implements GeoService {
         }
 
         log.info("City data retrieved. City='{}', Latitude={}, Longitude={}",
-                cityName, response.lat(), response.lon());
+                cityName, response.getFirst().lat(), response.getFirst().lon());
 
-        return new CityDataDto(response.lat(), response.lon());
+        return new CityDataDto(response.getFirst().lat(), response.getFirst().lon());
     }
 }
