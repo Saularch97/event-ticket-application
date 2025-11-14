@@ -1,9 +1,10 @@
-FROM eclipse-temurin:21-jdk AS builder
+FROM eclipse-temurin:22-jdk AS builder
 WORKDIR /app
 COPY . .
+
 RUN ./gradlew build -x test --no-daemon
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:24-jre
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar

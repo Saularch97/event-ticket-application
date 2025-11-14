@@ -33,9 +33,7 @@ The system is designed using a microservices architecture with asynchronous mess
 ---
 
 Once running access http://localhost:8081/swagger-ui/index.html to see the swagger documentation.
-
 ## ✅ TODO
-
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
 * [x] Implement some migrations with flyway for versioning the database
 * [x] More complex queries using dto's projections, entity manager
@@ -59,10 +57,9 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add **tests** (unit and integration)
 
 Things to come:
-* [ ] Have dev and prod environments in kubernetes
-* [ ] Add micrometer + Grafana + Prometheus
 * [ ] Include role permission in the controllers
-* [ ] K8s for dev and prod
+* [x] Have dev and prod environments in kubernetes
+* [ ] Add micrometer + Grafana + Prometheus
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
@@ -71,10 +68,11 @@ Things to come:
 * [ ] Possibility to decouple auth to an service to make an api gateway to authentication
 * [ ] Setup **deployment** pipeline
 * [ ] Implement structured **logging** in the application
-* [ ] Integrate a **payment method** (e.g., Stripe)
+* [ ] Integrate a **payment method** (e.de., Stripe)
 * [ ] Study about hazelcast
 ---
 // TODO averiguar necessidade de adicionar essa key
+// TODO deixar claro no README que o build das apps é com Java 22 e o runtime com Java 24 para aproveitar as melhorias de performance do mesmo
 🧾 Stop Breaking Things. Make Your Java APIs Idempotent.
 
 Ever retried a POST request and accidentally created two records?

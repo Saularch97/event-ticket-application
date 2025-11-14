@@ -7,7 +7,7 @@ import com.example.booking.dto.CityDataDto;
 import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventsDto;
-import com.example.booking.dto.RecomendEventDto;
+import com.example.booking.dto.RecommendEventDto;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
@@ -210,8 +210,8 @@ public class EventsServiceImpl implements EventsService {
 
     private void publishEventRecommendation(Event savedEvent, CityDataDto cityData) {
         try {
-            RecomendEventDto recomendEventDto = new RecomendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
-            producer.publishEventRecommendation(recomendEventDto);
+            RecommendEventDto recommendEventDto = new RecommendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
+            producer.publishEventRecommendation(recommendEventDto);
             log.info("Event recommendation published for eventId={}", savedEvent.getEventId());
         } catch (JsonProcessingException e) {
             log.warn("Failed to send event recommendation to queue for eventId={}", savedEvent.getEventId(), e);
