@@ -230,9 +230,18 @@ public class EventsServiceImpl implements EventsService {
 
     private void bindTicketCategories(CreateEventRequest request, Event event) {
         Integer availableTickets = 0;
-        List<TicketCategory> ticketCategories = ticketCategoryService.createTicketCategoriesForEvent(event, request.ticketCategories());
 
-        for (var ticketCategory : ticketCategories) {
+        List<TicketCategory> ticketCategories = new ArrayList<>();
+
+        for (var categoryRequest : request.ticketCategories()) {
+            TicketCategory ticketCategory = new TicketCategory();
+            ticketCategory.setName(categoryRequest.name());
+            ticketCategory.setAvailableCategoryTickets(categoryRequest.availableCategoryTickets());
+            ticketCategory.setPrice(categoryRequest.price());
+
+            ticketCategory.setEvent(event);
+
+            ticketCategories.add(ticketCategory);
             availableTickets += ticketCategory.getAvailableCategoryTickets();
         }
 

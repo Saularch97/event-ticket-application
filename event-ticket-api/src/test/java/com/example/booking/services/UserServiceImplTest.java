@@ -33,22 +33,37 @@ class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
+    private static final String TEST_USER_USERNAME = "testuser";
+    private static final String TEST_USER_EMAIL = "test@example.com";
+    private static final String TEST_USER_PASSWORD = "password";
+    private static final String NEW_USER_USERNAME = "newuser";
+    private static final String NEW_USER_EMAIL = "new@example.com";
+    private static final String NEW_USER_PASSWORD = "newpassword";
+    private static final String USER2_USERNAME = "anotheruser";
+    private static final String USER2_EMAIL = "another@example.com";
+    private static final String NONEXISTENT_USERNAME = "nonexistent";
+    private static final String MSG_USER_NOT_FOUND = "User not found!";
+    private static final String ROLE_USER_STR = "ROLE_USER";
+    private static final String ROLE_ADMIN_STR = "ROLE_ADMIN";
+    private static final int EXPECTED_SIZE_1 = 1;
+    private static final int EXPECTED_SIZE_2 = 2;
+
     private User user;
     private CreateUserRequest createUserRequest;
-    // TODO colocar strings em constantes para serem usadas
+
     @BeforeEach
     void setUp() {
         user = new User();
         user.setUserId(UUID.randomUUID());
-        user.setUserName("testuser");
-        user.setEmail("test@example.com");
-        user.setPassword("password");
+        user.setUserName(TEST_USER_USERNAME);
+        user.setEmail(TEST_USER_EMAIL);
+        user.setPassword(TEST_USER_PASSWORD);
         user.setRoles(Set.of(new Role(ERole.ROLE_USER)));
 
         createUserRequest = new CreateUserRequest(
-                "testuser",
-                "test@example.com",
-                "password"
+                TEST_USER_USERNAME,
+                TEST_USER_EMAIL,
+                TEST_USER_PASSWORD
         );
     }
 
@@ -72,15 +87,15 @@ class UserServiceImplTest {
 
         assertEquals(createUserRequest.username(), result.userName());
         assertEquals(createUserRequest.email(), result.email());
-        assertEquals(1, result.scopes().size());
-        assertEquals("ROLE_USER", result.scopes().get(0).name());
+        assertEquals(EXPECTED_SIZE_1, result.scopes().size());
+        assertEquals(ROLE_USER_STR, result.scopes().get(0).name());
     }
 
     @Test
     void listAllUsers_ShouldReturnListOfUserDtos_WhenUsersExist() {
         User user2 = new User();
-        user2.setUserName("anotheruser");
-        user2.setEmail("another@example.com");
+        user2.setUserName(USER2_USERNAME);
+        user2.setEmail(USER2_EMAIL);
         user2.setRoles(Set.of(new Role(ERole.ROLE_ADMIN)));
 
         when(repository.findAll()).thenReturn(List.of(user, user2));
@@ -88,7 +103,7 @@ class UserServiceImplTest {
         List<UserDto> result = userService.listAllUsers();
 
         assertNotNull(result);
-        assertEquals(2, result.size());
+        assertEquals(EXPECTED_SIZE_2, result.size());
         assertEquals(user.getUserName(), result.get(0).userName());
         assertEquals(user2.getUserName(), result.get(1).userName());
         verify(repository).findAll();
@@ -107,63 +122,63 @@ class UserServiceImplTest {
 
     @Test
     void findByUserName_ShouldReturnUserDto_WhenUserExists() {
-        when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
+        when(repository.findByUserName(TEST_USER_USERNAME)).thenReturn(Optional.of(user));
 
-        UserDto result = userService.findByUserName("testuser");
+        UserDto result = userService.findByUserName(TEST_USER_USERNAME);
 
         assertNotNull(result);
         assertEquals(user.getUserName(), result.userName());
         assertEquals(user.getEmail(), result.email());
-        assertEquals(1, result.scopes().size());
-        verify(repository).findByUserName("testuser");
+        assertEquals(EXPECTED_SIZE_1, result.scopes().size());
+        verify(repository).findByUserName(TEST_USER_USERNAME);
     }
 
     @Test
     void findByUserName_ShouldThrowException_WhenUserNotFound() {
-        when(repository.findByUserName("nonexistent")).thenReturn(Optional.empty());
+        when(repository.findByUserName(NONEXISTENT_USERNAME)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> userService.findByUserName("nonexistent")
+                () -> userService.findByUserName(NONEXISTENT_USERNAME)
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("User not found!", exception.getReason());
-        verify(repository).findByUserName("nonexistent");
+        assertEquals(MSG_USER_NOT_FOUND, exception.getReason());
+        verify(repository).findByUserName(NONEXISTENT_USERNAME);
     }
 
     @Test
     void findEntityByUserName_ShouldReturnUserUserEntity_WhenUserExists() {
-        when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
+        when(repository.findByUserName(TEST_USER_USERNAME)).thenReturn(Optional.of(user));
 
-        User result = userService.findUserEntityByUserName("testuser");
+        User result = userService.findUserEntityByUserName(TEST_USER_USERNAME);
 
         assertNotNull(result);
         assertEquals(user.getUserName(), result.getUserName());
         assertEquals(user.getEmail(), result.getEmail());
-        verify(repository).findByUserName("testuser");
+        verify(repository).findByUserName(TEST_USER_USERNAME);
     }
 
     @Test
     void findUserEntityByUserName_ShouldThrowException_WhenUserNotFound() {
-        when(repository.findByUserName("nonexistent")).thenReturn(Optional.empty());
+        when(repository.findByUserName(NONEXISTENT_USERNAME)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> userService.findUserEntityByUserName("nonexistent")
+                () -> userService.findUserEntityByUserName(NONEXISTENT_USERNAME)
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        assertEquals("User not found!", exception.getReason());
-        verify(repository).findByUserName("nonexistent");
+        assertEquals(MSG_USER_NOT_FOUND, exception.getReason());
+        verify(repository).findByUserName(NONEXISTENT_USERNAME);
     }
 
     @Test
     void saveUser_ShouldSetCorrectProperties_WhenCreatingNewUser() {
         CreateUserRequest request = new CreateUserRequest(
-                "newuser",
-                "new@example.com",
-                "newpassword"
+                NEW_USER_USERNAME,
+                NEW_USER_EMAIL,
+                NEW_USER_PASSWORD
         );
 
         when(repository.save(any(User.class))).thenAnswer(invocation -> {
@@ -176,13 +191,13 @@ class UserServiceImplTest {
         UserDto result = userService.saveUser(request);
 
         verify(repository).save(argThat(user ->
-                user.getUserName().equals("newuser") &&
-                        user.getEmail().equals("new@example.com") &&
-                        user.getPassword().equals("newpassword") &&
+                user.getUserName().equals(NEW_USER_USERNAME) &&
+                        user.getEmail().equals(NEW_USER_EMAIL) &&
+                        user.getPassword().equals(NEW_USER_PASSWORD) &&
                         user.getRoles().iterator().next().getName() == ERole.ROLE_ADMIN
         ));
-        assertEquals("newuser", result.userName());
-        assertEquals("new@example.com", result.email());
+        assertEquals(NEW_USER_USERNAME, result.userName());
+        assertEquals(NEW_USER_EMAIL, result.email());
     }
 
     @Test
@@ -190,11 +205,11 @@ class UserServiceImplTest {
         Role adminRole = new Role(ERole.ROLE_ADMIN);
         user.setRoles(Set.of(adminRole));
 
-        when(repository.findByUserName("testuser")).thenReturn(Optional.of(user));
+        when(repository.findByUserName(TEST_USER_USERNAME)).thenReturn(Optional.of(user));
 
-        UserDto result = userService.findByUserName("testuser");
+        UserDto result = userService.findByUserName(TEST_USER_USERNAME);
 
-        assertEquals(1, result.scopes().size());
-        assertEquals("ROLE_ADMIN", result.scopes().getFirst().name());
+        assertEquals(EXPECTED_SIZE_1, result.scopes().size());
+        assertEquals(ROLE_ADMIN_STR, result.scopes().getFirst().name());
     }
 }

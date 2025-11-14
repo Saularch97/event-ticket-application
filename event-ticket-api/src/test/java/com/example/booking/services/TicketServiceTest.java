@@ -1,11 +1,14 @@
 package com.example.booking.services;
 
+import com.example.booking.builders.EventBuilder;
+import com.example.booking.builders.TicketBuilder;
+import com.example.booking.builders.TicketCategoryBuilder;
 import com.example.booking.config.cache.CacheNames;
+import com.example.booking.controller.request.ticket.EmmitTicketRequest;
+import com.example.booking.domain.entities.*;
 import com.example.booking.dto.RemainingTicketCategoryDto;
 import com.example.booking.dto.TicketItemDto;
 import com.example.booking.dto.TicketsDto;
-import com.example.booking.controller.request.ticket.EmmitTicketRequest;
-import com.example.booking.domain.entities.*;
 import com.example.booking.exception.TicketCategoryNotFoundException;
 import com.example.booking.exception.TicketCategorySoldOutException;
 import com.example.booking.exception.TicketNotFoundException;
@@ -24,7 +27,9 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -34,6 +39,19 @@ class TicketServiceTest {
 
     private static final String CATEGORY_NAME = "Pista Premium";
     private static final String TEST_LOCATION = "Estádio Nacional";
+    private static final String TEST_USERNAME = "testUser";
+    private static final Long TEST_TICKET_CATEGORY_ID = 1L;
+    private static final Long INVALID_TICKET_CATEGORY_ID = 2L;
+    private static final Double TEST_CATEGORY_PRICE = 250.0;
+    private static final Integer TEST_CATEGORY_TICKETS = 300;
+    private static final Integer TEST_EVENT_TICKETS = 500;
+    private static final LocalDateTime TEST_EVENT_DATETIME = LocalDateTime.of(2025, 12, 15, 20, 0);
+    private static final Integer SOLD_OUT_TICKETS = 0;
+    private static final Integer PAGE_0 = 0;
+    private static final Integer PAGE_SIZE_5 = 5;
+    private static final Integer PAGE_SIZE_10 = 10;
+    private static final String SORT_BY_TICKET_ID = "ticketId";
+    private static final Integer EXPECTED_LIST_SIZE_1 = 1;
 
     @Mock
     private TicketRepository ticketRepository;
@@ -61,27 +79,29 @@ class TicketServiceTest {
 
     @BeforeEach
     void setUp() {
-        testUsername = "testUser";
+        testUsername = TEST_USERNAME;
         testUserId = UUID.randomUUID();
         testEventId = UUID.randomUUID();
-        testTicketCategoryId = 1L;
+        testTicketCategoryId = TEST_TICKET_CATEGORY_ID;
 
         testUser = new User();
         testUser.setUserId(testUserId);
         testUser.setUserName(testUsername);
 
-        testCategory = new TicketCategory();
-        testCategory.setTicketCategoryId(testTicketCategoryId);
-        testCategory.setName(CATEGORY_NAME);
-        testCategory.setPrice(250.0);
-        testCategory.setAvailableCategoryTickets(300);
+        testCategory = TicketCategoryBuilder.aTicketCategory()
+                .withTicketCategoryId(testTicketCategoryId)
+                .withName(CATEGORY_NAME)
+                .withPrice(TEST_CATEGORY_PRICE)
+                .withAvailableCategoryTickets(TEST_CATEGORY_TICKETS)
+                .build();
 
-        testEvent = new Event();
-        testEvent.setEventId(testEventId);
-        testEvent.setEventLocation(TEST_LOCATION);
-        testEvent.setEventDate(LocalDateTime.of(2025, 12, 15, 20, 0));
-        testEvent.setTicketCategories(List.of(testCategory));
-        testEvent.setAvailableTickets(500);
+        testEvent = EventBuilder.anEvent()
+                .withEventId(testEventId)
+                .withEventLocation(TEST_LOCATION)
+                .withEventDate(TEST_EVENT_DATETIME)
+                .withTicketCategories(List.of(testCategory))
+                .withAvailableTickets(TEST_EVENT_TICKETS)
+                .build();
     }
 
     @Test
@@ -97,12 +117,12 @@ class TicketServiceTest {
         TicketItemDto result = ticketsService.emmitTicket(request);
 
         assertNotNull(result);
-        assertEquals(testEvent.getOriginalAmountOfTickets() - 1, testEvent.getAvailableTickets());
+        assertEquals(TEST_EVENT_TICKETS - 1, testEvent.getAvailableTickets());
     }
 
     @Test
     void emmitTicket_ShouldTicketCategoryNotFoundException_WhenCategoryNotFound() {
-        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, 2L);
+        EmmitTicketRequest request = new EmmitTicketRequest(testEventId, INVALID_TICKET_CATEGORY_ID);
 
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
@@ -114,7 +134,7 @@ class TicketServiceTest {
 
     @Test
     void emmitTicket_ShouldThrowTicketSoldOutException_WhenNoTicketsAvailableInCategory() {
-        testEvent.getTicketCategories().getFirst().setAvailableCategoryTickets(0);
+        testEvent.getTicketCategories().getFirst().setAvailableCategoryTickets(SOLD_OUT_TICKETS);
         EmmitTicketRequest request = new EmmitTicketRequest(testEventId, testTicketCategoryId);
 
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
@@ -126,10 +146,12 @@ class TicketServiceTest {
 
     @Test
     void deleteEmittedTicket_ShouldDeleteTicketAndUpdateCounts_WhenTicketExists() {
-        Ticket ticket = new Ticket();
-        ticket.setTicketId(UUID.randomUUID());
-        ticket.setEvent(testEvent);
-        ticket.setTicketCategory(testCategory);
+        Ticket ticket = TicketBuilder.aTicket()
+                .withTicketId(UUID.randomUUID())
+                .withEvent(testEvent)
+                .withTicketCategory(testCategory)
+                .build();
+
         testEvent.decrementAvailableTickets();
 
         when(ticketRepository.findTicketWithEvent(ticket.getTicketId())).thenReturn(Optional.of(ticket));
@@ -155,15 +177,14 @@ class TicketServiceTest {
 
     @Test
     void listAllTickets_ShouldReturnPaginatedTicketsDto_WhenCalledWithValidParameters() {
-        int page = 0, pageSize = 10;
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
+        PageRequest pageRequest = PageRequest.of(PAGE_0, PAGE_SIZE_10, Sort.Direction.DESC, SORT_BY_TICKET_ID);
 
         List<Ticket> tickets = List.of(mockTicket(), mockTicket());
         Page<Ticket> ticketPage = new PageImpl<>(tickets, pageRequest, tickets.size());
 
         when(ticketRepository.findAllWithAssociations(pageRequest)).thenReturn(ticketPage);
 
-        TicketsDto result = ticketsService.listAllTickets(page, pageSize);
+        TicketsDto result = ticketsService.listAllTickets(PAGE_0, PAGE_SIZE_10);
 
         assertNotNull(result);
         assertEquals(tickets.size(), result.tickets().size());
@@ -171,13 +192,12 @@ class TicketServiceTest {
 
     @Test
     void listAllTickets_ShouldReturnEmptyTicketsDto_WhenNoTicketsExist() {
-        int page = 0, pageSize = 10;
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.DESC, "ticketId");
+        PageRequest pageRequest = PageRequest.of(PAGE_0, PAGE_SIZE_10, Sort.Direction.DESC, SORT_BY_TICKET_ID);
         Page<Ticket> emptyPage = new PageImpl<>(List.of(), pageRequest, 0);
 
         when(ticketRepository.findAllWithAssociations(pageRequest)).thenReturn(emptyPage);
 
-        TicketsDto result = ticketsService.listAllTickets(page, pageSize);
+        TicketsDto result = ticketsService.listAllTickets(PAGE_0, PAGE_SIZE_10);
 
         assertNotNull(result);
         assertTrue(result.tickets().isEmpty());
@@ -185,8 +205,7 @@ class TicketServiceTest {
 
     @Test
     void listAllUserTickets_ShouldReturnPaginatedTicketsDtoForAuthenticatedUser_WhenCalled() {
-        int page = 0, pageSize = 5;
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
+        PageRequest pageRequest = PageRequest.of(PAGE_0, PAGE_SIZE_5, Sort.Direction.ASC, SORT_BY_TICKET_ID);
 
         List<Ticket> userTickets = List.of(mockTicketWithUser(testUserId), mockTicketWithUser(testUserId));
         Page<Ticket> ticketPage = new PageImpl<>(userTickets, pageRequest, userTickets.size());
@@ -195,7 +214,7 @@ class TicketServiceTest {
         when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(ticketRepository.findAllTicketsByUserId(testUserId, pageRequest)).thenReturn(ticketPage);
 
-        TicketsDto result = ticketsService.listAllUserTickets(page, pageSize);
+        TicketsDto result = ticketsService.listAllUserTickets(PAGE_0, PAGE_SIZE_5);
 
         assertNotNull(result);
         assertEquals(userTickets.size(), result.tickets().size());
@@ -203,15 +222,14 @@ class TicketServiceTest {
 
     @Test
     void listAllUserTickets_ShouldReturnEmptyTicketsDto_WhenUserHasNoTickets() {
-        int page = 0, pageSize = 5;
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "ticketId");
+        PageRequest pageRequest = PageRequest.of(PAGE_0, PAGE_SIZE_5, Sort.Direction.ASC, SORT_BY_TICKET_ID);
         Page<Ticket> emptyPage = new PageImpl<>(List.of(), pageRequest, 0);
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
         when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(ticketRepository.findAllTicketsByUserId(testUserId, pageRequest)).thenReturn(emptyPage);
 
-        TicketsDto result = ticketsService.listAllUserTickets(page, pageSize);
+        TicketsDto result = ticketsService.listAllUserTickets(PAGE_0, PAGE_SIZE_5);
 
         assertNotNull(result);
         assertTrue(result.tickets().isEmpty());
@@ -224,9 +242,9 @@ class TicketServiceTest {
         List<RemainingTicketCategoryDto> result = ticketsService.getAvailableTicketsByCategoryFromEvent(testEventId);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(EXPECTED_LIST_SIZE_1, result.size());
         assertEquals(CATEGORY_NAME, result.getFirst().categoryName());
-        assertEquals(300, result.getFirst().remainingTickets());
+        assertEquals(TEST_CATEGORY_TICKETS, result.getFirst().remainingTickets());
     }
 
     @Test
@@ -241,22 +259,22 @@ class TicketServiceTest {
     }
 
     private Ticket mockTicket() {
-        Ticket ticket = new Ticket();
-        ticket.setTicketId(UUID.randomUUID());
-        ticket.setTicketOwner(new User());
-        ticket.setEvent(new Event());
-        ticket.setTicketCategory(new TicketCategory());
-        return ticket;
+        return TicketBuilder.aTicket()
+                .withTicketId(UUID.randomUUID())
+                .withTicketOwner(new User())
+                .withEvent(new Event())
+                .withTicketCategory(new TicketCategory())
+                .build();
     }
 
     private Ticket mockTicketWithUser(UUID userId) {
         User user = new User();
         user.setUserId(userId);
 
-        Ticket ticket = new Ticket();
-        ticket.setTicketOwner(user);
-        ticket.setTicketCategory(new TicketCategory());
-        ticket.setEvent(new Event());
-        return ticket;
+        return TicketBuilder.aTicket()
+                .withTicketOwner(user)
+                .withTicketCategory(new TicketCategory())
+                .withEvent(new Event())
+                .build();
     }
 }

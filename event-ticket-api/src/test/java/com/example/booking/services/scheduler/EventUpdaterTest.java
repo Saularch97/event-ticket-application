@@ -17,7 +17,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 class EventUpdaterTest {
@@ -55,19 +57,21 @@ class EventUpdaterTest {
 
         eventUpdater.updateEventStatuses();
 
-        verify(eventRepository, times(1)).saveAll(eventsCaptor.capture());
 
+        verify(event1).setTrending(true);
+        verify(event2).setTrending(true);
+        verify(event3).setTrending(true);
+
+        verify(event4).setTrending(false);
+
+        verify(event4, never()).setTrending(true);
+
+        verify(eventRepository).saveAll(eventsCaptor.capture());
         List<Event> savedEvents = eventsCaptor.getValue();
 
-        savedEvents.forEach(event -> {
-            if (event == event1 || event == event2 || event == event3) {
-                verify(event).setTrending(true);
-            }
-            if (event == event4) {
-                verify(event).setTrending(false);
-                verify(event, never()).setTrending(true);
-            }
-        });
+        assertThat(savedEvents)
+                .hasSize(4)
+                .containsExactlyInAnyOrder(event1, event2, event3, event4);
     }
 
     private Ticket mockTicket(LocalDateTime emittedAt) {
