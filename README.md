@@ -57,7 +57,7 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add **tests** (unit and integration)
 
 Things to come:
-* [ ] Include role permission in the controllers
+* [x] Include role permission in the controllers
   * Use ABAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
 * [x] Have dev and prod environments in kubernetes
 * [ ] Add micrometer + Grafana + Prometheus
@@ -70,6 +70,7 @@ Things to come:
 * [ ] Setup **deployment** pipeline
 * [x] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.de., Stripe)
+  * Use RabiitMq for payment
 * [ ] Study about hazelcast
 ---
 // TODO averiguar necessidade de adicionar essa key

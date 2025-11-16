@@ -7,6 +7,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,6 +41,11 @@ public class ValidationExceptionHandler {
         responseBody.put("errors", errors);
 
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
+        return errorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex, request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -87,6 +93,8 @@ public class ValidationExceptionHandler {
     private static ResponseEntity<Object> badRequestResponse(Exception ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex, request);
     }
+
+
 
     private static ResponseEntity<Object> errorResponse(HttpStatus status, String error, Exception ex, HttpServletRequest request) {
         Map<String, Object> responseBody = buildResponse(status, error, ex.getMessage(), request);
