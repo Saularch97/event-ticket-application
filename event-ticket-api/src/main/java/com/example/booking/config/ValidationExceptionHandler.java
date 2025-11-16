@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,6 +67,14 @@ public class ValidationExceptionHandler {
         return notFoundResponse(ex, request);
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+        return accessDeniedResponse(ex, request);
+    }
+
+    private static ResponseEntity<Object> accessDeniedResponse(Exception ex, HttpServletRequest request) {
+        return errorResponse(HttpStatus.FORBIDDEN, "Forbidden", ex, request);
+    }
 
     private static ResponseEntity<Object> notFoundResponse(Exception ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.NOT_FOUND, "Not found", ex, request);

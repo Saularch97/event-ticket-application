@@ -29,6 +29,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -58,6 +59,7 @@ public class EventsServiceImpl implements EventsService {
         this.producer = producer;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public EventItemDto createEvent(CreateEventRequest request) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
         log.info("Creating event. UserId={}, EventName={}", userId, request.eventName());
@@ -77,6 +79,7 @@ public class EventsServiceImpl implements EventsService {
         return Event.toEventItemDto(savedEvent);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @eventSecurity.isEventOwner(#eventId)")
     public void deleteEvent(UUID eventId) {
         log.info("Delete event requested. EventId={}", eventId);
         if (!eventRepository.existsById(eventId)) {
@@ -87,6 +90,7 @@ public class EventsServiceImpl implements EventsService {
         log.info("Event deleted successfully. EventId={}", eventId);
     }
 
+    @PreAuthorize("isAuthenticated()")
     public EventsDto listAllEvents(int page, int pageSize) {
         log.info("Listing all events. Page={}, PageSize={}", page, pageSize);
         var events = eventRepository.findAll(
@@ -96,6 +100,7 @@ public class EventsServiceImpl implements EventsService {
         return new EventsDto(events.getContent(), page, pageSize, events.getTotalPages(), events.getTotalElements());
     }
 
+    @PreAuthorize("isAuthenticated()")
     public EventsDto listAllUserEvents(int page, int pageSize) {
         UUID userID = jwtUtils.getAuthenticatedUserId();
         log.info("Listing all events for user. UserId={}, Page={}, PageSize={}", userID, page, pageSize);
@@ -113,6 +118,7 @@ public class EventsServiceImpl implements EventsService {
             value = CacheNames.TOP_EVENTS,
             key = "'topTrending'"
     )
+    @PreAuthorize("isAuthenticated()")
     public List<EventItemDto> getTopTrendingEvents() {
         log.info("Fetching top trending events");
 
@@ -137,6 +143,7 @@ public class EventsServiceImpl implements EventsService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public EventsDto listAllAvailableUserEvents(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
         log.info("Listing all available user events. UserId={}, Page={}, PageSize={}", userId, page, pageSize);
@@ -157,6 +164,7 @@ public class EventsServiceImpl implements EventsService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public EventsDto searchEvents(String name, String location, LocalDateTime start, LocalDateTime end, int page, int pageSize) {
         log.info("Searching events with criteria. Name='{}', Location='{}', Start='{}', End='{}', Page={}, PageSize={}",
                 name, location, start, end, page, pageSize);
@@ -178,8 +186,10 @@ public class EventsServiceImpl implements EventsService {
         );
     }
 
+    // TODO rotas próprias para adicionar ou remover categoria, fazer proteção, admin ou o manager que criou pode alterar
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN') or @eventSecurity.isEventOwner(#eventId)")
     public void updateEvent(UUID eventId, UpdateEventRequest request) {
         log.info("Updating event. EventId={}", eventId);
 
@@ -192,18 +202,6 @@ public class EventsServiceImpl implements EventsService {
         event.setEventDate(request.eventDateTime());
         event.setEventLocation(request.eventLocation());
         event.setEventName(request.eventName());
-
-        event.getTicketCategories().clear();
-
-        for (CreateTicketCategoryRequest ticketRequest : request.ticketCategories()) {
-            TicketCategory ticketCategory = new TicketCategory();
-            ticketCategory.setName(ticketRequest.name());
-            ticketCategory.setAvailableCategoryTickets(ticketRequest.availableCategoryTickets());
-            ticketCategory.setPrice(ticketRequest.price());
-            ticketCategory.setEvent(event);
-
-            event.getTicketCategories().add(ticketCategory);
-        }
 
         log.info("Event updated successfully. EventId={}", eventId);
     }
@@ -228,6 +226,7 @@ public class EventsServiceImpl implements EventsService {
         return event;
     }
 
+    // TODO move logic to ticketCategoryService
     private void bindTicketCategories(CreateEventRequest request, Event event) {
         Integer availableTickets = 0;
 

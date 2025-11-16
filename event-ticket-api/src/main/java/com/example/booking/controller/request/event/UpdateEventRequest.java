@@ -17,14 +17,5 @@ public record UpdateEventRequest(
         LocalDateTime eventDateTime,
 
         @NotBlank(message = "Event needs to have a location")
-        String eventLocation,
-
-        @NotNull(message = "Event needs to have a price")
-        @Positive(message = "Price must be greater than zero")
-        Double eventPrice,
-
-        @NotNull(message = "Event needs to have at least one ticket category")
-        @Size(min = 1, message = "At least one ticket category is required")
-        @Valid
-        List<CreateTicketCategoryRequest> ticketCategories
+        String eventLocation
 ) { }

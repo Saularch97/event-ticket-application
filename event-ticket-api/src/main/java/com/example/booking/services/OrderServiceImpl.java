@@ -20,6 +20,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -45,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
         this.cacheManager = cacheManager;
     }
 
+    @PreAuthorize("isAuthenticated()")
     public OrderItemDto createNewOrder(CreateOrderRequest dto) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
         log.info("Creating new order for userId={}, ticketIds={}", userId, dto.ticketIds());
@@ -97,6 +99,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public OrdersResponse getUserOrders(int page, int pageSize) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
         log.info("Fetching orders for userId={}, page={}, pageSize={}", userId, page, pageSize);
@@ -133,6 +136,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+        "@orderSecurity.isOrderOwner(#orderId)"
+    )
     public void deleteOrder(UUID orderId) {
         log.info("Attempting to delete orderId={}", orderId);
 

@@ -1,0 +1,37 @@
+meta {
+  name: Update Event
+  type: http
+  seq: 8
+}
+
+put {
+  url: http://localhost:8081/booking/api/events/{{eventId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventName": "Festival de Inverno 2025",
+    "eventDateTime": "2025-08-15T20:30",
+    "eventLocation": "São Paulo - SP",
+    "eventPrice": 120.0,
+    "ticketCategories": [
+      {
+        "name": "Pista",
+        "availableCategoryTickets": 300,
+        "price": 120.0
+      },
+      {
+        "name": "VIP",
+        "availableCategoryTickets": 100,
+        "price": 250.0
+      }
+    ]
+  }
+  
+}
+
+settings {
+  encodeUrl: true
+}

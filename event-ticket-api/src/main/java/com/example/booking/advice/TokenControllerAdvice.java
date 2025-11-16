@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 
+// TODO jogar pra classe geral de tratamento de excessões
 @RestControllerAdvice
 public class TokenControllerAdvice {
 

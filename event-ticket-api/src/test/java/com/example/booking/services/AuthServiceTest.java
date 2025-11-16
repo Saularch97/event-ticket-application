@@ -39,6 +39,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.will;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +66,6 @@ class AuthServiceTest {
     private static final String ENCODED_PASSWORD = "encodedPassword";
     private static final String TEST_REFRESH_TOKEN = "refreshToken";
     private static final String ROLE_USER_STR = "ROLE_USER";
-    private static final String ROLE_ADMIN_STR = "admin";
 
     private static final String ADMIN_USERNAME = "admin";
     private static final String ADMIN_EMAIL = "admin@example.com";
@@ -87,7 +87,6 @@ class AuthServiceTest {
     private LoginRequest loginRequest;
     private SignupRequest signupRequest;
     private User user;
-    private Role userRole;
     private Role adminRole;
     private RefreshToken refreshToken;
 
@@ -96,7 +95,7 @@ class AuthServiceTest {
         loginRequest = new LoginRequest(TEST_USERNAME, TEST_PASSWORD);
         signupRequest = new SignupRequest(TEST_USERNAME, TEST_EMAIL, Set.of(ERole.ROLE_ADMIN.name()), TEST_PASSWORD);
 
-        userRole = new Role();
+        Role userRole = new Role();
         userRole.setName(ERole.ROLE_USER);
 
         adminRole = new Role();
@@ -157,7 +156,6 @@ class AuthServiceTest {
         when(userRepository.existsByUserName(signupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(signupRequest.email())).thenReturn(false);
         when(passwordEncoder.encode(signupRequest.password())).thenReturn(ENCODED_PASSWORD);
-        when(roleService.findRoleEntityByName(ERole.ROLE_USER)).thenReturn(userRole);
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         UserDto result = authServiceImpl.registerUser(signupRequest);
@@ -170,7 +168,6 @@ class AuthServiceTest {
         verify(userRepository).existsByUserName(signupRequest.username());
         verify(userRepository).existsByEmail(signupRequest.email());
         verify(passwordEncoder).encode(signupRequest.password());
-        verify(roleService).findRoleEntityByName(ERole.ROLE_USER);
         verify(userRepository).save(any(User.class));
     }
 
@@ -200,7 +197,7 @@ class AuthServiceTest {
 
     @Test
     void registerUser_ShouldAssignAdminRole_WhenAdminRoleIsRequested() {
-        SignupRequest adminSignupRequest = new SignupRequest(ADMIN_USERNAME, ADMIN_EMAIL, Set.of(ROLE_ADMIN_STR), TEST_PASSWORD);
+        SignupRequest adminSignupRequest = new SignupRequest(ADMIN_USERNAME, ADMIN_EMAIL, Set.of(ERole.ROLE_ADMIN.name()), TEST_PASSWORD);
 
         when(userRepository.existsByUserName(adminSignupRequest.username())).thenReturn(false);
         when(userRepository.existsByEmail(adminSignupRequest.email())).thenReturn(false);
@@ -218,9 +215,7 @@ class AuthServiceTest {
 
         UserDto result = authServiceImpl.registerUser(adminSignupRequest);
 
-        assertNotNull(result);
-        assertEquals(adminUser.getUserId(), result.userId());
-        assertEquals(adminUser.getUserName(), result.userName());
+        assertEquals(User.toUserDto(adminUser), result);
 
         verify(roleService).findRoleEntityByName(ERole.ROLE_ADMIN);
         verify(roleService, never()).findRoleEntityByName(ERole.ROLE_USER);

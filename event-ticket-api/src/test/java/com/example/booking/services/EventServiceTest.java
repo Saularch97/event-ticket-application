@@ -128,12 +128,7 @@ public class EventServiceTest {
 
     private static final String UPDATE_EVENT_NAME = "Evento Atualizado";
     private static final String UPDATE_EVENT_LOCATION = "Nova Localização";
-    private static final double UPDATE_EVENT_PRICE = 200.0;
     private static final String UPDATE_CAT_NAME_VIP = "Nova VIP";
-    private static final double UPDATE_CAT_PRICE_VIP = 250.0;
-    private static final int UPDATE_CAT_TICKETS_VIP = 50;
-    private static final String UPDATE_CAT_NAME_PISTA = "Nova Pista";
-    private static final double UPDATE_CAT_PRICE_PISTA = 150.0;
     private static final int UPDATE_CAT_TICKETS_PISTA = 200;
     private static final String UPDATE_DUMMY_NAME = "Nome";
     private static final String UPDATE_DUMMY_LOCATION = "Local";
@@ -646,17 +641,12 @@ public class EventServiceTest {
         UUID eventId = UUID.randomUUID();
         LocalDateTime newDate = LocalDateTime.now().plusMonths(1);
 
-        List<CreateTicketCategoryRequest> newCategoryRequests = List.of(
-                new CreateTicketCategoryRequest(UPDATE_CAT_NAME_VIP, UPDATE_CAT_PRICE_VIP, UPDATE_CAT_TICKETS_VIP),
-                new CreateTicketCategoryRequest(UPDATE_CAT_NAME_PISTA, UPDATE_CAT_PRICE_PISTA, UPDATE_CAT_TICKETS_PISTA)
-        );
+
 
         UpdateEventRequest updateRequest = new UpdateEventRequest(
                 UPDATE_EVENT_NAME,
                 newDate,
-                UPDATE_EVENT_LOCATION,
-                UPDATE_EVENT_PRICE,
-                newCategoryRequests
+                UPDATE_EVENT_LOCATION
         );
 
         TicketCategory oldCategory = TicketCategoryBuilder.aTicketCategory().build();
@@ -674,10 +664,7 @@ public class EventServiceTest {
         assertAll("Validação dos campos atualizados do evento",
                 () -> assertEquals(UPDATE_EVENT_NAME, existingEvent.getEventName(), "Nome do evento incorreto"),
                 () -> assertEquals(newDate, existingEvent.getEventDate(), "Data do evento incorreta"),
-                () -> assertEquals(UPDATE_EVENT_LOCATION, existingEvent.getEventLocation(), "Localização incorreta"),
-                () -> assertEquals(RESULT_SIZE_2, existingEvent.getTicketCategories().size(), "Quantidade de categorias incorreta"),
-                () -> assertEquals(UPDATE_CAT_NAME_VIP, existingEvent.getTicketCategories().get(0).getName(), "Nome da primeira categoria incorreto"),
-                () -> assertEquals(UPDATE_CAT_TICKETS_PISTA, existingEvent.getTicketCategories().get(1).getAvailableCategoryTickets(), "Ingressos disponíveis incorretos na segunda categoria")
+                () -> assertEquals(UPDATE_EVENT_LOCATION, existingEvent.getEventLocation(), "Localização incorreta")
         );
     }
 
@@ -687,9 +674,7 @@ public class EventServiceTest {
         UpdateEventRequest updateRequest = new UpdateEventRequest(
                 UPDATE_DUMMY_NAME,
                 LocalDateTime.now(),
-                UPDATE_DUMMY_LOCATION,
-                UPDATE_DUMMY_PRICE,
-                List.of()
+                UPDATE_DUMMY_LOCATION
         );
 
         when(eventRepository.findById(nonExistentEventId)).thenReturn(Optional.empty());

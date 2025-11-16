@@ -25,6 +25,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,6 +52,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public TicketItemDto emmitTicket(EmmitTicketRequest request) {
         String userName = jwtUtils.getAuthenticatedUsername();
         log.info("User '{}' requested to emit ticket for eventId={}, ticketCategoryId={}", userName, request.eventId(), request.ticketCategoryId());
@@ -94,6 +96,10 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @PreAuthorize(
+        "hasRole('ADMIN') or " +
+        "@ticketSecurity.isEventManager(#ticketId)"
+    )
     public void deleteEmittedTicket(UUID ticketId) {
         log.info("Request to delete ticket with id {}", ticketId);
 
@@ -113,6 +119,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public TicketsDto listAllTickets(int page, int pageSize) {
         log.info("Listing all tickets: page {}, pageSize {}", page, pageSize);
 
@@ -124,6 +131,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public TicketsDto listAllUserTickets(int page, int pageSize) {
         String userName = jwtUtils.getAuthenticatedUsername();
         log.info("Listing tickets for user '{}' page {}, pageSize {}", userName, page, pageSize);
@@ -137,8 +145,11 @@ public class TicketServiceImpl implements TicketService {
         return new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements());
     }
 
+    // TODO add listing for event tickets
+
     @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
     @Override
+    @PreAuthorize("isAuthenticated()")
     public List<RemainingTicketCategoryDto> getAvailableTicketsByCategoryFromEvent(UUID eventId) {
         log.info("Getting available tickets by category for event {}", eventId);
 

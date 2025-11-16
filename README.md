@@ -58,16 +58,17 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 
 Things to come:
 * [ ] Include role permission in the controllers
+  * Use ABAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
 * [x] Have dev and prod environments in kubernetes
 * [ ] Add micrometer + Grafana + Prometheus
+* [ ] Add Payment method(AbacatePay)
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
 * [ ] Use **Terraform** for infrastructure management
-* [ ] See possibility to add grafana to monitor some things
 * [ ] Possibility to decouple auth to an service to make an api gateway to authentication
 * [ ] Setup **deployment** pipeline
-* [ ] Implement structured **logging** in the application
+* [x] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.de., Stripe)
 * [ ] Study about hazelcast
 ---
@@ -107,5 +108,5 @@ It’s not a luxury, it’s a necessity in modern backend design.
 How do you handle retries in your Java APIs today?
 
 
-Idenpotency for paymnts:
+Idempotency for paymnts:
 ![img_1.png](img_1.png)

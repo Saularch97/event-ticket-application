@@ -119,13 +119,13 @@ public class AuthServiceImpl implements AuthService {
         } else {
             strRoles.forEach(role -> {
                 log.info("Assigning role '{}' to username={}", role, signUpRequest.username());
-                switch (role) {
-                    case "admin":
+                switch (ERole.valueOf(role)) {
+                    case ERole.ROLE_ADMIN:
                         Role adminRole = roleService.findRoleEntityByName(ERole.ROLE_ADMIN);
                         roles.add(adminRole);
                         break;
-                    case "mod":
-                        Role modRole = roleService.findRoleEntityByName(ERole.ROLE_MODERATOR);
+                    case ERole.ROLE_MANAGER:
+                        Role modRole = roleService.findRoleEntityByName(ERole.ROLE_MANAGER);
                         roles.add(modRole);
                         break;
                     default:

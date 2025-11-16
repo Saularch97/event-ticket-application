@@ -7,10 +7,12 @@ import com.example.booking.repositories.TicketCategoryRepository;
 import com.example.booking.services.intefaces.TicketCategoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TicketCategoryServiceImpl implements TicketCategoryService {
@@ -24,6 +26,7 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
     }
 
     @Override
+    @PreAuthorize("isAuthenticated()")
     public List<TicketCategory> createTicketCategoriesForEvent(Event event, List<CreateTicketCategoryRequest> requests) {
         log.info("Creating {} ticket categories for event with ID {}", requests.size(), event.getEventId());
 
@@ -38,6 +41,22 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         log.info("Created {} ticket categories for event with ID {}", ticketCategories.size(), event.getEventId());
         return ticketCategories;
     }
+
+    // TODO implement new endpoint
+    @Override
+    public void addTicketCategoryToEvent( Event eventId) {
+        return;
+    }
+
+    /*
+    @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @ticketCategorySecurity.isEventOwner(#event.eventOwner.userId)")
+    public void addTicketCategoryToEvent(AddTicketCategoryRequest request, UUID eventId) {
+        log.info("Creating single ticket category '{}' for event with ID {}", request.name(), eventId);
+
+        var event = eventsService.findEventEntityById(eventId);
+    }
+     */
 
     private TicketCategory createTicketCategory(CreateTicketCategoryRequest request, Event event) {
         log.info("Creating single ticket category '{}' for event with ID {}", request.name(), event.getEventId());
