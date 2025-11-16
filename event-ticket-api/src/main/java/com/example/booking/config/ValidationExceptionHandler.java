@@ -43,6 +43,11 @@ public class ValidationExceptionHandler {
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<Object> handleTokenRefreshException(TokenRefreshException ex, HttpServletRequest request) {
+        return accessDeniedResponse(ex, request);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex, request);

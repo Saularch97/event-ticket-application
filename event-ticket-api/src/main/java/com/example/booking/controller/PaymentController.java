@@ -35,7 +35,6 @@ public class PaymentController {
 
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (StripeException e) {
-            // TODO melhorar logging da aplicação
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
