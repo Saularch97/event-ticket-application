@@ -42,10 +42,20 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         return ticketCategories;
     }
 
-    // TODO implement new endpoint
+    // TODO continue this route with preauthorize just for the event owner
     @Override
-    public void addTicketCategoryToEvent( Event eventId) {
-        return;
+    @PreAuthorize("hasRole('ADMIN') or @ticketCategorySecurity.isEventOwner(#event.eventOwner.userId)")
+    public void addTicketCategoryToExistingEvent(Event event, CreateTicketCategoryRequest request) {
+
+        var ticketCategory = new TicketCategory();
+        ticketCategory.setEvent(event);
+        ticketCategory.setAvailableCategoryTickets(request.availableCategoryTickets());
+        ticketCategory.setPrice(request.price());
+        ticketCategory.setName(request.name());
+
+        event.getTicketCategories().add(ticketCategory);
+
+        repository.save(ticketCategory);
     }
 
     /*
