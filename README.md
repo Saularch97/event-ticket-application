@@ -32,6 +32,8 @@ The system is designed using a microservices architecture with asynchronous mess
 
 EXPLICAR NO README COMO FUNCIONA O RECONHECIMENTO DOS MICROSSERVIÇOS VIA EUREKA E API-GATEWAY DO SPRING
 
+
+TODO resolver microsserviço de recomendação abre em localhost diferente (não pé 8081)
 ---
 
 Once running access http://localhost:8081/swagger-ui/index.html to see the swagger documentation.
@@ -62,18 +64,18 @@ Things to come:
 * [x] Include role permission in the controllers
   * Use ABAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
 * [x] Have dev and prod environments in kubernetes
-* [ ] Add micrometer + Grafana + Prometheus (LGTM stack) e spring boot actuator
+* [x] Add micrometer + Grafana + Prometheus
   * Take care with what endpoints you are going to expose in production via actuator
+  * Actualy they have differences between dev and prod, dev erases all data and prod maitains all data
 * [ ] Add Payment method(AbacatePay)
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
-* [ ] Use **Terraform** for infrastructure management
 * [ ] Possibility to decouple auth to an service to make an api gateway to authentication
 * [ ] Setup **deployment** pipeline
 * [x] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.de., Stripe)
-  * Use RabiitMq for payment
+  * Use RabittMq for payment
 * [ ] Study about hazelcast
 ---
 // TODO averiguar necessidade de adicionar essa key

@@ -1,5 +1,6 @@
 load('ext://k8s_yaml_glob', 'k8s_yaml_glob')
 
+k8s_yaml_glob('./infra/common/*.yaml')
 k8s_yaml_glob('./infra/dev/*.yaml')  
 
 docker_build('event-ticket-application_discovery', './servicediscovery')
