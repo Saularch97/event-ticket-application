@@ -32,10 +32,6 @@ The system is designed using a microservices architecture with asynchronous mess
 
 EXPLICAR NO README COMO FUNCIONA O RECONHECIMENTO DOS MICROSSERVIÇOS VIA EUREKA E API-GATEWAY DO SPRING
 
-
-TODO resolver microsserviço de recomendação abre em localhost diferente (não pé 8081)
----
-
 Once running access http://localhost:8081/swagger-ui/index.html to see the swagger documentation.
 ## ✅ TODO
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
@@ -72,7 +68,6 @@ Things to come:
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
 * [ ] Possibility to decouple auth to an service to make an api gateway to authentication
-* [ ] Setup **deployment** pipeline
 * [x] Implement structured **logging** in the application
 * [ ] Integrate a **payment method** (e.de., Stripe)
   * Use RabittMq for payment

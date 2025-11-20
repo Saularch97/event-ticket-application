@@ -370,8 +370,11 @@ public class EventServiceTest {
         when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
         when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
+        when(ticketCategoryService.createTicketCategoriesForEvent(any(), any())).thenReturn(ticketCategories);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
             Event e = invocation.getArgument(0);
+            e.setAvailableTickets(SUMMER_FEST_TOTAL_TICKETS);
+            e.setOriginalAmountOfTickets(SUMMER_FEST_TOTAL_TICKETS);
             e.setTicketCategories(ticketCategories);
             return e;
         });

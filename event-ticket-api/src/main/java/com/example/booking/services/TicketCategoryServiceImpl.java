@@ -1,5 +1,6 @@
 package com.example.booking.services;
 
+import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
@@ -26,23 +27,27 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
     }
 
     @Override
-    @PreAuthorize("isAuthenticated()")
     public List<TicketCategory> createTicketCategoriesForEvent(Event event, List<CreateTicketCategoryRequest> requests) {
         log.info("Creating {} ticket categories for event with ID {}", requests.size(), event.getEventId());
-
         List<TicketCategory> ticketCategories = new ArrayList<>();
         for (var req : requests) {
             log.debug("Creating ticket category with name '{}' and price {} for event ID {}", req.name(), req.price(), event.getEventId());
 
             var ticketCategory = createTicketCategory(req, event);
             ticketCategories.add(ticketCategory);
+
         }
+
+        repository.saveAll(ticketCategories);
+
+        updateEventAvailableTickets(event, ticketCategories);
+
+        event.setTicketCategories(ticketCategories);
 
         log.info("Created {} ticket categories for event with ID {}", ticketCategories.size(), event.getEventId());
         return ticketCategories;
     }
 
-    // TODO continue this route with preauthorize just for the event owner
     @Override
     @PreAuthorize("hasRole('ADMIN') or @ticketCategorySecurity.isEventOwner(#event.eventOwner.userId)")
     public void addTicketCategoryToExistingEvent(Event event, CreateTicketCategoryRequest request) {
@@ -83,5 +88,15 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         log.info("Ticket category '{}' created with ID {}", savedCategory.getName(), savedCategory.getTicketCategoryId());
 
         return savedCategory;
+    }
+
+
+    private void updateEventAvailableTickets(Event event, List<TicketCategory> categories) {
+        int total = categories.stream()
+                .mapToInt(TicketCategory::getAvailableCategoryTickets)
+                .sum();
+        event.setAvailableTickets(total);
+
+        log.info("Updating event available tickets");
     }
 }

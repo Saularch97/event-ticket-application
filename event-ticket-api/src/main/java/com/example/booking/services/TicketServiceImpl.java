@@ -145,8 +145,6 @@ public class TicketServiceImpl implements TicketService {
         return new TicketsDto(tickets.getContent(), page, pageSize, tickets.getTotalPages(), tickets.getTotalElements());
     }
 
-    // TODO add listing for event tickets
-
     @Cacheable(value = CacheNames.REMAINING_TICKETS, key = "#eventId")
     @Override
     @PreAuthorize("isAuthenticated()")

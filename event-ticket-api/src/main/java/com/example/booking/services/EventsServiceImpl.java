@@ -69,10 +69,9 @@ public class EventsServiceImpl implements EventsService {
         var event = buildEventForRequest(request, user);
 
         CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
-        bindTicketCategories(request, event);
 
         Event savedEvent = eventRepository.save(event);
-
+        ticketCategoryService.createTicketCategoriesForEvent(event, request.ticketCategories());
         publishEventRecommendation(savedEvent, cityData);
 
         log.info("Event created successfully. EventId={}, OwnerId={}", savedEvent.getEventId(), userId);
@@ -224,28 +223,6 @@ public class EventsServiceImpl implements EventsService {
         event.setEventDate(dateTime);
         event.setEventLocation(request.eventLocation());
         return event;
-    }
-
-    // TODO move logic to ticketCategoryService
-    private void bindTicketCategories(CreateEventRequest request, Event event) {
-        Integer availableTickets = 0;
-
-        List<TicketCategory> ticketCategories = new ArrayList<>();
-
-        for (var categoryRequest : request.ticketCategories()) {
-            TicketCategory ticketCategory = new TicketCategory();
-            ticketCategory.setName(categoryRequest.name());
-            ticketCategory.setAvailableCategoryTickets(categoryRequest.availableCategoryTickets());
-            ticketCategory.setPrice(categoryRequest.price());
-
-            ticketCategory.setEvent(event);
-
-            ticketCategories.add(ticketCategory);
-            availableTickets += ticketCategory.getAvailableCategoryTickets();
-        }
-
-        event.setAvailableTickets(availableTickets);
-        event.setTicketCategories(ticketCategories);
     }
 
     private  LocalDateTime formatDate(CreateEventRequest request) {
