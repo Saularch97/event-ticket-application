@@ -30,7 +30,7 @@ public class RecommendationService {
         return events.stream()
             .filter(event -> event.getLatitude() != null && event.getLongitude() != null && !event.getEventid().equals(currentEvent.getEventid()))
             .filter(event ->
-                calcularDistanciaKm(
+                calculateDistanceInKilometers(
                     currentEvent.getLatitude(), currentEvent.getLongitude(),
                     event.getLatitude(), event.getLongitude()
                 ) <= radius
@@ -46,7 +46,7 @@ public class RecommendationService {
     }
 
 
-    public double calcularDistanciaKm(double lat1, double lon1, double lat2, double lon2) {
+    public double calculateDistanceInKilometers(double lat1, double lon1, double lat2, double lon2) {
         final int R = 6371;
 
         double dLat = Math.toRadians(lat2 - lat1);

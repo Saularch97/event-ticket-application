@@ -58,6 +58,8 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         repository.save(ticketCategory);
     }
 
+    // TODO getTicketCategoriesForEvent
+
     /*
     @Override
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or @ticketCategorySecurity.isEventOwner(#event.eventOwner.userId)")
