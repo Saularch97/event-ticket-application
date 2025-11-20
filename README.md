@@ -30,6 +30,8 @@ The system is designed using a microservices architecture with asynchronous mess
 - The client can request event recommendations by providing the current latitude and longitude.
 - The recommendation service performs a geolocation query and returns nearby events.
 
+EXPLICAR NO README COMO FUNCIONA O RECONHECIMENTO DOS MICROSSERVIÇOS VIA EUREKA E API-GATEWAY DO SPRING
+
 ---
 
 Once running access http://localhost:8081/swagger-ui/index.html to see the swagger documentation.
@@ -55,12 +57,13 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add Spring Validation (`spring-boot-starter-validation`) for DTOs
 * [x] Implement `@RestControllerAdvice` for error handling
 * [x] Add **tests** (unit and integration)
-
+* [ ] Queues added with simple retry ack/nack
 Things to come:
 * [x] Include role permission in the controllers
   * Use ABAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
 * [x] Have dev and prod environments in kubernetes
-* [ ] Add micrometer + Grafana + Prometheus
+* [ ] Add micrometer + Grafana + Prometheus (LGTM stack) e spring boot actuator
+  * Take care with what endpoints you are going to expose in production via actuator
 * [ ] Add Payment method(AbacatePay)
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
