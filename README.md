@@ -73,7 +73,6 @@ Things to come:
   * Use RabittMq for payment
 * [ ] Study about hazelcast
 ---
-// TODO averiguar necessidade de adicionar essa key
 // TODO deixar claro no README que o build das apps é com Java 22 e o runtime com Java 24 para aproveitar as melhorias de performance do mesmo
 🧾 Stop Breaking Things. Make Your Java APIs Idempotent.
 

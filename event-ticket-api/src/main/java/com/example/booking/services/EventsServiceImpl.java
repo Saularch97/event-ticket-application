@@ -2,14 +2,12 @@ package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.event.UpdateEventRequest;
-import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.dto.CityDataDto;
 import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventsDto;
 import com.example.booking.dto.RecommendEventDto;
 import com.example.booking.domain.entities.Event;
-import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.exception.EventNotFoundException;
@@ -185,7 +183,6 @@ public class EventsServiceImpl implements EventsService {
         );
     }
 
-    // TODO rotas próprias para adicionar ou remover categoria, fazer proteção, admin ou o manager que criou pode alterar
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN') or @eventSecurity.isEventOwner(#eventId)")
