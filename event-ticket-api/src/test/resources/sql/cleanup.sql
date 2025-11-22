@@ -7,8 +7,7 @@ TRUNCATE TABLE
     tb_ticket_category,
     tb_orders,
     tb_users,
-    tb_events,
-    payment
+    tb_events
 RESTART IDENTITY CASCADE;
 
 SET CONSTRAINTS ALL IMMEDIATE;

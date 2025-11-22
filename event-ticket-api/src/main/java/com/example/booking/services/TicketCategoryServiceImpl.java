@@ -60,7 +60,6 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         return savedCategory;
     }
 
-
     private void updateEventAvailableTickets(Event event, List<TicketCategory> categories) {
         int total = categories.stream()
                 .mapToInt(TicketCategory::getAvailableCategoryTickets)

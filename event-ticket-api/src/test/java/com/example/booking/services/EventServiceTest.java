@@ -34,7 +34,7 @@ import com.example.booking.dto.EventItemDto;
 import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
-import com.example.booking.messaging.EventRequestProducer;
+import com.example.booking.messaging.interfaces.EventRequestProducer;
 import com.example.booking.repositories.EventRepository;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;

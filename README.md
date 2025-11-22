@@ -64,6 +64,8 @@ Things to come:
   * Take care with what endpoints you are going to expose in production via actuator
   * Actualy they have differences between dev and prod, dev erases all data and prod maitains all data
 * [ ] Add Payment method(AbacatePay)
+  * Add imdepotency key in order to prevent  to call gateway
+  * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets

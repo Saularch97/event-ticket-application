@@ -11,7 +11,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.User;
 import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.exception.EventNotFoundException;
-import com.example.booking.messaging.EventRequestProducer;
+import com.example.booking.messaging.interfaces.EventRequestProducer;
 import com.example.booking.repositories.EventRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.GeoService;

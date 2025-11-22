@@ -1,4 +1,4 @@
-package com.example.booking.messaging;
+package com.example.booking.messaging.interfaces;
 
 import com.example.booking.dto.RecommendEventDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
