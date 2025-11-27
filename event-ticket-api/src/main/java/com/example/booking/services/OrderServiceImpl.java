@@ -55,13 +55,13 @@ public class OrderServiceImpl implements OrderService {
         List<Ticket> tickets = ticketService.findTicketsWithEventDetails(dto.ticketIds());
 
         if (tickets.size() != dto.ticketIds().size()) {
-            log.warn("Some tickets not found. Expected={}, Found={}", dto.ticketIds().size(), tickets.size());
+            log.error("Some tickets not found. Expected={}, Found={}", dto.ticketIds().size(), tickets.size());
             throw new TicketNotFoundException();
         }
 
         for (Ticket ticket : tickets) {
             if (ticket.getOrder() != null) {
-                log.warn("Ticket with ID={} already has an associated order", ticket.getTicketId());
+                log.error("Ticket with ID={} already has an associated order", ticket.getTicketId());
                 throw new TicketAlreadyHaveAnOrderException(ticket.getTicketId() + " not found for!");
             }
         }

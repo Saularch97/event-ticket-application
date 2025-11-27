@@ -9,4 +9,6 @@ import java.util.List;
 public interface TicketCategoryService {
 
     List<TicketCategory> createTicketCategoriesForEvent(Event event, List<CreateTicketCategoryRequest> requests);
+
+    TicketCategory reserveOneTicket(Long categoryId);
 }

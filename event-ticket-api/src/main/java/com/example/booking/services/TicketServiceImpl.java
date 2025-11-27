@@ -14,6 +14,7 @@ import com.example.booking.exception.TicketCategorySoldOutException;
 import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
+import com.example.booking.services.intefaces.TicketCategoryService;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
@@ -42,16 +43,19 @@ public class TicketServiceImpl implements TicketService {
     private final EventsService eventService;
     private final JwtUtils jwtUtils;
     private final CacheManager cacheManager;
+    private final TicketCategoryService ticketCategoryService;
 
-    public TicketServiceImpl(TicketRepository ticketRepository, UserService userService, EventsService eventService, JwtUtils jwtUtils, CacheManager cacheManager) {
+    public TicketServiceImpl(TicketRepository ticketRepository, UserService userService, EventsService eventService, JwtUtils jwtUtils, CacheManager cacheManager, TicketCategoryService ticketCategoryService) {
         this.ticketRepository = ticketRepository;
         this.userService = userService;
         this.eventService = eventService;
         this.jwtUtils = jwtUtils;
         this.cacheManager = cacheManager;
+        this.ticketCategoryService = ticketCategoryService;
     }
 
     @Override
+    @Transactional
     @PreAuthorize("isAuthenticated()")
     public TicketItemDto emmitTicket(EmmitTicketRequest request) {
         String userName = jwtUtils.getAuthenticatedUsername();
@@ -60,34 +64,14 @@ public class TicketServiceImpl implements TicketService {
         User user = userService.findUserEntityByUserName(userName);
         Event event = eventService.findEventEntityById(request.eventId());
 
-        event.decrementAvailableTickets();
+        var ticketCategory = ticketCategoryService.reserveOneTicket(request.ticketCategoryId());
 
-        Ticket ticket = new Ticket();
-        ticket.setTicketOwner(user);
-        ticket.setEvent(event);
+        eventService.decrementTicket(event.getEventId());
 
-        TicketCategory category = event.getTicketCategories()
-                .stream()
-                .filter(tc -> tc.getTicketCategoryId().equals(request.ticketCategoryId()))
-                .findFirst().orElseThrow(() -> {
-                    log.warn("Ticket category with id {} not found for event {}", request.ticketCategoryId(), event.getEventId());
-                    return new TicketCategoryNotFoundException(request.ticketCategoryId());
-                });
-
-        if (category.getAvailableCategoryTickets() == 0) {
-            log.warn("Ticket category '{}' sold out for event {}", category.getName(), event.getEventId());
-            throw new TicketCategorySoldOutException();
-        }
-
-        category.decrementTicketCategory();
-        ticket.setTicketCategory(category);
-        ticket.setTicketCategoryName(category.getName());
-        ticket.setTicketPrice(category.getPrice());
-        ticket.setTicketEventLocation(event.getEventLocation());
-        ticket.setTicketEventDate(event.getEventDate().toString());
-
+        Ticket ticket = buildTicket(user, event, ticketCategory);
         ticketRepository.save(ticket);
-        log.info("Ticket emitted with id {} for user '{}', eventId {}, category '{}'", ticket.getTicketId(), userName, event.getEventId(), category.getName());
+
+        log.info("Ticket emitted with id {} for user '{}', eventId {}, category '{}'", ticket.getTicketId(), userName, event.getEventId(), ticketCategory.getName());
 
         Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(event.getEventId());
         log.debug("Cache '{}' evicted for eventId id {} in method emmitTicket", CacheNames.REMAINING_TICKETS, event.getEventId());
@@ -180,5 +164,17 @@ public class TicketServiceImpl implements TicketService {
 
         log.debug("Found {} tickets with event details", tickets.size());
         return tickets;
+    }
+
+    private static Ticket buildTicket(User user, Event event, TicketCategory ticketCategory) {
+        Ticket ticket = new Ticket();
+        ticket.setTicketOwner(user);
+        ticket.setEvent(event);
+        ticket.setTicketCategory(ticketCategory);
+        ticket.setTicketCategoryName(ticketCategory.getName());
+        ticket.setTicketPrice(ticketCategory.getPrice());
+        ticket.setTicketEventLocation(event.getEventLocation());
+        ticket.setTicketEventDate(event.getEventDate().toString());
+        return ticket;
     }
 }

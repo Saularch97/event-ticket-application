@@ -29,4 +29,6 @@ public interface EventsService {
     EventsDto searchEvents(String name, String location, LocalDateTime start, LocalDateTime end, int page, int pageSize);
 
     void updateEvent(UUID id, UpdateEventRequest request);
+
+    void decrementTicket(UUID eventId);
 }

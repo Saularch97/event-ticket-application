@@ -14,6 +14,7 @@ import com.example.booking.exception.TicketCategorySoldOutException;
 import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
+import com.example.booking.services.intefaces.TicketCategoryService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +65,8 @@ class TicketServiceTest {
     @Mock
     private CacheManager cacheManager;
     @Mock
+    private TicketCategoryService ticketCategoryService;
+    @Mock
     private Cache cache;
 
     @InjectMocks
@@ -110,6 +113,7 @@ class TicketServiceTest {
 
         when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
         when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
+        when(ticketCategoryService.reserveOneTicket(testTicketCategoryId)).thenReturn(testCategory);
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
         when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -117,31 +121,44 @@ class TicketServiceTest {
         TicketItemDto result = ticketsService.emmitTicket(request);
 
         assertNotNull(result);
-        assertEquals(TEST_EVENT_TICKETS - 1, testEvent.getAvailableTickets());
+        verify(eventService, times(1)).decrementTicket(testEventId);
+        verify(ticketCategoryService, times(1)).reserveOneTicket(testTicketCategoryId);
     }
 
     @Test
-    void emmitTicket_ShouldTicketCategoryNotFoundException_WhenCategoryNotFound() {
+    void emmitTicket_ShouldThrowTicketCategoryNotFoundException_WhenCategoryNotFound() {
         EmmitTicketRequest request = new EmmitTicketRequest(testEventId, INVALID_TICKET_CATEGORY_ID);
 
+        when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
+        when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
+
+        when(ticketCategoryService.reserveOneTicket(INVALID_TICKET_CATEGORY_ID))
+                .thenThrow(new TicketCategoryNotFoundException(INVALID_TICKET_CATEGORY_ID));
 
         assertThrows(TicketCategoryNotFoundException.class,
                 () -> ticketsService.emmitTicket(request));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
+        verify(eventService, never()).decrementTicket(any());
     }
 
     @Test
     void emmitTicket_ShouldThrowTicketSoldOutException_WhenNoTicketsAvailableInCategory() {
-        testEvent.getTicketCategories().getFirst().setAvailableCategoryTickets(SOLD_OUT_TICKETS);
         EmmitTicketRequest request = new EmmitTicketRequest(testEventId, testTicketCategoryId);
 
+        when(jwtUtils.getAuthenticatedUsername()).thenReturn(testUsername);
+        when(userService.findUserEntityByUserName(testUsername)).thenReturn(testUser);
         when(eventService.findEventEntityById(testEventId)).thenReturn(testEvent);
 
-        assertThrows(TicketCategorySoldOutException.class, () -> ticketsService.emmitTicket(request));
+        when(ticketCategoryService.reserveOneTicket(testTicketCategoryId))
+                .thenThrow(new TicketCategorySoldOutException());
+
+        assertThrows(TicketCategorySoldOutException.class,
+                () -> ticketsService.emmitTicket(request));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
+        verify(eventService, never()).decrementTicket(any());
     }
 
     @Test

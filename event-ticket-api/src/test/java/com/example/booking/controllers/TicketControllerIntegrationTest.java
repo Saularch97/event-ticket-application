@@ -3,11 +3,13 @@ package com.example.booking.controllers;
 import com.example.booking.controller.request.event.CreateEventRequest;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
+import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.EventRequestProducerImpl;
+import com.example.booking.repositories.EventRepository;
 import com.example.booking.repositories.RoleRepository;
 import com.example.booking.repositories.TicketCategoryRepository;
 import com.example.booking.repositories.UserRepository;
@@ -35,6 +37,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -60,6 +63,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private TicketCategoryRepository ticketCategoryRepository;
+    @Autowired private EventRepository eventRepository;
 
     private String jwt;
     private UUID eventId;
@@ -112,6 +116,25 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tickets.length()", is(2)));
+    }
+
+    @Test
+    void shouldDecrementAvailableTickets_WhenTicketIsEmitted() throws Exception {
+        TicketCategory categoryBefore = ticketCategoryRepository.findById(this.vipCategoryId).orElseThrow();
+        Event eventBefore = eventRepository.findById(this.eventId).orElseThrow();
+
+        int initialCategoryCount = categoryBefore.getAvailableCategoryTickets();
+        int initialEventCount = eventBefore.getAvailableTickets();
+
+        emmitTicketRequest(this.vipCategoryId)
+                .andExpect(status().isCreated());
+
+        TicketCategory categoryAfter = ticketCategoryRepository.findById(this.vipCategoryId).orElseThrow();
+        Event eventAfter = eventRepository.findById(this.eventId).orElseThrow();
+
+        assertThat(categoryAfter.getAvailableCategoryTickets(), is(initialCategoryCount - 1));
+
+        assertThat(eventAfter.getAvailableTickets(), is(initialEventCount - 1));
     }
 
     private String obtainJwt() throws Exception {

@@ -1,4 +1,4 @@
-package com.example.booking.config;
+package com.example.booking.advice;
 
 import com.example.booking.exception.*;
 import com.example.booking.exception.base.ConflictException;
@@ -98,8 +98,6 @@ public class ValidationExceptionHandler {
     private static ResponseEntity<Object> badRequestResponse(Exception ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex, request);
     }
-
-
 
     private static ResponseEntity<Object> errorResponse(HttpStatus status, String error, Exception ex, HttpServletRequest request) {
         Map<String, Object> responseBody = buildResponse(status, error, ex.getMessage(), request);

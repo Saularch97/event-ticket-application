@@ -4,6 +4,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.dto.EventSummaryDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -26,6 +27,7 @@ public interface EventRepository extends JpaRepository<Event, UUID>, CustomEvent
     """)
     Page<EventSummaryDto> findAvailableEventsByOwner(UUID ownerId, Pageable pageable);
 
-
-
+    @Modifying
+    @Query("UPDATE Event e SET e.availableTickets = e.availableTickets - 1 WHERE e.eventId = :id AND e.availableTickets > 0")
+    int decrementAvailableTickets(@Param("id") UUID id);
 }

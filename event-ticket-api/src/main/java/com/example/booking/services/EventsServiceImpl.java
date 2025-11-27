@@ -11,6 +11,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.User;
 import com.example.booking.dto.EventSummaryDto;
 import com.example.booking.exception.EventNotFoundException;
+import com.example.booking.exception.EventSoldOutException;
 import com.example.booking.messaging.interfaces.EventRequestProducer;
 import com.example.booking.repositories.EventRepository;
 import com.example.booking.services.intefaces.EventsService;
@@ -200,6 +201,15 @@ public class EventsServiceImpl implements EventsService {
         event.setEventName(request.eventName());
 
         log.info("Event updated successfully. EventId={}", eventId);
+    }
+
+    @Transactional
+    @Override
+    public void decrementTicket(UUID eventId) {
+        int updated = eventRepository.decrementAvailableTickets(eventId);
+        if (updated == 0) {
+            throw new EventSoldOutException();
+        }
     }
 
     private void publishEventRecommendation(Event savedEvent, CityDataDto cityData) {

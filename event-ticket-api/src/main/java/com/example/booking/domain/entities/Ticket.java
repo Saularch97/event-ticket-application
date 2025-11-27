@@ -1,5 +1,6 @@
 package com.example.booking.domain.entities;
 
+import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.TicketItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -50,7 +51,9 @@ public class Ticket {
     @Column(name = "ticket_price")
     private Double ticketPrice;
 
-
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private ETicketStatus ticketStatus;
 
     public Order getOrder() {
         return order;
@@ -159,6 +162,14 @@ public class Ticket {
 
     public void setTicketEventLocation(String ticketEventLocation) {
         this.ticketEventLocation = ticketEventLocation;
+    }
+
+    public ETicketStatus getTicketStatus() {
+        return ticketStatus;
+    }
+
+    public void setTicketStatus(ETicketStatus ticketStatus) {
+        this.ticketStatus = ticketStatus;
     }
 
     public static TicketItemDto toTicketItemDto(Ticket ticket) {

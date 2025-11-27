@@ -4,6 +4,7 @@ import com.example.booking.builders.EventBuilder;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
+import com.example.booking.exception.TicketCategorySoldOutException;
 import com.example.booking.repositories.TicketCategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,11 +13,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -28,6 +31,8 @@ class TicketCategoryServiceTest {
 
     @InjectMocks
     TicketCategoryServiceImpl ticketCategoryService;
+
+    private static final Long TEST_CATEGORY_ID = 123L;
 
     private static final String CAT_NAME_VIP = "VIP";
     private static final double CAT_PRICE_VIP = 150.00;
@@ -75,5 +80,36 @@ class TicketCategoryServiceTest {
                 );
 
         verify(repository, times(EXPECTED_SAVE_CALLS)).save(any(TicketCategory.class));
+    }
+
+    @Test
+    void reserveOneTicket_ShouldReturnTicketCategory_WhenReservationIsSuccessful() {
+        TicketCategory mockCategory = new TicketCategory();
+        mockCategory.setTicketCategoryId(TEST_CATEGORY_ID);
+        mockCategory.setName(CAT_NAME_VIP);
+        mockCategory.setAvailableCategoryTickets(10);
+
+        when(repository.decrementQuantity(TEST_CATEGORY_ID)).thenReturn(1);
+        when(repository.findById(TEST_CATEGORY_ID)).thenReturn(Optional.of(mockCategory));
+
+        TicketCategory result = ticketCategoryService.reserveOneTicket(TEST_CATEGORY_ID);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getTicketCategoryId()).isEqualTo(TEST_CATEGORY_ID);
+        assertThat(result.getName()).isEqualTo(CAT_NAME_VIP);
+
+        verify(repository, times(1)).decrementQuantity(TEST_CATEGORY_ID);
+        verify(repository, times(1)).findById(TEST_CATEGORY_ID);
+    }
+
+    @Test
+    void reserveOneTicket_ShouldThrowSoldOutException_WhenNoRowsUpdated() {
+        when(repository.decrementQuantity(TEST_CATEGORY_ID)).thenReturn(0);
+
+        assertThatThrownBy(() -> ticketCategoryService.reserveOneTicket(TEST_CATEGORY_ID))
+                .isInstanceOf(TicketCategorySoldOutException.class);
+
+        verify(repository, times(1)).decrementQuantity(TEST_CATEGORY_ID);
+        verify(repository, never()).findById(any());
     }
 }

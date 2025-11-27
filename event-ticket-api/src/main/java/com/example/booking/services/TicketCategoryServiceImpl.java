@@ -3,8 +3,12 @@ package com.example.booking.services;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
+import com.example.booking.exception.TicketCategoryNotFoundException;
+import com.example.booking.exception.TicketCategorySoldOutException;
 import com.example.booking.repositories.TicketCategoryRepository;
 import com.example.booking.services.intefaces.TicketCategoryService;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -43,6 +47,18 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
 
         log.info("Created {} ticket categories for event with ID {}", ticketCategories.size(), event.getEventId());
         return ticketCategories;
+    }
+
+    @Override
+    @Transactional
+    public TicketCategory reserveOneTicket(Long categoryId) {
+        int updated = repository.decrementQuantity(categoryId);
+
+        if (updated == 0) {
+            throw new TicketCategorySoldOutException();
+        }
+
+        return repository.findById(categoryId).orElseThrow(() -> new TicketCategoryNotFoundException(categoryId));
     }
 
     private TicketCategory createTicketCategory(CreateTicketCategoryRequest request, Event event) {
