@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -149,10 +150,10 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
     private UUID createTestEvent() throws Exception {
         String futureDate = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         var eventRequest = new CreateEventRequest(
-                "Show do Legado", futureDate, 22, 0, "Alfenas", 30.0,
+                "Show do Legado", futureDate, 22, 0, "Alfenas", BigDecimal.valueOf(30.0),
                 List.of(
-                        new CreateTicketCategoryRequest(CATEGORY_VIP, 200.0, 2),
-                        new CreateTicketCategoryRequest(CATEGORY_PISTA, 150.0, 3)
+                        new CreateTicketCategoryRequest(CATEGORY_VIP, BigDecimal.valueOf(200.0), 2),
+                        new CreateTicketCategoryRequest(CATEGORY_PISTA, BigDecimal.valueOf(150.0), 3)
                 )
         );
         MvcResult result = mockMvc.perform(post(EVENTS_URL)

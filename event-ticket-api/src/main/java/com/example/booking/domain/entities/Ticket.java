@@ -5,6 +5,7 @@ import com.example.booking.dto.TicketItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -48,8 +49,8 @@ public class Ticket {
     @Column(name = "ticket_category_name")
     private String ticketCategoryName;
 
-    @Column(name = "ticket_price")
-    private Double ticketPrice;
+    @Column(name = "ticket_price", precision = 19, scale = 2)
+    private BigDecimal ticketPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
@@ -72,7 +73,7 @@ public class Ticket {
                   String ticketEventLocation,
                   String ticket,
                   String ticketCategoryName,
-                  Double ticketPrice) {
+                  BigDecimal ticketPrice) {
         this.ticketId = ticketId;
         this.event = event;
         this.ticketOwner = ticketOwner;
@@ -132,11 +133,11 @@ public class Ticket {
         this.ticketCategory = ticketCategory;
     }
 
-    public Double getTicketPrice() {
+    public BigDecimal getTicketPrice() {
         return ticketPrice;
     }
 
-    public void setTicketPrice(Double ticketPrice) {
+    public void setTicketPrice(BigDecimal ticketPrice) {
         this.ticketPrice = ticketPrice;
     }
 

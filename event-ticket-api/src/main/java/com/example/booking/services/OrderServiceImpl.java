@@ -63,7 +63,7 @@ public class OrderServiceImpl implements OrderService {
         updateTicketAssociations(tickets, savedOrder);
         evictCaches(tickets);
 
-
+        // Mandar o orderItemDto para a o producer!
         return new OrderItemDto(
                 savedOrder.getOrderId(),
                 savedOrder.getOrderPrice(),
@@ -75,6 +75,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @PreAuthorize("isAuthenticated()")
     public OrdersResponse getOrdersByUserId(UUID userId, int page, int pageSize) {
+        // TODO ver se realmente é necessário passa page e pageSize para construirCacheKey
         String cacheKey = userId + "-" + page + "-" + pageSize;
 
         var cache = cacheManager.getCache(CacheNames.ORDERS);

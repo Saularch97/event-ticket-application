@@ -30,6 +30,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,10 +45,10 @@ class OrderServiceTest {
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final String SORT_PROPERTY_ORDER_PRICE = "orderPrice";
-    private static final double TICKET_PRICE_1 = 100.0;
-    private static final double TICKET_PRICE_2 = 150.0;
-    private static final double TOTAL_ORDER_PRICE = TICKET_PRICE_1 + TICKET_PRICE_2;
-    private static final double MOCK_ORDER_PRICE = 100.0;
+    private static final BigDecimal TICKET_PRICE_1 = BigDecimal.valueOf(100);
+    private static final BigDecimal TICKET_PRICE_2 = BigDecimal.valueOf(150);
+    private static final BigDecimal TOTAL_ORDER_PRICE = TICKET_PRICE_1.add(TICKET_PRICE_2);
+    private static final BigDecimal MOCK_ORDER_PRICE = BigDecimal.valueOf(100L);
     private static final Long MOCK_CATEGORY_ID = 1L;
     private static final int SINGLE_ITEM_COUNT = 1;
     private static final long SINGLE_ITEM_COUNT_LONG = 1L;
@@ -301,6 +302,7 @@ class OrderServiceTest {
         when(event.getEventId()).thenReturn(eventId);
 
         TicketCategory ticketCategory = mock(TicketCategory.class);
+        when(ticketCategory.getPrice()).thenReturn(BigDecimal.TEN);
 
         Ticket ticket = mock(Ticket.class);
         when(ticket.getEvent()).thenReturn(event);

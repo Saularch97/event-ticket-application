@@ -3,11 +3,13 @@ package com.example.booking.builders;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.TicketCategory;
 
+import java.math.BigDecimal;
+
 public class TicketCategoryBuilder {
 
     private Long ticketCategoryId;
     private String name;
-    private Double price;
+    private BigDecimal price;
     private Event event;
     private Integer availableCategoryTickets;
 
@@ -31,7 +33,7 @@ public class TicketCategoryBuilder {
         return this;
     }
 
-    public TicketCategoryBuilder withPrice(Double price) {
+    public TicketCategoryBuilder withPrice(BigDecimal price) {
         this.price = price;
         return this;
     }

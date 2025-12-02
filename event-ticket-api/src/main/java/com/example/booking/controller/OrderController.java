@@ -3,6 +3,7 @@ package com.example.booking.controller;
 import com.example.booking.controller.request.order.CreateOrderRequest;
 import com.example.booking.controller.response.order.CreateOrderResponse;
 import com.example.booking.controller.response.order.OrdersResponse;
+import com.example.booking.dto.OrderItemDto;
 import com.example.booking.services.intefaces.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -50,13 +51,13 @@ public class OrderController {
     public ResponseEntity<CreateOrderResponse> createNewOrder(
             @Valid @RequestBody CreateOrderRequest request
     )  {
-        var savedOrder = orderService.createNewOrder(request);
+        OrderItemDto orderItemDto = orderService.createNewOrder(request);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(savedOrder.orderId())
+                .buildAndExpand(orderItemDto.orderId())
                 .toUri();
-        return ResponseEntity.created(location).body(new CreateOrderResponse(savedOrder.orderId()));
+        return ResponseEntity.created(location).body(new CreateOrderResponse(orderItemDto.orderId()));
     }
 
     @Operation(

@@ -4,6 +4,7 @@ import com.example.booking.domain.entities.Order;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.User;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -11,7 +12,7 @@ import java.util.UUID;
 public class OrderBuilder {
 
     private UUID orderId;
-    private Double orderPrice;
+    private BigDecimal orderPrice;
     private Set<Ticket> tickets = new HashSet<>();
     private User user;
 
@@ -27,7 +28,7 @@ public class OrderBuilder {
         return this;
     }
 
-    public OrderBuilder withOrderPrice(Double orderPrice) {
+    public OrderBuilder withOrderPrice(BigDecimal orderPrice) {
         this.orderPrice = orderPrice;
         return this;
     }

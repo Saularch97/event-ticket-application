@@ -3,6 +3,8 @@ package com.example.booking.domain.entities;
 import com.example.booking.dto.TicketCategoryDto;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "tb_ticket_category")
 public class TicketCategory {
@@ -13,7 +15,9 @@ public class TicketCategory {
     private Long ticketCategoryId;
 
     private String name;
-    private Double price;
+
+    @Column(precision = 19, scale = 2)
+    private BigDecimal price;
 
     @ManyToOne
     @JoinColumn(name = "event_id")
@@ -25,7 +29,7 @@ public class TicketCategory {
     public TicketCategory() {
     }
 
-    public TicketCategory(Integer availableCategoryTickets, Event event, Double price, String name, Long ticketCategoryId) {
+    public TicketCategory(Integer availableCategoryTickets, Event event, BigDecimal price, String name, Long ticketCategoryId) {
         this.availableCategoryTickets = availableCategoryTickets;
         this.event = event;
         this.price = price;
@@ -49,11 +53,11 @@ public class TicketCategory {
         this.name = name;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
@@ -92,4 +96,3 @@ public class TicketCategory {
         );
     }
 }
-

@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record OrderItemDto(
         UUID orderId,
-        Double orderPrice,
+        java.math.BigDecimal orderPrice,
         List<TicketItemDto> tickets,
         UUID userid
 ) implements Serializable {

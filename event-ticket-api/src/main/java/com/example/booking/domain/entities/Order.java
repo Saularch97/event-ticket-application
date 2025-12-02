@@ -4,6 +4,7 @@ import com.example.booking.dto.OrderItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -11,21 +12,13 @@ import java.util.stream.Collectors;
 @Table(name = "tb_orders")
 public class Order {
 
-    public Order() {
-    }
-
-    public Order(UUID orderId, Double orderPrice, Set<Ticket> tickets, User user) {
-        this.orderId = orderId;
-        this.orderPrice = orderPrice;
-        this.tickets = tickets;
-        this.user = user;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "order_id")
     private UUID orderId;
-    private Double orderPrice;
+
+    @Column(name = "order_price", precision = 19, scale = 2)
+    private BigDecimal orderPrice;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy="order", fetch = FetchType.LAZY)
@@ -36,6 +29,16 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
+    public Order() {
+    }
+
+    public Order(UUID orderId, BigDecimal orderPrice, Set<Ticket> tickets, User user) {
+        this.orderId = orderId;
+        this.orderPrice = orderPrice;
+        this.tickets = tickets;
+        this.user = user;
+    }
+
     public UUID getOrderId() {
         return orderId;
     }
@@ -44,11 +47,11 @@ public class Order {
         this.orderId = orderId;
     }
 
-    public Double getOrderPrice() {
+    public BigDecimal getOrderPrice() {
         return orderPrice;
     }
 
-    public void setOrderPrice(Double orderPrice) {
+    public void setOrderPrice(BigDecimal orderPrice) {
         this.orderPrice = orderPrice;
     }
 
@@ -78,12 +81,14 @@ public class Order {
         );
     }
 
-    private Double calculateTotal(Set<Ticket> tickets) {
-        if (tickets == null || tickets.isEmpty()) return 0.0;
+    private BigDecimal calculateTotal(Set<Ticket> tickets) {
+        if (tickets == null || tickets.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
 
         return tickets.stream()
                 .map(t -> t.getTicketCategory().getPrice())
-                .reduce(0.0, Double::sum);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
 

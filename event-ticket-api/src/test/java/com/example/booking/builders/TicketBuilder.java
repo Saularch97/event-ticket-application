@@ -2,6 +2,7 @@ package com.example.booking.builders;
 
 import com.example.booking.domain.entities.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ public class TicketBuilder {
     private String ticketEventLocation;
     private String ticketEventDate;
     private String ticketCategoryName;
-    private Double ticketPrice;
+    private BigDecimal ticketPrice;
 
     public TicketBuilder() {
     }
@@ -70,7 +71,7 @@ public class TicketBuilder {
         return this;
     }
 
-    public TicketBuilder withTicketPrice(Double ticketPrice) {
+    public TicketBuilder withTicketPrice(BigDecimal ticketPrice) {
         this.ticketPrice = ticketPrice;
         return this;
     }

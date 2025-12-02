@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -66,24 +67,24 @@ public class EventServiceTest {
     private static final LocalDateTime COMMON_EVENT_DATE = LocalDateTime.of(2025, 8, 15, 20, 30);
 
     private static final String SETUP_CAT1_NAME = "category";
-    private static final double SETUP_CAT1_PRICE = 300.0;
-    private static final int SETUP_CAT1_TICKETS = 100;
+    private static final BigDecimal SETUP_CAT1_PRICE = BigDecimal.valueOf(300.0);
+    private static final Integer SETUP_CAT1_TICKETS = 100;
     private static final String SETUP_CAT2_NAME = "category2";
-    private static final double SETUP_CAT2_PRICE = 200.0;
-    private static final int SETUP_CAT2_TICKETS = 1500;
+    private static final BigDecimal SETUP_CAT2_PRICE = BigDecimal.valueOf(200.0);
+    private static final Integer SETUP_CAT2_TICKETS = 1500;
     private static final String SETUP_EVENT_NAME = "event";
-    private static final int SETUP_EVENT_HOUR = 12;
-    private static final int SETUP_EVENT_MINUTE = 12;
+    private static final Integer SETUP_EVENT_HOUR = 12;
+    private static final Integer SETUP_EVENT_MINUTE = 12;
     private static final String SETUP_EVENT_LOCATION = "National Stadium";
-    private static final double SETUP_EVENT_PRICE = 120.0;
-    private static final int SAMPLE_EVENT_TICKETS = 500;
+    private static final BigDecimal SETUP_EVENT_PRICE = BigDecimal.valueOf(120.0);
+    private static final Integer SAMPLE_EVENT_TICKETS = 500;
     private static final String SAMPLE_CAT_NAME = "Pista";
-    private static final double SAMPLE_CAT_PRICE = 150.0;
+    private static final BigDecimal SAMPLE_CAT_PRICE = BigDecimal.valueOf(150.0);
     private static final String ADMIN_USERNAME = "adminUser";
     private static final String SIMPLE_EVENT_NAME = "Show de Rock";
-    private static final long DEFAULT_TRENDING_TICKETS = 0L;
-    private static final double TEST_LAT = 10.0;
-    private static final double TEST_LON = 20.0;
+    private static final Long DEFAULT_TRENDING_TICKETS = 0L;
+    private static final Double TEST_LAT = 10.0;
+    private static final Double TEST_LON = 20.0;
 
     private static final String MSG_USER_NOT_FOUND = "User not found!";
     private static final String MSG_INVALID_TOKEN = "Invalid token";
@@ -92,17 +93,17 @@ public class EventServiceTest {
     private static final long TEST_CAT_ID_1 = 1L;
     private static final long TEST_CAT_ID_2 = 2L;
     private static final String PRIME_CAT_NAME = "prime_ticket";
-    private static final double PRIME_CAT_PRICE = 20.0;
+    private static final BigDecimal PRIME_CAT_PRICE = BigDecimal.valueOf(20.0);
     private static final int PRIME_CAT_TICKETS = 50;
     private static final String ULTRA_CAT_NAME = "ultra_ticket";
-    private static final double ULTRA_CAT_PRICE = 40.0;
+    private static final BigDecimal ULTRA_CAT_PRICE = BigDecimal.valueOf(40.0);
     private static final int ULTRA_CAT_TICKETS = 50;
     private static final String SUMMER_FEST_NAME = "Festival de Verão";
     private static final String SUMMER_FEST_DATE_STR = "25/12/2025";
     private static final int SUMMER_FEST_HOUR = 20;
     private static final int SUMMER_FEST_MINUTE = 30;
     private static final String SUMMER_FEST_LOCATION = "São Paulo - SP";
-    private static final double SUMMER_FEST_PRICE = 100.0;
+    private static final BigDecimal SUMMER_FEST_PRICE = BigDecimal.valueOf(100.0);
     private static final int SUMMER_FEST_TOTAL_TICKETS = 100;
 
     private static final int PAGE_0 = 0;

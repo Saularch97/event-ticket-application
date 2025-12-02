@@ -3,7 +3,7 @@ package com.example.booking.messaging;
 import com.example.booking.messaging.interfaces.EventRequestProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.AmqpException; // Importado
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.stereotype.Component;
@@ -28,12 +28,11 @@ public class EventRequestProducerImpl implements EventRequestProducer {
 
     public void publishEventRecommendation(RecommendEventDto dto) {
         String jsonPayload;
-
+        // TODO análisar esses dois try catch e ver se são realmente necessários
         try {
             jsonPayload = objectMapper.writeValueAsString(dto);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize RecommendEventDto for RabbitMQ. DTO: {}. Error: {}",
-                    dto, e.getMessage(), e);
+            log.error("Failed to serialize RecommendEventDto for RabbitMQ. DTO: {}. Error: {}", dto, e.getMessage(), e);
             return;
         }
 

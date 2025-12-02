@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,11 +36,11 @@ class TicketCategoryServiceTest {
     private static final Long TEST_CATEGORY_ID = 123L;
 
     private static final String CAT_NAME_VIP = "VIP";
-    private static final double CAT_PRICE_VIP = 150.00;
+    private static final BigDecimal CAT_PRICE_VIP = BigDecimal.valueOf(150.00);
     private static final int CAT_TICKETS_VIP = 100;
 
     private static final String CAT_NAME_PISTA = "Pista";
-    private static final double CAT_PRICE_PISTA = 80.00;
+    private static final BigDecimal CAT_PRICE_PISTA = BigDecimal.valueOf(80.00);
     private static final int CAT_TICKETS_PISTA = 500;
 
     private static final int EXPECTED_LIST_SIZE = 2;

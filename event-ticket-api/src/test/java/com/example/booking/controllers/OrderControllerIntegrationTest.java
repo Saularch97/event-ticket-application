@@ -22,6 +22,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -139,8 +140,8 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     private UUID createTestEvent() throws Exception {
         String futureDate = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        var eventRequest = new CreateEventRequest("Evento para Pedidos", futureDate, 20, 0, "Online", 300.0,
-                List.of(new CreateTicketCategoryRequest(CATEGORY_VIP, 250.0, 10)));
+        var eventRequest = new CreateEventRequest("Evento para Pedidos", futureDate, 20, 0, "Online", BigDecimal.valueOf(300.0),
+                List.of(new CreateTicketCategoryRequest(CATEGORY_VIP, BigDecimal.valueOf(250.0), 10)));
         MvcResult result = mockMvc.perform(post(EVENTS_URL)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
                         .contentType(MediaType.APPLICATION_JSON)

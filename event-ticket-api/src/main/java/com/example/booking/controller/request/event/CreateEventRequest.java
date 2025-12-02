@@ -3,6 +3,7 @@ package com.example.booking.controller.request.event;
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import jakarta.validation.constraints.NotBlank;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -31,7 +32,7 @@ public record CreateEventRequest(
 
         @NotNull(message = "Event needs to have a price")
         @Positive(message = "Price must be greater than zero")
-        Double eventPrice,
+        BigDecimal eventPrice,
 
         @NotNull(message = "Event needs to have at least one ticket category")
         @Size(min = 1, message = "At least one ticket category is required")

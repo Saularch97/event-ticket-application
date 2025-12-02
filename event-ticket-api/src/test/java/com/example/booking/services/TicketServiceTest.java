@@ -27,6 +27,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -43,11 +44,10 @@ class TicketServiceTest {
     private static final String TEST_USERNAME = "testUser";
     private static final Long TEST_TICKET_CATEGORY_ID = 1L;
     private static final Long INVALID_TICKET_CATEGORY_ID = 2L;
-    private static final Double TEST_CATEGORY_PRICE = 250.0;
+    private static final BigDecimal TEST_CATEGORY_PRICE = BigDecimal.valueOf(250.0);
     private static final Integer TEST_CATEGORY_TICKETS = 300;
     private static final Integer TEST_EVENT_TICKETS = 500;
     private static final LocalDateTime TEST_EVENT_DATETIME = LocalDateTime.of(2025, 12, 15, 20, 0);
-    private static final Integer SOLD_OUT_TICKETS = 0;
     private static final Integer PAGE_0 = 0;
     private static final Integer PAGE_SIZE_5 = 5;
     private static final Integer PAGE_SIZE_10 = 10;

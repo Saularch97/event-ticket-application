@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -135,8 +136,8 @@ class EventControllerIntegrationTest extends AbstractIntegrationTest {
     private CreateEventRequest createSampleEventRequest() {
         String futureDate = LocalDate.now().plusMonths(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         return new CreateEventRequest(
-                "Show do Legado", futureDate, 22, 0, "Alfenas", 30.0,
-                List.of(new CreateTicketCategoryRequest("VIP", 200.0, 100))
+                "Show do Legado", futureDate, 22, 0, "Alfenas", BigDecimal.valueOf(30.0),
+                List.of(new CreateTicketCategoryRequest("VIP", BigDecimal.valueOf(200.0), 100))
         );
     }
 
