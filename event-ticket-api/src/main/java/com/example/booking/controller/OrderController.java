@@ -71,12 +71,13 @@ public class OrderController {
                     )
             }
     )
-    @GetMapping
+    @GetMapping("/{userId}")
     public ResponseEntity<OrdersResponse> getUserOrders(
+            @Parameter(description = "User id") @PathVariable UUID userId,
             @Parameter(description = "Page number to retrieve") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Number of orders per page") @RequestParam(defaultValue = "10") int pageSize
     ) {
-        var ordersDto = orderService.getUserOrders(page, pageSize);
+        var ordersDto = orderService.getOrdersByUserId(userId,page, pageSize);
         return ResponseEntity.ok(ordersDto);
     }
 

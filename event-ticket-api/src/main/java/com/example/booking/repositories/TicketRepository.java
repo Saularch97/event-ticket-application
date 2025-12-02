@@ -66,4 +66,12 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     @Query("SELECT t FROM Ticket t JOIN FETCH t.event WHERE t.ticketId IN :ids")
     List<Ticket> findAllByIdWithEvent(@Param("ids") List<UUID> ids);
+
+    @Query("""
+    SELECT t FROM Ticket t
+    JOIN FETCH t.event
+    JOIN FETCH t.ticketCategory
+    WHERE t.ticketId IN :ids
+    """)
+    List<Ticket> findTicketsWithEventDetails(@Param("ids") List<UUID> ids);
 }

@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface OrderService {
     OrderItemDto createNewOrder(CreateOrderRequest dto);
-    OrdersResponse getUserOrders(int page, int pageSize);
+    OrdersResponse getOrdersByUserId(UUID userId, int page, int pageSize);
     void deleteOrder(UUID orderId);
 }

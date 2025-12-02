@@ -36,7 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     private static final String API_BASE_URL = "/api";
-    private static final String ORDER_URL = API_BASE_URL + "/orders"; // Padrão REST
+    private static final String ORDER_URL = API_BASE_URL + "/orders";
+    private static final String GET_ORDERS_BY_USER_ID_URL = API_BASE_URL + "/orders" + "/{userId}"    ;
     private static final String TICKET_URL = API_BASE_URL + "/tickets";
     private static final String EVENTS_URL = API_BASE_URL + "/events";
     private static final String AUTH_SIGNIN_URL = API_BASE_URL + "/auth/signin";
@@ -55,6 +56,7 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     private String jwt;
     private UUID ticketId;
+    private UUID userid;
 
     @BeforeEach
     void setup() throws Exception {
@@ -67,6 +69,8 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
         adminUser.setEmail("admin@example.com");
         adminUser.setRoles(Set.of(adminRole));
         userRepository.save(adminUser);
+
+        userid = adminUser.getUserId();
 
         this.jwt = obtainJwt();
 
@@ -110,7 +114,7 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
     void shouldListUserOrders() throws Exception {
         createTestOrder(List.of(this.ticketId));
 
-        mockMvc.perform(get(ORDER_URL)
+        mockMvc.perform(get(GET_ORDERS_BY_USER_ID_URL, userid)
                         .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orders.length()", is(1)));

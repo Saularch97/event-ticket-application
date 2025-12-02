@@ -58,6 +58,7 @@ public class Order {
 
     public void setTickets(Set<Ticket> tickets) {
         this.tickets = tickets;
+        this.orderPrice = calculateTotal(tickets);
     }
 
     public User getUser() {
@@ -75,6 +76,14 @@ public class Order {
                 order.getTickets().stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
                 order.getUser().getUserId()
         );
+    }
+
+    private Double calculateTotal(Set<Ticket> tickets) {
+        if (tickets == null || tickets.isEmpty()) return 0.0;
+
+        return tickets.stream()
+                .map(t -> t.getTicketCategory().getPrice())
+                .reduce(0.0, Double::sum);
     }
 }
 

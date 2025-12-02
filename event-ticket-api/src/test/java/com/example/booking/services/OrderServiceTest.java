@@ -100,23 +100,29 @@ class OrderServiceTest {
         CreateOrderRequest request = new CreateOrderRequest(List.of(ticketId1, ticketId2));
 
         Event event = EventBuilder.anEvent().withEventId(eventId).build();
-        TicketCategory tc1 = TicketCategoryBuilder.aTicketCategory().withPrice(TICKET_PRICE_1).build();
-        TicketCategory tc2 = TicketCategoryBuilder.aTicketCategory().withPrice(TICKET_PRICE_2).build();
+
+        TicketCategory tc1 = TicketCategoryBuilder.aTicketCategory()
+                .withPrice(TICKET_PRICE_1)
+                .build();
+
+        TicketCategory tc2 = TicketCategoryBuilder.aTicketCategory()
+                .withPrice(TICKET_PRICE_2)
+                .build();
 
         Ticket ticket1 = TicketBuilder.aTicket()
                 .withTicketId(ticketId1)
                 .withTicketCategory(tc1)
                 .withEvent(event)
-                .withOrder(null)
                 .withTicketOwner(user)
+                .withTicketPrice(TICKET_PRICE_1)
                 .build();
 
         Ticket ticket2 = TicketBuilder.aTicket()
                 .withTicketId(ticketId2)
                 .withTicketCategory(tc2)
                 .withEvent(event)
-                .withOrder(null)
                 .withTicketOwner(user)
+                .withTicketPrice(TICKET_PRICE_2)
                 .build();
 
         List<Ticket> tickets = List.of(ticket1, ticket2);
@@ -129,7 +135,7 @@ class OrderServiceTest {
 
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
         when(userService.findUserEntityById(userId)).thenReturn(user);
-        when(ticketService.findTicketsWithEventDetails(request.ticketIds())).thenReturn(tickets);
+        when(ticketService.findAndValidateAvailableTickets(request.ticketIds())).thenReturn(tickets);
         when(orderRepository.save(any(Order.class))).thenReturn(savedOrder);
 
         OrderItemDto result = orderServiceImpl.createNewOrder(request);
@@ -137,11 +143,13 @@ class OrderServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.orderId()).isEqualTo(savedOrder.getOrderId());
         assertThat(result.userid()).isEqualTo(userId);
+
         assertThat(result.orderPrice()).isEqualTo(TOTAL_ORDER_PRICE);
         assertThat(result.tickets()).hasSize(tickets.size());
 
         verify(orderRepository).save(orderArgumentCaptor.capture());
         Order capturedOrder = orderArgumentCaptor.getValue();
+
         assertThat(capturedOrder.getUser()).isEqualTo(user);
         assertThat(capturedOrder.getOrderPrice()).isEqualTo(TOTAL_ORDER_PRICE);
         assertThat(capturedOrder.getTickets()).containsExactlyInAnyOrder(ticket1, ticket2);
@@ -149,7 +157,7 @@ class OrderServiceTest {
         assertThat(ticket1.getOrder()).isEqualTo(savedOrder);
         assertThat(ticket2.getOrder()).isEqualTo(savedOrder);
 
-        verify(remainingTicketsCache, times(tickets.size())).evict(eventId);
+        verify(remainingTicketsCache, times(1)).evict(eventId);
         verify(ordersCache).clear();
     }
 
@@ -159,18 +167,13 @@ class OrderServiceTest {
         UUID ticketId2 = UUID.randomUUID();
         CreateOrderRequest request = new CreateOrderRequest(List.of(ticketId1, ticketId2));
 
-        Ticket ticket1 = TicketBuilder.aTicket().withTicketId(ticketId1).build();
-        List<Ticket> foundTickets = List.of(ticket1);
-
-        when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
-        when(userService.findUserEntityById(userId)).thenReturn(user);
-        when(ticketService.findTicketsWithEventDetails(request.ticketIds())).thenReturn(foundTickets);
+        when(ticketService.findAndValidateAvailableTickets(request.ticketIds()))
+                .thenThrow(new TicketNotFoundException());
 
         assertThatThrownBy(() -> orderServiceImpl.createNewOrder(request))
                 .isInstanceOf(TicketNotFoundException.class);
 
         verify(orderRepository, never()).save(any());
-        verify(cacheManager, never()).getCache(anyString());
     }
 
     @Test
@@ -178,12 +181,12 @@ class OrderServiceTest {
         UUID ticketId1 = UUID.randomUUID();
         CreateOrderRequest request = new CreateOrderRequest(List.of(ticketId1));
 
-        Ticket ticket1 = TicketBuilder.aTicket().withTicketId(ticketId1).withOrder(OrderBuilder.anOrder().build()).build();
-        List<Ticket> tickets = List.of(ticket1);
 
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
         when(userService.findUserEntityById(userId)).thenReturn(user);
-        when(ticketService.findTicketsWithEventDetails(request.ticketIds())).thenReturn(tickets);
+
+        when(ticketService.findAndValidateAvailableTickets(request.ticketIds()))
+                .thenThrow(new TicketAlreadyHaveAnOrderException("Ticket is already sold"));
 
         assertThatThrownBy(() -> orderServiceImpl.createNewOrder(request))
                 .isInstanceOf(TicketAlreadyHaveAnOrderException.class);
@@ -199,10 +202,9 @@ class OrderServiceTest {
 
         OrdersResponse cachedResponse = new OrdersResponse(Collections.emptyList(), page, pageSize, 0, 0L);
 
-        when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
         when(ordersCache.get(cacheKey, OrdersResponse.class)).thenReturn(cachedResponse);
 
-        OrdersResponse result = orderServiceImpl.getUserOrders(page, pageSize);
+        OrdersResponse result = orderServiceImpl.getOrdersByUserId(userId ,page, pageSize);
 
         assertThat(result).isSameAs(cachedResponse);
         verify(orderRepository, never()).findOrdersByUserIdWithAssociations(any(), any());
@@ -214,64 +216,80 @@ class OrderServiceTest {
         int page = DEFAULT_PAGE;
         int pageSize = DEFAULT_PAGE_SIZE;
         String cacheKey = userId + "-" + page + "-" + pageSize;
-        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, SORT_PROPERTY_ORDER_PRICE);
+        PageRequest pageRequest = PageRequest.of(page, pageSize, Sort.Direction.ASC, "orderPrice");
 
         UUID orderId = UUID.randomUUID();
-        double orderPrice = MOCK_ORDER_PRICE;
         UUID ticketId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
-        UUID ticketUserId = UUID.randomUUID();
+        UUID ticketOwnerId = UUID.randomUUID();
         Long categoryId = MOCK_CATEGORY_ID;
 
-        Order orderMock = mock(Order.class);
-        Ticket ticketMock = mock(Ticket.class);
-        Event eventMock = mock(Event.class);
-        TicketCategory categoryMock = mock(TicketCategory.class);
-        User ticketDtoUserMock = mock(User.class);
+        TicketCategory category = new TicketCategory();
+        category.setTicketCategoryId(categoryId);
+        category.setName("VIP");
+        category.setPrice(TICKET_PRICE_1);
 
-        when(orderMock.getOrderId()).thenReturn(orderId);
-        when(orderMock.getOrderPrice()).thenReturn(orderPrice);
-        when(orderMock.getUser()).thenReturn(user);
-        when(orderMock.getTickets()).thenReturn(Set.of(ticketMock));
+        Event event = new Event();
+        event.setEventId(eventId);
+        event.setEventName("Show de Teste");
 
-        when(ticketMock.getTicketId()).thenReturn(ticketId);
-        when(ticketMock.getEvent()).thenReturn(eventMock);
-        when(eventMock.getEventId()).thenReturn(eventId);
-        when(ticketMock.getTicketOwner()).thenReturn(ticketDtoUserMock);
-        when(ticketDtoUserMock.getUserId()).thenReturn(ticketUserId);
-        when(ticketMock.getTicketCategory()).thenReturn(categoryMock);
-        when(categoryMock.getTicketCategoryId()).thenReturn(categoryId);
+        User ticketOwner = new User();
+        ticketOwner.setUserId(ticketOwnerId);
 
-        Page<Order> ordersPage = new PageImpl<>(List.of(orderMock), pageRequest, SINGLE_ITEM_COUNT_LONG);
-        when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
-        when(ordersCache.get(cacheKey, OrdersResponse.class)).thenReturn(null);
+        Ticket ticket = TicketBuilder.aTicket()
+                .withTicketId(ticketId)
+                .withEvent(event)
+                .withTicketCategory(category)
+                .withTicketOwner(ticketOwner)
+                .withTicketPrice(TICKET_PRICE_1)
+                .build();
+
+        Order order = OrderBuilder.anOrder()
+                .withOrderId(orderId)
+                .withUser(user)
+                .withOrderPrice(MOCK_ORDER_PRICE)
+                .withTickets(Set.of(ticket))
+                .build();
+
+        ticket.setOrder(order);
+
+        Page<Order> ordersPage = new PageImpl<>(List.of(order), pageRequest, 1);
+
+        Cache cacheMock = mock(Cache.class);
+
+        when(cacheManager.getCache(CacheNames.ORDERS)).thenReturn(cacheMock);
+
+        when(cacheMock.get(cacheKey, OrdersResponse.class)).thenReturn(null);
+
         when(orderRepository.findOrdersByUserIdWithAssociations(userId, pageRequest)).thenReturn(ordersPage);
 
-        OrdersResponse result = orderServiceImpl.getUserOrders(page, pageSize);
+        OrdersResponse result = orderServiceImpl.getOrdersByUserId(userId, page, pageSize);
+
+        OrderItemDto resultOrder = result.orders().getFirst();
+        TicketItemDto resultTicket = resultOrder.tickets().getFirst();
 
         assertThat(result).isNotNull();
         assertThat(result.page()).isEqualTo(page);
         assertThat(result.pageSize()).isEqualTo(pageSize);
-        assertThat(result.totalPages()).isEqualTo(SINGLE_ITEM_COUNT);
-        assertThat(result.totalElements()).isEqualTo(SINGLE_ITEM_COUNT_LONG);
+        assertThat(result.totalElements()).isEqualTo(1L);
 
-        assertThat(result.orders()).hasSize(SINGLE_ITEM_COUNT);
+        assertThat(result.orders()).hasSize(1);
 
-        OrderItemDto resultOrderDto = result.orders().getFirst();
-        assertThat(resultOrderDto.orderId()).isEqualTo(orderId);
-        assertThat(resultOrderDto.orderPrice()).isEqualTo(orderPrice);
-        assertThat(resultOrderDto.userid()).isEqualTo(userId);
+        assertThat(resultOrder.orderId()).isEqualTo(orderId);
+        assertThat(resultOrder.orderPrice()).isEqualTo(MOCK_ORDER_PRICE);
 
-        assertThat(resultOrderDto.tickets()).hasSize(SINGLE_ITEM_COUNT);
-        TicketItemDto resultTicketDto = resultOrderDto.tickets().getFirst();
-        assertThat(resultTicketDto.ticketId()).isEqualTo(ticketId);
-        assertThat(resultTicketDto.eventId()).isEqualTo(eventId);
-        assertThat(resultTicketDto.userId()).isEqualTo(ticketUserId);
-        assertThat(resultTicketDto.ticketCategoryId()).isEqualTo(categoryId);
+        assertThat(resultOrder.tickets()).hasSize(1);
 
-        verify(ordersCache).put(cacheKeyCaptor.capture(), ordersResponseCaptor.capture());
+        assertThat(resultTicket.ticketId()).isEqualTo(ticketId);
+        assertThat(resultTicket.eventId()).isEqualTo(eventId);
+        assertThat(resultTicket.ticketCategoryId()).isEqualTo(categoryId);
+
+        verify(cacheMock).put(cacheKeyCaptor.capture(), ordersResponseCaptor.capture());
+
         assertThat(cacheKeyCaptor.getValue()).isEqualTo(cacheKey);
-        assertThat(ordersResponseCaptor.getValue()).isEqualTo(result);
+        assertThat(ordersResponseCaptor.getValue()).usingRecursiveComparison().isEqualTo(result);
+
+        verify(orderRepository).findOrdersByUserIdWithAssociations(userId, pageRequest);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
+import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.RemainingTicketCategoryDto;
 import com.example.booking.dto.TicketItemDto;
 import com.example.booking.dto.TicketsDto;
@@ -9,6 +10,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
+import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
 import com.example.booking.exception.TicketCategoryNotFoundException;
 import com.example.booking.exception.TicketCategorySoldOutException;
 import com.example.booking.exception.TicketNotFoundException;
@@ -166,6 +168,24 @@ public class TicketServiceImpl implements TicketService {
         return tickets;
     }
 
+    @Override
+    public List<Ticket> findAndValidateAvailableTickets(List<UUID> ticketIds) {
+        List<Ticket> tickets = ticketRepository.findTicketsWithEventDetails(ticketIds);
+
+        if (tickets.size() != ticketIds.size()) {
+            log.error("Tickets size mismatch!");
+            throw new TicketNotFoundException();
+        }
+
+        boolean hasUnavailableTicket = tickets.stream().anyMatch(t -> t.getOrder() != null);
+
+        if (hasUnavailableTicket) {
+            throw new TicketAlreadyHaveAnOrderException("One or more tickets are not available.");
+        }
+
+        return tickets;
+    }
+
     private static Ticket buildTicket(User user, Event event, TicketCategory ticketCategory) {
         Ticket ticket = new Ticket();
         ticket.setTicketOwner(user);
@@ -175,6 +195,7 @@ public class TicketServiceImpl implements TicketService {
         ticket.setTicketPrice(ticketCategory.getPrice());
         ticket.setTicketEventLocation(event.getEventLocation());
         ticket.setTicketEventDate(event.getEventDate().toString());
+        ticket.setTicketStatus(ETicketStatus.PENDING);
         return ticket;
     }
 }
