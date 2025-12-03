@@ -5,7 +5,9 @@ import com.example.booking.controller.request.order.CreateOrderRequest;
 import com.example.booking.dto.OrderItemDto;
 import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.domain.entities.*;
+import com.example.booking.dto.PaymentRequestProducerDto;
 import com.example.booking.exception.OrderNotFoundException;
+import com.example.booking.messaging.interfaces.PaymentServiceProducer;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.services.intefaces.TicketService;
@@ -15,12 +17,12 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,13 +37,15 @@ public class OrderServiceImpl implements OrderService {
     private final TicketService ticketService;
     private final JwtUtils jwtUtils;
     private final CacheManager cacheManager;
+    private final PaymentServiceProducer paymentServiceProducer;
 
-    public OrderServiceImpl(OrderRepository orderRepository, UserService userService, TicketService ticketService, JwtUtils jwtUtils, CacheManager cacheManager) {
+    public OrderServiceImpl(OrderRepository orderRepository, UserService userService, TicketService ticketService, JwtUtils jwtUtils, CacheManager cacheManager, PaymentServiceProducer paymentServiceProducer) {
         this.orderRepository = orderRepository;
         this.userService = userService;
         this.ticketService = ticketService;
         this.jwtUtils = jwtUtils;
         this.cacheManager = cacheManager;
+        this.paymentServiceProducer = paymentServiceProducer;
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -63,13 +67,48 @@ public class OrderServiceImpl implements OrderService {
         updateTicketAssociations(tickets, savedOrder);
         evictCaches(tickets);
 
-        // Mandar o orderItemDto para a o producer!
+        sendPaymentEvent(tickets, savedOrder);
+
         return new OrderItemDto(
                 savedOrder.getOrderId(),
                 savedOrder.getOrderPrice(),
                 tickets.stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
                 user.getUserId()
         );
+    }
+
+    private void sendPaymentEvent(List<Ticket> tickets, Order savedOrder) {
+
+        if (tickets == null) {
+            tickets = new ArrayList<>();
+        }
+
+        String eventName = tickets.isEmpty() ? "Event" : tickets.getFirst().getEvent().getEventName();
+
+        String shortOrderId = savedOrder.getOrderId().toString().substring(0, 8);
+        String longDescription = String.format("Tickets: %s - Order %s", eventName, shortOrderId);
+
+        String rawDescriptor = Normalizer.normalize(eventName, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+
+        String statementDescriptor = rawDescriptor.replaceAll("[^a-zA-Z0-9 ]", "");
+
+        if (statementDescriptor.length() > 22) {
+            statementDescriptor = statementDescriptor.substring(0, 22);
+        }
+
+        var paymentRequestProducerDto = new PaymentRequestProducerDto(
+                savedOrder.getOrderId(),
+                savedOrder.getOrderPrice(),
+                savedOrder.getUser().getUserId(),
+                savedOrder.getUser().getEmail(),
+                longDescription,
+                statementDescriptor
+        );
+
+        log.info("Sending payments for order: {} | Descriptor: {}", savedOrder.getOrderId(), statementDescriptor);
+
+        paymentServiceProducer.publishPayment(paymentRequestProducerDto);
     }
 
     @Override

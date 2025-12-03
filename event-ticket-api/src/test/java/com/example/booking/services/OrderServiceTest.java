@@ -14,6 +14,7 @@ import com.example.booking.dto.TicketItemDto;
 import com.example.booking.exception.OrderNotFoundException;
 import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
 import com.example.booking.exception.TicketNotFoundException;
+import com.example.booking.messaging.interfaces.PaymentServiceProducer;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
@@ -44,14 +45,11 @@ class OrderServiceTest {
     private static final String TEST_USER_NAME = "Test User";
     private static final int DEFAULT_PAGE = 0;
     private static final int DEFAULT_PAGE_SIZE = 10;
-    private static final String SORT_PROPERTY_ORDER_PRICE = "orderPrice";
     private static final BigDecimal TICKET_PRICE_1 = BigDecimal.valueOf(100);
     private static final BigDecimal TICKET_PRICE_2 = BigDecimal.valueOf(150);
     private static final BigDecimal TOTAL_ORDER_PRICE = TICKET_PRICE_1.add(TICKET_PRICE_2);
     private static final BigDecimal MOCK_ORDER_PRICE = BigDecimal.valueOf(100L);
     private static final Long MOCK_CATEGORY_ID = 1L;
-    private static final int SINGLE_ITEM_COUNT = 1;
-    private static final long SINGLE_ITEM_COUNT_LONG = 1L;
 
     @InjectMocks
     private OrderServiceImpl orderServiceImpl;
@@ -66,11 +64,12 @@ class OrderServiceTest {
     private JwtUtils jwtUtils;
     @Mock
     private CacheManager cacheManager;
-
     @Mock
     private Cache remainingTicketsCache;
     @Mock
     private Cache ordersCache;
+    @Mock
+    private PaymentServiceProducer paymentServiceProducer;
 
     @Captor
     private ArgumentCaptor<Order> orderArgumentCaptor;
@@ -100,7 +99,7 @@ class OrderServiceTest {
         UUID eventId = UUID.randomUUID();
         CreateOrderRequest request = new CreateOrderRequest(List.of(ticketId1, ticketId2));
 
-        Event event = EventBuilder.anEvent().withEventId(eventId).build();
+        Event event = EventBuilder.anEvent().withEventId(eventId).withEventName("TestEvent").build();
 
         TicketCategory tc1 = TicketCategoryBuilder.aTicketCategory()
                 .withPrice(TICKET_PRICE_1)

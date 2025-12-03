@@ -7,7 +7,7 @@ public record PaymentRequestProducerDto(
         UUID orderId,
         BigDecimal amount,
         UUID userId,
-        String payerEmail, // Útil para o Gateway enviar o recibo
-        String description // Ex: "Pedido #1234 - 3 Ingressos"
-) {
-}
+        String userEmail,
+        String description,
+        String statementDescriptor
+) {}

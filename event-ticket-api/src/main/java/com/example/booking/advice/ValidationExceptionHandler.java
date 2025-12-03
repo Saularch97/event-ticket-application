@@ -83,6 +83,11 @@ public class ValidationExceptionHandler {
         return accessDeniedResponse(ex, request);
     }
 
+    @ExceptionHandler(MessageSerializationException.class)
+    public ResponseEntity<Object> handleMessageSerializationException(MessageSerializationException ex, HttpServletRequest request) {
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Processing Error", ex, request);
+    }
+
     private static ResponseEntity<Object> accessDeniedResponse(Exception ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.FORBIDDEN, "Forbidden", ex, request);
     }

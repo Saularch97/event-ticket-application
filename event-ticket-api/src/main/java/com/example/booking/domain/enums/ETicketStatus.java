@@ -1,11 +1,10 @@
 package com.example.booking.domain.enums;
 
 public enum ETicketStatus {
-    RESERVED,   // (1) Assento bloqueado, aguardando início do pagamento/Pix.
-    PENDING,    // (2) Pagamento enviado ao Gateway, aguardando Webhook (Async).
-    PAID,       // (3) Sucesso! Webhook confirmou o pagamento.
-    FAILED,     // (4) Cartão recusado ou erro no processamento.
-    EXPIRED,    // (5) O tempo do Pix expirou ou o usuário desistiu (TTL).
-    CANCELED,   // (6) Cancelado manualmente (pelo admin ou estorno).
-    REFUNDED    // (7) Reembolsado (ótimo para mostrar complexidade extra).
+    PENDING,    // (1) Criado pelo OrderService. Estoque abatido temporariamente.
+    PAID,       // (2) PaymentService confirmou sucesso.
+    FAILED,     // (3) PaymentService recusou (sem saldo, cartão inválido).
+    EXPIRED,    // (4) Cron Job do OrderService (Limpeza de pedidos travados).
+    CANCELED,   // (5) Ação manual (Admin) ou estorno.
+    REFUNDED    // (6) Pós-venda (Devolução do dinheiro).
 }

@@ -31,7 +31,7 @@ The system is designed using a microservices architecture with asynchronous mess
 - The recommendation service performs a geolocation query and returns nearby events.
 
 EXPLICAR NO README COMO FUNCIONA O RECONHECIMENTO DOS MICROSSERVIÇOS VIA EUREKA E API-GATEWAY DO SPRING
-
+TODO PARA OS CRON JOBS VER POST DO WAGNER DO LINKEDIN
 Once running access http://localhost:8081/swagger-ui/index.html to see the swagger documentation.
 ## ✅ TODO
 * [x] Implement **Security Headers** ([https://securityheaders.com/](https://securityheaders.com/))
@@ -58,11 +58,12 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [ ] Queues added with simple retry ack/nack
 Things to come:
 * [x] Include role permission in the controllers
-  * Use ABAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
+  * Use RBAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
 * [x] Have dev and prod environments in kubernetes
-* [x] Add micrometer + Grafana + Prometheus
+* [x] Add micrometer + Grafana + Prometheus + Loki
   * Take care with what endpoints you are going to expose in production via actuator
   * Actualy they have differences between dev and prod, dev erases all data and prod maitains all data
+  * Add loki for inspect logging
 * [ ] Add Payment method(AbacatePay)
   * Add imdepotency key in order to prevent  to call gateway
   * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
