@@ -1,5 +1,6 @@
 package com.example.booking.domain.entities;
 
+import com.example.booking.domain.enums.EOrderStatus;
 import com.example.booking.dto.OrderItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -29,14 +30,19 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "order_status")
+    @Enumerated(EnumType.STRING)
+    private EOrderStatus orderStatus;
+
     public Order() {
     }
 
-    public Order(UUID orderId, BigDecimal orderPrice, Set<Ticket> tickets, User user) {
+    public Order(UUID orderId, BigDecimal orderPrice, Set<Ticket> tickets, User user, EOrderStatus orderStatus) {
         this.orderId = orderId;
         this.orderPrice = orderPrice;
         this.tickets = tickets;
         this.user = user;
+        this.orderStatus = orderStatus;
     }
 
     public UUID getOrderId() {
@@ -70,6 +76,14 @@ public class Order {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public EOrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(EOrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 
     public static OrderItemDto toOrderItemDto(Order order) {

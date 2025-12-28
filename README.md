@@ -65,6 +65,7 @@ Things to come:
   * Actualy they have differences between dev and prod, dev erases all data and prod maitains all data
   * Add loki for inspect logging
 * [ ] Add Payment method(AbacatePay)
+  * Add queue for error and success
   * Add imdepotency key in order to prevent  to call gateway
   * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
