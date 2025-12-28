@@ -1,47 +1,70 @@
 package com.example.booking.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
 
-    private static final String QUEUE_NAME = "event-request-queue";
-    private static final String EXCHANGE_NAME = "event-request-exchange";
-    private static final String ROUTING_KEY = "event-request-queue-key";
+    private static final String EVENT_QUEUE = "event-request-queue";
+    private static final String EVENT_EXCHANGE = "event-request-exchange";
+    private static final String EVENT_RK = "event-request-queue-key";
 
-    @Bean
-    Queue eventRequestQueue() {
-        return new Queue(QUEUE_NAME, true, false, false);
+    @Value("${rabbitmq.payment.queue}")
+    private String paymentQueueName;
+
+    @Value("${rabbitmq.payment.exchange}")
+    private String paymentExchangeName;
+
+    @Value("${rabbitmq.payment.routing-key}")
+    private String paymentRoutingKey;
+
+    @Bean Queue eventRequestQueue() {
+        return new Queue(EVENT_QUEUE, true);
+    }
+
+    @Bean DirectExchange eventRequestExchange() {
+        return new DirectExchange(EVENT_EXCHANGE);
+    }
+
+    @Bean Binding eventRequestBinding() {
+        return BindingBuilder.bind(eventRequestQueue()).to(eventRequestExchange()).with(EVENT_RK);
     }
 
     @Bean
-    DirectExchange eventRequestExchange() {
-        return new DirectExchange(EXCHANGE_NAME, true, false);
+    Queue paymentQueue() {
+        return QueueBuilder.durable(paymentQueueName)
+                .withArgument("x-dead-letter-exchange", paymentExchangeName + ".dlx")
+                .withArgument("x-dead-letter-routing-key", paymentRoutingKey)
+                .build();
     }
 
     @Bean
-    Binding eventRequestBinding() {
-        return BindingBuilder.bind(eventRequestQueue())
-                            .to(eventRequestExchange())
-                            .with(ROUTING_KEY);
+    DirectExchange paymentExchange() {
+        return new DirectExchange(paymentExchangeName);
     }
 
     @Bean
-    Queue eventRequestDLQ() {
-        return new Queue(QUEUE_NAME + ".dlq", true);
+    Binding paymentBinding() {
+        return BindingBuilder.bind(paymentQueue())
+                .to(paymentExchange())
+                .with(paymentRoutingKey);
     }
 
     @Bean
-    DirectExchange eventRequestDLX() {
-        return new DirectExchange(EXCHANGE_NAME + ".dlx");
+    Queue paymentDLQ() {
+        return new Queue(paymentQueueName + ".dlq", true);
     }
 
     @Bean
-    Binding eventRequestDLQBinding() {
-        return BindingBuilder.bind(eventRequestDLQ())
-                            .to(eventRequestDLX())
-                            .with(ROUTING_KEY);
+    DirectExchange paymentDLX() {
+        return new DirectExchange(paymentExchangeName + ".dlx");
+    }
+
+    @Bean
+    Binding paymentDLQBinding() {
+        return BindingBuilder.bind(paymentDLQ()).to(paymentDLX()).with(paymentRoutingKey);
     }
 }
