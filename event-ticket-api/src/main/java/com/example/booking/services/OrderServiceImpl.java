@@ -2,13 +2,16 @@ package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.order.CreateOrderRequest;
+import com.example.booking.domain.enums.EOrderStatus;
+import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.OrderItemDto;
 import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.domain.entities.*;
+import com.example.booking.dto.PaymentRequestDto;
 import com.example.booking.dto.PaymentRequestProducerDto;
 import com.example.booking.exception.OrderNotFoundException;
-import com.example.booking.messaging.interfaces.PaymentServiceProducer;
 import com.example.booking.repositories.OrderRepository;
+import com.example.booking.services.client.PaymentClient;
 import com.example.booking.services.intefaces.OrderService;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
@@ -26,6 +29,8 @@ import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
@@ -37,29 +42,35 @@ public class OrderServiceImpl implements OrderService {
     private final TicketService ticketService;
     private final JwtUtils jwtUtils;
     private final CacheManager cacheManager;
-    private final PaymentServiceProducer paymentServiceProducer;
+    private final PaymentClient paymentClient;
 
-    public OrderServiceImpl(OrderRepository orderRepository, UserService userService, TicketService ticketService, JwtUtils jwtUtils, CacheManager cacheManager, PaymentServiceProducer paymentServiceProducer) {
+    public OrderServiceImpl(OrderRepository orderRepository,
+                            UserService userService,
+                            TicketService ticketService,
+                            JwtUtils jwtUtils,
+                            CacheManager cacheManager,
+                            PaymentClient paymentClient) {
         this.orderRepository = orderRepository;
         this.userService = userService;
         this.ticketService = ticketService;
         this.jwtUtils = jwtUtils;
         this.cacheManager = cacheManager;
-        this.paymentServiceProducer = paymentServiceProducer;
+        this.paymentClient = paymentClient;
     }
 
     @PreAuthorize("isAuthenticated()")
+    @Transactional
     public OrderItemDto createNewOrder(CreateOrderRequest dto) {
         UUID userId = jwtUtils.getAuthenticatedUserId();
         log.info("Creating new order for userId={}, ticketIds={}", userId, dto.ticketIds());
 
         User user = userService.findUserEntityById(userId);
         List<Ticket> tickets = ticketService.findAndValidateAvailableTickets(dto.ticketIds());
-
+        tickets.forEach(ticket -> ticket.setTicketStatus(ETicketStatus.PENDING));
         var ticketOrder = new Order();
         ticketOrder.setTickets(new HashSet<>(tickets));
-
         ticketOrder.setUser(user);
+        ticketOrder.setOrderStatus(EOrderStatus.PENDING_PAYMENT);
 
         Order savedOrder = orderRepository.save(ticketOrder);
         log.info("Order created successfully. orderId={}, userId={}, totalPrice={}", savedOrder.getOrderId(), user.getUserId(), ticketOrder.getOrderPrice());
@@ -67,54 +78,27 @@ public class OrderServiceImpl implements OrderService {
         updateTicketAssociations(tickets, savedOrder);
         evictCaches(tickets);
 
-        sendPaymentEvent(tickets, savedOrder);
+        PaymentRequestDto paymentDto = new PaymentRequestDto(
+                savedOrder.getOrderId(),
+                savedOrder.getOrderPrice(),
+                savedOrder.getTickets().stream().map(Ticket::toTicketItemDto).toList(),
+                savedOrder.getUser().getEmail()
+        );
+
+        String checkoutUrl = paymentClient.getCheckoutUrl(paymentDto);
 
         return new OrderItemDto(
                 savedOrder.getOrderId(),
                 savedOrder.getOrderPrice(),
-                tickets.stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
-                user.getUserId()
+                tickets.stream().map(Ticket::toTicketItemDto).collect(toList()),
+                user.getUserId(),
+                checkoutUrl
         );
-    }
-
-    private void sendPaymentEvent(List<Ticket> tickets, Order savedOrder) {
-
-        if (tickets == null) {
-            tickets = new ArrayList<>();
-        }
-
-        String eventName = tickets.isEmpty() ? "Event" : tickets.getFirst().getEvent().getEventName();
-
-        String shortOrderId = savedOrder.getOrderId().toString().substring(0, 8);
-        String longDescription = String.format("Tickets: %s - Order %s", eventName, shortOrderId);
-
-        String rawDescriptor = Normalizer.normalize(eventName, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "");
-
-        String statementDescriptor = rawDescriptor.replaceAll("[^a-zA-Z0-9 ]", "");
-
-        if (statementDescriptor.length() > 22) {
-            statementDescriptor = statementDescriptor.substring(0, 22);
-        }
-
-        var paymentRequestProducerDto = new PaymentRequestProducerDto(
-                savedOrder.getOrderId(),
-                savedOrder.getOrderPrice(),
-                savedOrder.getUser().getUserId(),
-                savedOrder.getUser().getEmail(),
-                longDescription,
-                statementDescriptor
-        );
-
-        log.info("Sending payments for order: {} | Descriptor: {}", savedOrder.getOrderId(), statementDescriptor);
-
-        paymentServiceProducer.publishPayment(paymentRequestProducerDto);
     }
 
     @Override
     @PreAuthorize("isAuthenticated()")
     public OrdersResponse getOrdersByUserId(UUID userId, int page, int pageSize) {
-        // TODO ver se realmente é necessário passa page e pageSize para construirCacheKey
         String cacheKey = userId + "-" + page + "-" + pageSize;
 
         var cache = cacheManager.getCache(CacheNames.ORDERS);
@@ -168,6 +152,21 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.deleteById(orderId);
         log.info("Order deleted successfully. orderId={}", orderId);
+    }
+
+    @Transactional
+    public void updateOrderStatusToPaid(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
+
+        if (order.getOrderStatus() == EOrderStatus.PENDING_PAYMENT) {
+            order.setOrderStatus(EOrderStatus.CONFIRMED);
+            order.getTickets().forEach(ticket -> {
+                ticket.setTicketStatus(ETicketStatus.PAID);
+            });
+            orderRepository.save(order);
+            log.info("Order status {} updated with success", orderId);
+        }
     }
 
     private void restoreStock(Set<Ticket> tickets) {

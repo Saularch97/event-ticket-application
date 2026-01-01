@@ -1,6 +1,7 @@
 package com.example.booking.repositories;
 
 import com.example.booking.domain.entities.Order;
+import com.example.booking.domain.enums.EOrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,4 +36,15 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     WHERE o.orderId = :orderId
     """)
     Optional<Order> findByIdWithFullAssociations(@Param("orderId") UUID orderId);
+
+    @Query("""
+    SELECT DISTINCT o FROM Order o
+    LEFT JOIN FETCH o.tickets t
+    WHERE o.orderStatus = :status 
+    AND o.createdAt < :limitDateTime
+    """)
+    List<Order> findAllByOrderStatusAndCreatedAtBefore(
+            @Param("status") EOrderStatus status,
+            @Param("limitDateTime") LocalDateTime limitDateTime
+    );
 }

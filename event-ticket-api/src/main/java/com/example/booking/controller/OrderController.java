@@ -57,7 +57,7 @@ public class OrderController {
                 .path("/{id}")
                 .buildAndExpand(orderItemDto.orderId())
                 .toUri();
-        return ResponseEntity.created(location).body(new CreateOrderResponse(orderItemDto.orderId()));
+        return ResponseEntity.created(location).body(new CreateOrderResponse(orderItemDto.orderId(), orderItemDto.checkoutUrl()));
     }
 
     @Operation(

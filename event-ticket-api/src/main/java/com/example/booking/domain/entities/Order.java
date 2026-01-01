@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,9 @@ public class Order {
 
     @Column(name = "order_price", precision = 19, scale = 2)
     private BigDecimal orderPrice;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(cascade = CascadeType.ALL, mappedBy="order", fetch = FetchType.LAZY)
@@ -45,6 +49,11 @@ public class Order {
         this.orderStatus = orderStatus;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     public UUID getOrderId() {
         return orderId;
     }
@@ -59,6 +68,10 @@ public class Order {
 
     public void setOrderPrice(BigDecimal orderPrice) {
         this.orderPrice = orderPrice;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public Set<Ticket> getTickets() {
@@ -91,7 +104,8 @@ public class Order {
                 order.getOrderId(),
                 order.getOrderPrice(),
                 order.getTickets().stream().map(Ticket::toTicketItemDto).collect(Collectors.toList()),
-                order.getUser().getUserId()
+                order.getUser().getUserId(),
+                null
         );
     }
 
@@ -105,4 +119,3 @@ public class Order {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
-

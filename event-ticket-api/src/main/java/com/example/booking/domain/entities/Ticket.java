@@ -178,7 +178,8 @@ public class Ticket {
                 ticket.getTicketId(),
                 ticket.getEvent().getEventId(),
                 ticket.getTicketOwner().getUserId(),
-                ticket.getTicketCategory().getTicketCategoryId()
+                ticket.getTicketCategory().getTicketCategoryId(),
+                ticket.getTicketPrice()
         );
     }
 }

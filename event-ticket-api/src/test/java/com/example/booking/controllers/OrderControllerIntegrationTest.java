@@ -8,7 +8,7 @@ import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
-import com.example.booking.messaging.EventRequestProducerImpl;
+import com.example.booking.messaging.producer.EventRequestProducerImpl;
 import com.example.booking.repositories.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -10,4 +10,5 @@ public interface OrderService {
     OrderItemDto createNewOrder(CreateOrderRequest dto);
     OrdersResponse getOrdersByUserId(UUID userId, int page, int pageSize);
     void deleteOrder(UUID orderId);
+    void updateOrderStatusToPaid(UUID orderId);
 }

@@ -1,8 +1,7 @@
-package com.example.booking.messaging;
+package com.example.booking.messaging.producer;
 
-import com.example.booking.dto.PaymentRequestProducerDto;
-import com.example.booking.exception.MessageSerializationException;
-import com.example.booking.messaging.interfaces.PaymentServiceProducer;
+import com.example.booking.dto.RecommendEventDto;
+import com.example.booking.messaging.interfaces.EventRequestProducer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -14,35 +13,36 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PaymentServiceProducerImpl implements PaymentServiceProducer {
+public class EventRequestProducerImpl implements EventRequestProducer {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentServiceProducerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(EventRequestProducerImpl.class);
 
-    @Value("${rabbitmq.payment.exchange}")
+    @Value("${rabbitmq.recommendation.exchange}")
     private String exchangeName;
 
-    @Value("${rabbitmq.payment.routing-key}")
+    @Value("${rabbitmq.recommendation.routing-key}")
     private String routingKey;
 
     private final AmqpTemplate amqpTemplate;
     private final ObjectMapper objectMapper;
 
-    public PaymentServiceProducerImpl(AmqpTemplate amqpTemplate, ObjectMapper objectMapper) {
+    public EventRequestProducerImpl(AmqpTemplate amqpTemplate, ObjectMapper objectMapper) {
         this.amqpTemplate = amqpTemplate;
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public void publishPayment(PaymentRequestProducerDto dto) {
+    public void publishEventRecommendation(RecommendEventDto dto) {
         String jsonPayload;
+
         try {
             jsonPayload = objectMapper.writeValueAsString(dto);
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize PaymentRequestProducerDto for RabbitMQ. DTO: {}. Error: {}", dto, e.getMessage(), e);
-            throw new MessageSerializationException(e);
+            log.error("Error: Failed to serialize RecommendEventDto. Data will be lost. DTO: {}. Error: {}", dto, e.getMessage(), e);
+            return;
         }
 
-        log.info("Publishing payment request. Exchange: {}, RoutingKey: {}, Payload: {}",
+        log.info("Publishing event recommendation. Exchange: {}, RoutingKey: {}, Payload: {}",
                 exchangeName, routingKey, jsonPayload);
 
         try {
@@ -52,16 +52,15 @@ public class PaymentServiceProducerImpl implements PaymentServiceProducer {
                     jsonPayload,
                     message -> {
                         message.getMessageProperties().setContentType(MessageProperties.CONTENT_TYPE_JSON);
-                        message.getMessageProperties().setCorrelationId(dto.orderId().toString());
                         return message;
                     }
             );
 
-            log.info("Payment request published successfully. OrderId: {}", dto.orderId());
+            log.info("Event recommendation published successfully.");
 
         } catch (AmqpException e) {
-            log.error("Failed to publish payment message to RabbitMQ. Exchange: {}, RoutingKey: {}, Payload: {}. Error: {}",
-                    exchangeName, routingKey, jsonPayload, e.getMessage(), e);
+            log.error("Failed to publish recommendation to RabbitMQ. Service might be down. Payload: {}. Error: {}",
+                    jsonPayload, e.getMessage(), e);
         }
     }
 }

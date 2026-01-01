@@ -1,0 +1,1 @@
+ALTER TABLE tb_orders ALTER COLUMN order_status TYPE VARCHAR(100);

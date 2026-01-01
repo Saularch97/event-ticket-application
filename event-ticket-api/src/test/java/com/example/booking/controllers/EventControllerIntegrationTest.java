@@ -5,7 +5,7 @@ import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest
 import com.example.booking.domain.entities.Role;
 import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
-import com.example.booking.messaging.EventRequestProducerImpl;
+import com.example.booking.messaging.producer.EventRequestProducerImpl;
 import com.example.booking.repositories.RoleRepository;
 import com.example.booking.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -14,7 +14,6 @@ import com.example.booking.dto.TicketItemDto;
 import com.example.booking.exception.OrderNotFoundException;
 import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
 import com.example.booking.exception.TicketNotFoundException;
-import com.example.booking.messaging.interfaces.PaymentServiceProducer;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;

@@ -64,8 +64,8 @@ Things to come:
   * Take care with what endpoints you are going to expose in production via actuator
   * Actualy they have differences between dev and prod, dev erases all data and prod maitains all data
   * Add loki for inspect logging
-* [ ] Add Payment method(AbacatePay)
-  * Add queue for error and success
+* [ ] Add Payment method(Stripe)
+  * Add webhook for notifying of payment dne
   * Add imdepotency key in order to prevent  to call gateway
   * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
 * [ ] Use **Virtual Threads** (Project Loom) where applicable
