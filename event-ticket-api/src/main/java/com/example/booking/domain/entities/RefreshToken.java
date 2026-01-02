@@ -4,12 +4,13 @@ package com.example.booking.domain.entities;
 import java.time.Instant;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "tb_refreshtoken")
 public class RefreshToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private long id;
 
     @OneToOne

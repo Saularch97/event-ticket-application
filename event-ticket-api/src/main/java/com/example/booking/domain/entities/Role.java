@@ -4,12 +4,13 @@ package com.example.booking.domain.entities;
 import com.example.booking.dto.RoleItemDto;
 import com.example.booking.domain.enums.ERole;
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "tb_roles")
 public class Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     private Integer id;
 
     @Enumerated(EnumType.STRING)

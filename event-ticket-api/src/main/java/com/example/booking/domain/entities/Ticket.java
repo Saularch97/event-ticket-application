@@ -4,6 +4,7 @@ import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.TicketItemDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,7 +15,7 @@ import java.util.UUID;
 public class Ticket {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     @Column(name = "ticket_id")
     private UUID ticketId;
 

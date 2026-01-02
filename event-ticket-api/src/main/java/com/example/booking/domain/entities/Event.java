@@ -4,7 +4,7 @@ import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventSummaryDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-
+import org.hibernate.annotations.UuidGenerator;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -13,7 +13,7 @@ import java.util.*;
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @UuidGenerator(style = UuidGenerator.Style.TIME)
     @Column(name = "event_id")
     private UUID eventId;
     @Column(name = "event_location")
