@@ -10,7 +10,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Table(name = "tb_roles")
 public class Role {
     @Id
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Enumerated(EnumType.STRING)

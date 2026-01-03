@@ -13,40 +13,13 @@ spec:
         app: booking
     spec:
       containers:
-      - name: booking-app
-        image: event-ticket-application_booking
-        ports:
-        - containerPort: 8080
-        env:
-        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-          value: "http://discovery-service:8761/eureka/"
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/bookingdb"
-        - name: SPRING_DATA_REDIS_HOST
-          value: "redis"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq"
-        - name: SPRING_RABBITMQ_PORT
-          value: "5672"
-        - name: PAYMENT_SERVICE_HOST
-          value: "payment-processor-service"
-        - name: PAYMENT_SERVICE_PORT
-          value: "8083"
-        - name: SPRING_DATASOURCE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: username
-        - name: SPRING_DATASOURCE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: postgres-secret
-              key: password
-        - name: JWT_PRIVATE_KEY
-          valueFrom:
-            secretKeyRef:
-              name: jwt-secret
-              key: private-key
+        - name: booking-app
+          image: event-ticket-application_booking
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: app-env
 ---
 apiVersion: v1
 kind: Service
@@ -56,5 +29,5 @@ spec:
   selector:
     app: booking
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080

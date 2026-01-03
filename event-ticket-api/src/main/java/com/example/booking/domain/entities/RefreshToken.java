@@ -10,7 +10,7 @@ import org.hibernate.annotations.UuidGenerator;
 @Table(name = "tb_refreshtoken")
 public class RefreshToken {
     @Id
-    @UuidGenerator(style = UuidGenerator.Style.TIME)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @OneToOne

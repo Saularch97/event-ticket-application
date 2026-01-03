@@ -3,6 +3,10 @@ load('ext://k8s_yaml_glob', 'k8s_yaml_glob')
 k8s_yaml_glob('./infra/common/*.yaml')
 k8s_yaml_glob('./infra/dev/*.yaml')  
 
+local("kubectl create secret generic app-env --from-env-file=.env --dry-run=client -o yaml | kubectl apply -f -")
+
+watch_file('.env')
+
 docker_build('event-ticket-application_discovery', './servicediscovery')
 docker_build('event-ticket-application_recomendation', './recomendation')
 docker_build('event-ticket-application_apigateway', './api-gateway')

@@ -114,3 +114,9 @@ How do you handle retries in your Java APIs today?
 
 Idempotency for paymnts:
 ![img_1.png](img_1.png)
+
+TODO: testar fluxo de pagamentos com env CHECK
+TODO: Testar recomendação de eventos CHECK
+TODO: registrar payment no api gateway
+TODO: Não commitar .env geral! Usar gitignore CHECK
+TODO: Documentar como rodar processo de pagamento localmente 

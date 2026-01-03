@@ -17,21 +17,9 @@ spec:
           image: event-ticket-application_payment
           ports:
             - containerPort: 8083
-          env:
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: "http://discovery-service:8761/eureka/"
-            - name: SPRING_RABBITMQ_HOST
-              value: "rabbitmq"
-            - name: STRIPE_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: stripe-secret
-                  key: secret-key
-            - name: STRIPE_WEBHOOK_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: stripe-secret
-                  key: webhook-secret
+          envFrom:
+            - secretRef:
+                name: app-env
 ---
 apiVersion: v1
 kind: Service

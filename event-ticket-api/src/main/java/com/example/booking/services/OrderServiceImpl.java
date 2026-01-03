@@ -165,7 +165,7 @@ public class OrderServiceImpl implements OrderService {
                 ticket.setTicketStatus(ETicketStatus.PAID);
             });
             orderRepository.save(order);
-            log.info("Order status {} updated with success", orderId);
+            log.info("Order status {} updated with success", order.getOrderStatus());
         }
     }
 
