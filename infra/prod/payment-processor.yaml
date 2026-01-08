@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-processor-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-processor
+  template:
+    metadata:
+      labels:
+        app: payment-processor
+    spec:
+      containers:
+        - name: payment-app
+          image: saul97arch/payment-processor
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - secretRef:
+                name: app-env
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-processor-service
+spec:
+  selector:
+    app: payment-processor
+  ports:
+    - port: 8083
+      targetPort: 8083

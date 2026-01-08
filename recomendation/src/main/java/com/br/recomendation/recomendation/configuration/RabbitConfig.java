@@ -1,7 +1,5 @@
 package com.br.recomendation.recomendation.configuration;
 
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +12,9 @@ public class RabbitConfig {
     private static final String EXCHANGE_NAME = "event-request-exchange";
     private static final String ROUTING_KEY = "event-request-queue-key";
 
+    public static final String DLQ_QUEUE = "booking-dlq";
+    public static final String DLQ_EXCHANGE = "booking-dlx";
+
     @Bean
     Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
@@ -21,7 +22,10 @@ public class RabbitConfig {
 
     @Bean
     Queue eventRequestQueue() {
-        return new Queue(QUEUE_NAME, true, false, false);
+        return QueueBuilder.durable(QUEUE_NAME)
+                .withArgument("x-dead-letter-exchange", DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLQ_QUEUE)
+                .build();
     }
 
     @Bean
@@ -32,25 +36,7 @@ public class RabbitConfig {
     @Bean
     Binding eventRequestBinding() {
         return BindingBuilder.bind(eventRequestQueue())
-                            .to(eventRequestExchange())
-                            .with(ROUTING_KEY);
+                .to(eventRequestExchange())
+                .with(ROUTING_KEY);
     }
-
-    @Bean
-    Queue eventRequestDLQ() {
-        return new Queue(QUEUE_NAME + ".dlq", true);
-    }
-
-    @Bean
-    DirectExchange eventRequestDLX() {
-        return new DirectExchange(EXCHANGE_NAME + ".dlx");
-    }
-
-    @Bean
-    Binding eventRequestDLQBinding() {
-        return BindingBuilder.bind(eventRequestDLQ())
-                            .to(eventRequestDLX())
-                            .with(ROUTING_KEY);
-    }
-
 }

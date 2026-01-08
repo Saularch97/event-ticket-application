@@ -68,12 +68,12 @@ Things to come:
   * Add webhook for notifying of payment dne
   * Add imdepotency key in order to prevent  to call gateway
   * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
-* [ ] Use **Virtual Threads** (Project Loom) where applicable
+* [x] Use **Virtual Threads** (Project Loom) where applicable (Falta testar)
 * [ ] Implement Circuit break(Resilience4j)
 * [ ] Add **QR code generation** for tickets
-* [ ] Possibility to decouple auth to an service to make an api gateway to authentication
+* [ ] Possibility to decouple auth to an service to make an api gateway to authentication (deixar como adendo para futuro no TODO)
 * [x] Implement structured **logging** in the application
-* [ ] Integrate a **payment method** (e.de., Stripe)
+* [x] Integrate a **payment method** (e.de., Stripe)
   * Use RabittMq for payment
 * [ ] Study about hazelcast
 ---
