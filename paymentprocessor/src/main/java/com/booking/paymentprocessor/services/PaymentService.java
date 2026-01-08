@@ -1,7 +1,9 @@
 package com.booking.paymentprocessor.services;
 
 import com.booking.paymentprocessor.dto.PaymentRequestDto;
+import com.booking.paymentprocessor.services.interfaces.PaymentInterface;
 import com.stripe.Stripe;
+import com.stripe.exception.ApiConnectionException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
@@ -9,13 +11,15 @@ import com.stripe.param.checkout.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.util.stream.Collectors;
 
 @Service
-public class PaymentService {
+public class PaymentService implements PaymentInterface {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
@@ -31,30 +35,33 @@ public class PaymentService {
     @PostConstruct
     public void init() {
         Stripe.apiKey = secretKey;
-        log.info("Stripe API Key inicializada com sucesso.");
+        log.info("Stripe API Key initialized successfully.");
     }
 
+    @Override
+    @Retryable(
+            retryFor = { ApiConnectionException.class },
+            backoff = @Backoff(delay = 2000, multiplier = 2)
+    )
     public Session createStripeSession(PaymentRequestDto dto) throws StripeException {
-        // 2. Log de entrada
-        log.info("Iniciando criação de sessão Stripe para OrderId: {} com {} itens.", dto.orderId(), dto.items().size());
+        log.info("Starting Stripe session creation for OrderId: {} with {} items.", dto.orderId(), dto.items().size());
 
         var lineItems = dto.items().stream()
                 .map(item -> {
-                    // 3. Proteção contra Preço Nulo (Defensive Programming)
                     long amountInCents = 0L;
                     if (item.price() != null) {
                         amountInCents = item.price().movePointRight(2).longValue();
                     } else {
-                        log.warn("Item com TicketId {} veio com preço NULO! Usando 0.00", item.ticketId());
+                        log.warn("Item with TicketId {} has NULL price! Defaulting to 0.00", item.ticketId());
                     }
 
                     return SessionCreateParams.LineItem.builder()
                             .setQuantity(1L)
                             .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                                     .setCurrency("BRL")
-                                    .setUnitAmount(amountInCents) // Usando a variável segura
+                                    .setUnitAmount(amountInCents)
                                     .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                            .setName("Ingresso") // Mudei para português, opcional
+                                            .setName("Ticket")
                                             .setDescription("Ref Ticket: " + item.ticketId())
                                             .build())
                                     .build())
@@ -77,8 +84,8 @@ public class PaymentService {
 
         Session session = Session.create(params, options);
 
-        log.info("Sessão Stripe criada com sucesso! SessionID: {}", session.getId());
-        log.debug("URL de Checkout gerada: {}", session.getUrl());
+        log.info("Stripe session created successfully! SessionID: {}", session.getId());
+        log.debug("Checkout URL generated: {}", session.getUrl());
 
         return session;
     }

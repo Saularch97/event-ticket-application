@@ -64,7 +64,7 @@ Things to come:
   * Take care with what endpoints you are going to expose in production via actuator
   * Actualy they have differences between dev and prod, dev erases all data and prod maitains all data
   * Add loki for inspect logging
-* [ ] Add Payment method(Stripe)
+* [x] Add Payment method(Stripe)
   * Add webhook for notifying of payment dne
   * Add imdepotency key in order to prevent  to call gateway
   * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
@@ -115,8 +115,14 @@ How do you handle retries in your Java APIs today?
 Idempotency for paymnts:
 ![img_1.png](img_1.png)
 
-TODO: testar fluxo de pagamentos com env CHECK
-TODO: Testar recomendação de eventos CHECK
+
 TODO: registrar payment no api gateway
-TODO: Não commitar .env geral! Usar gitignore CHECK
+TODO: arrumar webhook pra não usar jackson OK
 TODO: Documentar como rodar processo de pagamento localmente 
+TODO: Testar unitáriamente e teste de integração pra módulo pagameno
+
+
+How to run application:
+
+Have stripe CLI installed and run in terminal:(Ver de rodar um script talvez para aplicar, ou documentar onde colocar chave de webhook)
+stripe listen --forward-to localhost:8083/payments/webhooks

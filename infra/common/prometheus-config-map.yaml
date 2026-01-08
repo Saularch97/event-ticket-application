@@ -21,3 +21,4 @@ data:
             - 'discovery-service:8761'   
             - 'recomendation-service:8082' 
             - 'booking-service:8080'
+            - 'payment-processor-service:8083'

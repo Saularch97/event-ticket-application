@@ -22,10 +22,9 @@ public class PaymentConfirmationConsumer {
 
     @RabbitListener(queues = RabbitMQConfig.ORDER_PAID_QUEUE)
     public void handlePaymentConfirmation(String orderId) {
-        log.info("Message received from queue with confirmation of order {}", orderId);
-
         try {
             orderService.updateOrderStatusToPaid(UUID.fromString(orderId));
+            log.info("Message received and order {} successfully updated to paid!", orderId);
         } catch (Exception e) {
             log.error("Error processing order {}: {}", orderId, e.getMessage());
             throw e;
