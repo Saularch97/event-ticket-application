@@ -14,6 +14,11 @@ java {
 	}
 }
 
+ext {
+	set('springCloudVersion', "2025.0.0")
+}
+
+
 repositories {
 	mavenCentral()
 }
@@ -25,10 +30,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.retry:spring-retry'
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-amqp-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
 }
 
 tasks.named('test') {
