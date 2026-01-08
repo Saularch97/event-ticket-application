@@ -55,7 +55,7 @@ Once running access http://localhost:8081/swagger-ui/index.html to see the swagg
 * [x] Add Spring Validation (`spring-boot-starter-validation`) for DTOs
 * [x] Implement `@RestControllerAdvice` for error handling
 * [x] Add **tests** (unit and integration)
-* [ ] Queues added with simple retry ack/nack
+* [x] Queues added with simple retry ack/nack
 Things to come:
 * [x] Include role permission in the controllers
   * Use RBAC for role atriubute for instace, just the user can edit his account details(Role-Based Access Control)
@@ -116,10 +116,7 @@ Idempotency for paymnts:
 ![img_1.png](img_1.png)
 
 
-TODO: registrar payment no api gateway
-TODO: arrumar webhook pra não usar jackson OK
 TODO: Documentar como rodar processo de pagamento localmente 
-TODO: Testar unitáriamente e teste de integração pra módulo pagameno
 
 
 How to run application:

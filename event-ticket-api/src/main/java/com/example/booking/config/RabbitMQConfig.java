@@ -15,9 +15,31 @@ public class RabbitMQConfig {
     public static final String ORDER_STATUS_EXCHANGE = "order-status-exchange";
     public static final String ORDER_PAID_RK = "order.paid";
 
+    public static final String DLQ_QUEUE = "booking-dlq";
+    public static final String DLQ_EXCHANGE = "booking-dlx";
+
+    @Bean
+    Queue deadLetterQueue() {
+        return QueueBuilder.durable(DLQ_QUEUE).build();
+    }
+
+    @Bean
+    FanoutExchange deadLetterExchange() {
+        return new FanoutExchange(DLQ_EXCHANGE);
+    }
+
+    @Bean
+    Binding deadLetterBinding() {
+        return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange());
+    }
+
+
     @Bean
     Queue eventRequestQueue() {
-        return new Queue(EVENT_QUEUE, true);
+        return QueueBuilder.durable(EVENT_QUEUE)
+                .withArgument("x-dead-letter-exchange", DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLQ_QUEUE)
+                .build();
     }
 
     @Bean
@@ -33,10 +55,12 @@ public class RabbitMQConfig {
                 .with(EVENT_RK);
     }
 
-
     @Bean
     Queue orderPaidQueue() {
-        return QueueBuilder.durable(ORDER_PAID_QUEUE).build();
+        return QueueBuilder.durable(ORDER_PAID_QUEUE)
+                .withArgument("x-dead-letter-exchange", DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLQ_QUEUE)
+                .build();
     }
 
     @Bean
