@@ -1,7 +1,7 @@
 package com.booking.paymentprocessor.services;
 
 import com.booking.paymentprocessor.dto.PaymentRequestDto;
-import com.booking.paymentprocessor.services.interfaces.PaymentInterface;
+import com.booking.paymentprocessor.services.interfaces.PaymentService;
 import com.stripe.Stripe;
 import com.stripe.exception.ApiConnectionException;
 import com.stripe.exception.StripeException;
@@ -19,9 +19,9 @@ import jakarta.annotation.PostConstruct;
 import java.util.stream.Collectors;
 
 @Service
-public class PaymentService implements PaymentInterface {
+public class PaymentServiceImpl implements PaymentService {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private static final Logger log = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     @Value("${stripe.secretKey}")
     private String secretKey;
