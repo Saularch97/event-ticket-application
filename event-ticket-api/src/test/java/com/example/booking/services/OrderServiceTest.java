@@ -67,8 +67,6 @@ class OrderServiceTest {
     private Cache remainingTicketsCache;
     @Mock
     private Cache ordersCache;
-    @Mock
-    private PaymentServiceProducer paymentServiceProducer;
 
     @Captor
     private ArgumentCaptor<Order> orderArgumentCaptor;

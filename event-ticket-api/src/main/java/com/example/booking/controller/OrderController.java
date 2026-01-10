@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @Tag(name = "Orders", description = "Endpoints for creating and managing ticket orders.")
 @RestController
-@RequestMapping("/api/orders") // Changed to /api/orders for REST consistency
+@RequestMapping("/api/orders")
 @SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 

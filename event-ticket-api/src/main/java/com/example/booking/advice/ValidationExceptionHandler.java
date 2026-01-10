@@ -88,6 +88,11 @@ public class ValidationExceptionHandler {
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Processing Error", ex, request);
     }
 
+    @ExceptionHandler(PaymentServiceUnavailableException.class)
+    public ResponseEntity<Object> handlePaymentServiceUnavailableException(Exception ex, HttpServletRequest request) {
+        return errorResponse(HttpStatus.SERVICE_UNAVAILABLE, "Service unavailable", ex, request);
+    }
+
     private static ResponseEntity<Object> accessDeniedResponse(Exception ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.FORBIDDEN, "Forbidden", ex, request);
     }
