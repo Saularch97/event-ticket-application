@@ -1,0 +1,24 @@
+meta {
+  name: Perform ticket check-in
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:8081/booking/api/tickets/checkin/{{ticketId}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  
+  
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

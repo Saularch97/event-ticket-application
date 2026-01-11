@@ -2,6 +2,8 @@ package com.example.booking.services.intefaces;
 
 import com.example.booking.dto.CityDataDto;
 
+import java.util.Optional;
+
 public interface GeoService {
-    CityDataDto searchForCityData(String cityName);
+    Optional<CityDataDto> searchForCityData(String cityName);
 }

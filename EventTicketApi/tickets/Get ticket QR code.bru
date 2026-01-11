@@ -1,0 +1,27 @@
+meta {
+  name: Get ticket QR code
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8081/booking/api/tickets/{{ticketId}}/qrcode
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "eventId": "UUID-do-evento",
+    "quantity": 2
+  }
+  
+}
+
+script:pre-request {
+  const cookie = bru.getVar("cookie");
+  
+  if(cookie) {
+    req.setHeader("Cookie", cookie)
+  }
+}

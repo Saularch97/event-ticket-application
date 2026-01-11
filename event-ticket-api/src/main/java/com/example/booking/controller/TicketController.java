@@ -5,6 +5,7 @@ import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.controller.response.ticket.AvailableTicketsResponse;
 import com.example.booking.controller.response.ticket.CreateTicketResponse;
 import com.example.booking.controller.response.ticket.TicketsResponse;
+import com.example.booking.services.intefaces.QrCodeService;
 import com.example.booking.services.intefaces.TicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -28,9 +30,11 @@ import java.util.UUID;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final QrCodeService qrCodeService;
 
-    public TicketController(TicketService ticketService) {
+    public TicketController(TicketService ticketService, QrCodeService qrCodeService) {
         this.ticketService = ticketService;
+        this.qrCodeService = qrCodeService;
     }
 
     @Operation(
@@ -143,4 +147,36 @@ public class TicketController {
         var ticketsDto = ticketService.getTicketsByCategoryId(categoryId, page, pageSize);
         return ResponseEntity.ok(new TicketsResponse(ticketsDto.tickets(), ticketsDto.page(), ticketsDto.pageSize(), ticketsDto.totalPages(), ticketsDto.totalElements()));
     }
+
+    // TODO write tests
+    @Operation(summary = "Generate QR Code for a ticket")
+    @GetMapping(value = "/{ticketId}/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getTicketQrCode(@PathVariable UUID ticketId) {
+
+        String qrContent = ticketId.toString();
+
+        byte[] image = qrCodeService.generateQrCodeImage(qrContent, 250, 250);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(image);
+    }
+
+    // TODO deixar aberto pra todos certo? No spring security
+    @Operation(summary = "Verify ticket validity")
+    @GetMapping("/verify/{ticketId}")
+    public ResponseEntity<ValidationResponse> verifyTicket(@PathVariable UUID ticketId) {
+        boolean isValid = ticketService.validateTicket(ticketId);
+
+        return ResponseEntity.ok(new ValidationResponse(ticketId, isValid));
+    }
+
+    @Operation(summary = "Perform ticket check-in")
+    @PostMapping("/checkin/{ticketId}")
+    public ResponseEntity<Void> checkInTicket(@PathVariable UUID ticketId) {
+        ticketService.performCheckIn(ticketId);
+        return ResponseEntity.ok().build();
+    }
+
+    public record ValidationResponse(UUID ticketId, boolean valid) {}
 }

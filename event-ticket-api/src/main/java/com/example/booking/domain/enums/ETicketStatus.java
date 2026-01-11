@@ -6,5 +6,6 @@ public enum ETicketStatus {
     FAILED,
     EXPIRED,
     CANCELED,
-    REFUNDED
+    REFUNDED,
+    USED
 }

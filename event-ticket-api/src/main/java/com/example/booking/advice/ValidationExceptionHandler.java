@@ -5,6 +5,7 @@ import com.example.booking.exception.base.ConflictException;
 import com.example.booking.exception.base.NotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -65,6 +66,11 @@ public class ValidationExceptionHandler {
 
     @ExceptionHandler(RefreshTokenEmptyException.class)
     public ResponseEntity<Object> handleRefreshTokenEmptyException(RefreshTokenEmptyException ex, HttpServletRequest request) {
+        return badRequestResponse(ex, request);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Object> handleBadRequestException(BadRequestException ex, HttpServletRequest request) {
         return badRequestResponse(ex, request);
     }
 

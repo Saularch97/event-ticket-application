@@ -57,6 +57,9 @@ public class Ticket {
     @Column(length = 20)
     private ETicketStatus ticketStatus;
 
+    @Column(name = "used_at")
+    private LocalDateTime usedAt;
+
     public Order getOrder() {
         return order;
     }
@@ -172,6 +175,14 @@ public class Ticket {
 
     public void setTicketStatus(ETicketStatus ticketStatus) {
         this.ticketStatus = ticketStatus;
+    }
+
+    public LocalDateTime getUsedAt() {
+        return usedAt;
+    }
+
+    public void setUsedAt(LocalDateTime usedAt) {
+        this.usedAt = usedAt;
     }
 
     public static TicketItemDto toTicketItemDto(Ticket ticket) {

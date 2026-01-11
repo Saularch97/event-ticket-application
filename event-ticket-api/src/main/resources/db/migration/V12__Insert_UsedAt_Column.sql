@@ -1,0 +1,1 @@
+ALTER TABLE tb_tickets ADD COLUMN used_at TIMESTAMP;

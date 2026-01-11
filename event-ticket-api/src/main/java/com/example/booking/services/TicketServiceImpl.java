@@ -10,10 +10,7 @@ import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
-import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
-import com.example.booking.exception.TicketCategoryNotFoundException;
-import com.example.booking.exception.TicketCategorySoldOutException;
-import com.example.booking.exception.TicketNotFoundException;
+import com.example.booking.exception.*;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.TicketCategoryService;
@@ -21,6 +18,7 @@ import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
@@ -31,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -184,6 +183,38 @@ public class TicketServiceImpl implements TicketService {
         }
 
         return tickets;
+    }
+
+    // TODO unit test
+    @Override
+    public Boolean validateTicket(UUID ticketId) {
+        return ticketRepository.findById(ticketId)
+                .map(ticket -> {
+                    return ticket.getTicketStatus() == ETicketStatus.PAID;
+                })
+                .orElse(false);
+    }
+
+
+    @Transactional
+    public void performCheckIn(UUID ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(TicketNotFoundException::new);
+
+        if (ticket.getTicketStatus() == ETicketStatus.USED) {
+            throw new TicketAlreadyUsedException("Ticket already used! Entry denied.");
+        }
+
+        if (ticket.getTicketStatus() != ETicketStatus.PAID) {
+            throw new TicketNotPaidException("Ticket is not valid for entry (Status: " + ticket.getTicketStatus() + ")");
+        }
+
+        ticket.setTicketStatus(ETicketStatus.USED);
+        ticket.setUsedAt(LocalDateTime.now());
+
+        ticketRepository.save(ticket);
+
+        log.info("Check-in successful for TicketID: {}", ticketId);
     }
 
     private static Ticket buildTicket(User user, Event event, TicketCategory ticketCategory) {

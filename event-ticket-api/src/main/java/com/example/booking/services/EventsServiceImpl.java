@@ -64,16 +64,18 @@ public class EventsServiceImpl implements EventsService {
         log.info("Creating event. UserId={}, EventName={}", userId, request.eventName());
 
         var user = userService.findUserEntityById(userId);
-
         var event = buildEventForRequest(request, user);
 
-        CityDataDto cityData = geoService.searchForCityData(event.getEventLocation());
+        CityDataDto cityData = geoService.searchForCityData(event.getEventLocation())
+                .orElse(null);
 
         Event savedEvent = eventRepository.save(event);
         ticketCategoryService.createTicketCategoriesForEvent(event, request.ticketCategories());
+
         publishEventRecommendation(savedEvent, cityData);
 
         log.info("Event created successfully. EventId={}, OwnerId={}", savedEvent.getEventId(), userId);
+
         return Event.toEventItemDto(savedEvent);
     }
 
@@ -213,10 +215,22 @@ public class EventsServiceImpl implements EventsService {
     }
 
     private void publishEventRecommendation(Event savedEvent, CityDataDto cityData) {
+
+        if (cityData == null) {
+            log.warn("Skipping recommendation publication for eventId={}. Reason: No geolocation data available.", savedEvent.getEventId());
+            return;
+        }
+
         try {
-            RecommendEventDto recommendEventDto = new RecommendEventDto(savedEvent.getEventId(), cityData.latitude(), cityData.longitude());
+            RecommendEventDto recommendEventDto = new RecommendEventDto(
+                    savedEvent.getEventId(),
+                    cityData.latitude(),
+                    cityData.longitude()
+            );
+
             producer.publishEventRecommendation(recommendEventDto);
             log.info("Event recommendation published for eventId={}", savedEvent.getEventId());
+
         } catch (JsonProcessingException e) {
             log.warn("Failed to send event recommendation to queue for eventId={}", savedEvent.getEventId(), e);
         }

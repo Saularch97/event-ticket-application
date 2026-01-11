@@ -18,4 +18,6 @@ public interface TicketService {
     TicketsDto getTicketsByCategoryId(Integer categoryId, int page, int pageSize);
     List<Ticket> findTicketsWithEventDetails(List<UUID> ticketIds);
     List<Ticket> findAndValidateAvailableTickets(List<UUID> ticketIds);
+    public Boolean validateTicket(UUID ticketId);
+    void performCheckIn(UUID ticketId);
 }
