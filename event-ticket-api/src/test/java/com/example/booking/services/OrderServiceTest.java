@@ -9,12 +9,15 @@ import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.order.CreateOrderRequest;
 import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.domain.entities.*;
+import com.example.booking.domain.enums.EOrderStatus;
+import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.OrderItemDto;
 import com.example.booking.dto.TicketItemDto;
 import com.example.booking.exception.OrderNotFoundException;
 import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
 import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.OrderRepository;
+import com.example.booking.services.client.PaymentClient;
 import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
@@ -49,6 +52,7 @@ class OrderServiceTest {
     private static final BigDecimal TOTAL_ORDER_PRICE = TICKET_PRICE_1.add(TICKET_PRICE_2);
     private static final BigDecimal MOCK_ORDER_PRICE = BigDecimal.valueOf(100L);
     private static final Long MOCK_CATEGORY_ID = 1L;
+    private static final String MOCK_CHECKOUT_URL = "https://checkout.stripe.com/pay/cs_test_123";
 
     @InjectMocks
     private OrderServiceImpl orderServiceImpl;
@@ -67,6 +71,8 @@ class OrderServiceTest {
     private Cache remainingTicketsCache;
     @Mock
     private Cache ordersCache;
+    @Mock
+    private PaymentClient paymentClient;
 
     @Captor
     private ArgumentCaptor<Order> orderArgumentCaptor;
@@ -130,6 +136,7 @@ class OrderServiceTest {
         savedOrder.setTickets(new HashSet<>(tickets));
         savedOrder.setOrderPrice(TOTAL_ORDER_PRICE);
 
+        when(paymentClient.getCheckoutUrl(any())).thenReturn(MOCK_CHECKOUT_URL);
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
         when(userService.findUserEntityById(userId)).thenReturn(user);
         when(ticketService.findAndValidateAvailableTickets(request.ticketIds())).thenReturn(tickets);
@@ -331,5 +338,71 @@ class OrderServiceTest {
 
         verify(cacheManager, never()).getCache(anyString());
         verify(orderRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void updateOrderStatusToPaid_shouldUpdateOrderAndTickets_whenStatusIsPending() {
+        UUID orderId = UUID.randomUUID();
+
+        TicketCategory dummyCategory = TicketCategoryBuilder.aTicketCategory()
+                .withPrice(BigDecimal.TEN)
+                .build();
+
+        Ticket ticket1 = TicketBuilder.aTicket()
+                .withTicketCategory(dummyCategory)
+                .build();
+        ticket1.setTicketStatus(ETicketStatus.PENDING);
+
+        Ticket ticket2 = TicketBuilder.aTicket()
+                .withTicketCategory(dummyCategory)
+                .build();
+        ticket2.setTicketStatus(ETicketStatus.PENDING);
+
+        Order order = OrderBuilder.anOrder()
+                .withOrderId(orderId)
+                .withTickets(Set.of(ticket1, ticket2))
+                .build();
+
+        order.setOrderStatus(EOrderStatus.PENDING_PAYMENT);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        orderServiceImpl.updateOrderStatusToPaid(orderId);
+
+        assertThat(order.getOrderStatus()).isEqualTo(EOrderStatus.CONFIRMED);
+
+        assertThat(ticket1.getTicketStatus()).isEqualTo(ETicketStatus.PAID);
+        assertThat(ticket2.getTicketStatus()).isEqualTo(ETicketStatus.PAID);
+
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    void updateOrderStatusToPaid_shouldThrowOrderNotFoundException_whenOrderDoesNotExist() {
+        UUID orderId = UUID.randomUUID();
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderServiceImpl.updateOrderStatusToPaid(orderId))
+                .isInstanceOf(OrderNotFoundException.class);
+
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void updateOrderStatusToPaid_shouldDoNothing_whenOrderIsNotPendingPayment() {
+        UUID orderId = UUID.randomUUID();
+        Order order = OrderBuilder.anOrder()
+                .withOrderId(orderId)
+                .build();
+
+        order.setOrderStatus(EOrderStatus.CONFIRMED);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        orderServiceImpl.updateOrderStatusToPaid(orderId);
+
+        assertThat(order.getOrderStatus()).isEqualTo(EOrderStatus.CONFIRMED);
+
+        verify(orderRepository, never()).save(any());
     }
 }

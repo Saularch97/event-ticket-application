@@ -99,6 +99,17 @@ public class ValidationExceptionHandler {
         return errorResponse(HttpStatus.SERVICE_UNAVAILABLE, "Service unavailable", ex, request);
     }
 
+    @ExceptionHandler(InvalidTicketValidationCodeException.class)
+    public ResponseEntity<Object> handleInvalidTicketValidationCodeException(InvalidTicketValidationCodeException ex, HttpServletRequest request) {
+        return badRequestResponse(ex, request);
+    }
+
+    @ExceptionHandler(TicketNotPaidException.class)
+    public ResponseEntity<Object> handleTicketNotPaidException(
+            TicketNotPaidException ex, HttpServletRequest request) {
+        return errorResponse(HttpStatus.PAYMENT_REQUIRED, "Payment Required", ex, request);
+    }
+
     private static ResponseEntity<Object> accessDeniedResponse(Exception ex, HttpServletRequest request) {
         return errorResponse(HttpStatus.FORBIDDEN, "Forbidden", ex, request);
     }

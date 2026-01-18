@@ -1,5 +1,6 @@
 package com.example.booking.controller;
 
+import com.example.booking.controller.request.ticket.CheckInRequest;
 import com.example.booking.dto.TicketsDto;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.controller.response.ticket.AvailableTicketsResponse;
@@ -148,21 +149,19 @@ public class TicketController {
         return ResponseEntity.ok(new TicketsResponse(ticketsDto.tickets(), ticketsDto.page(), ticketsDto.pageSize(), ticketsDto.totalPages(), ticketsDto.totalElements()));
     }
 
-    // TODO write tests
     @Operation(summary = "Generate QR Code for a ticket")
     @GetMapping(value = "/{ticketId}/qrcode", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> getTicketQrCode(@PathVariable UUID ticketId) {
 
-        String qrContent = ticketId.toString();
+        String actualToken = ticketService.generateNewValidationCode(ticketId);
 
-        byte[] image = qrCodeService.generateQrCodeImage(qrContent, 250, 250);
+        byte[] image = qrCodeService.generateQrCodeImage(actualToken, 300, 300);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
                 .body(image);
     }
 
-    // TODO deixar aberto pra todos certo? No spring security
     @Operation(summary = "Verify ticket validity")
     @GetMapping("/verify/{ticketId}")
     public ResponseEntity<ValidationResponse> verifyTicket(@PathVariable UUID ticketId) {
@@ -173,8 +172,12 @@ public class TicketController {
 
     @Operation(summary = "Perform ticket check-in")
     @PostMapping("/checkin/{ticketId}")
-    public ResponseEntity<Void> checkInTicket(@PathVariable UUID ticketId) {
-        ticketService.performCheckIn(ticketId);
+    public ResponseEntity<Void> checkInTicket(
+            @PathVariable UUID ticketId,
+            @RequestBody CheckInRequest request
+    ) {
+        ticketService.performCheckIn(ticketId, request.validationCode());
+
         return ResponseEntity.ok().build();
     }
 

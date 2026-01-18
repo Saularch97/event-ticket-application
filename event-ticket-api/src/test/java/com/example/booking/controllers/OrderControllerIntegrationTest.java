@@ -10,6 +10,7 @@ import com.example.booking.domain.entities.User;
 import com.example.booking.domain.enums.ERole;
 import com.example.booking.messaging.producer.EventRequestProducerImpl;
 import com.example.booking.repositories.*;
+import com.example.booking.services.client.PaymentClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -47,6 +48,9 @@ public class OrderControllerIntegrationTest extends AbstractIntegrationTest {
 
     @MockitoBean
     private EventRequestProducerImpl eventPublisher;
+
+    @MockitoBean
+    private PaymentClient paymentClient;
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;

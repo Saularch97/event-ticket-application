@@ -70,14 +70,13 @@ Things to come:
   * Add compesation pattern(Saga), if payment fails the ticket reserve needs to be undone
 * [x] Use **Virtual Threads** (Project Loom) where applicable (Falta testar)
 * [x] Implement Circuit break(Resilience4j)
-* [ ] Add **QR code generation** for tickets
-  * generate hash to validate ticket at each access In progress
+* [x] Add **QR code generation** for tickets
+  * generate hash to validate ticket at each access DONE
   * unit test everthing!
-* [ ] See if the other status written in enums needs to be used
+* [x] See if the other status written in enums needs to be used
 * [x] Implement structured **logging** in the application
 * [x] Integrate a **payment method** (e.de., Stripe)
   * Use RabittMq for payment
-* [ ] Study about hazelcast
 ---
 // TODO deixar claro no README que o build das apps é com Java 22 e o runtime com Java 24 para aproveitar as melhorias de performance do mesmo
 🧾 Stop Breaking Things. Make Your Java APIs Idempotent.
@@ -125,3 +124,6 @@ How to run application:
 
 Have stripe CLI installed and run in terminal:(Ver de rodar um script talvez para aplicar, ou documentar onde colocar chave de webhook)
 stripe listen --forward-to localhost:8083/payments/webhooks
+
+See about .devcontainer for run project
+put links of swagger in readme

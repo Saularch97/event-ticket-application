@@ -6,12 +6,11 @@ import com.example.booking.builders.TicketCategoryBuilder;
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.*;
+import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.RemainingTicketCategoryDto;
 import com.example.booking.dto.TicketItemDto;
 import com.example.booking.dto.TicketsDto;
-import com.example.booking.exception.TicketCategoryNotFoundException;
-import com.example.booking.exception.TicketCategorySoldOutException;
-import com.example.booking.exception.TicketNotFoundException;
+import com.example.booking.exception.*;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.TicketCategoryService;
@@ -273,6 +272,147 @@ class TicketServiceTest {
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void performCheckIn_ShouldCheckInSuccessfully_WhenCodeIsValidAndStatusIsPaid() {
+        UUID ticketId = UUID.randomUUID();
+        String validCode = "ABCD";
+
+        Ticket ticket = mockTicket();
+        ticket.setTicketId(ticketId);
+        ticket.setValidationCode(validCode);
+        ticket.setTicketStatus(ETicketStatus.PAID);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        ticketsService.performCheckIn(ticketId, validCode);
+
+        assertEquals(ETicketStatus.USED, ticket.getTicketStatus());
+        assertNotNull(ticket.getUsedAt());
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void performCheckIn_ShouldThrowTicketNotFoundException_WhenTicketDoesNotExist() {
+        UUID ticketId = UUID.randomUUID();
+        String code = "ANY";
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+
+        assertThrows(TicketNotFoundException.class,
+                () -> ticketsService.performCheckIn(ticketId, code));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void performCheckIn_ShouldThrowInvalidTicketValidationCodeException_WhenCodeDoesNotMatch() {
+        UUID ticketId = UUID.randomUUID();
+        String correctCode = "ABCD";
+        String wrongCode = "WRONG";
+
+        Ticket ticket = mockTicket();
+        ticket.setValidationCode(correctCode);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThrows(InvalidTicketValidationCodeException.class,
+                () -> ticketsService.performCheckIn(ticketId, wrongCode));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void performCheckIn_ShouldThrowInvalidTicketValidationCodeException_WhenTicketCodeIsNull() {
+        UUID ticketId = UUID.randomUUID();
+
+        Ticket ticket = mockTicket();
+        ticket.setValidationCode(null);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThrows(InvalidTicketValidationCodeException.class,
+                () -> ticketsService.performCheckIn(ticketId, "CODE"));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void performCheckIn_ShouldThrowTicketAlreadyUsedException_WhenStatusIsUsed() {
+        UUID ticketId = UUID.randomUUID();
+        String code = "ABCD";
+
+        Ticket ticket = mockTicket();
+        ticket.setValidationCode(code);
+        ticket.setTicketStatus(ETicketStatus.USED);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThrows(TicketAlreadyUsedException.class,
+                () -> ticketsService.performCheckIn(ticketId, code));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void performCheckIn_ShouldThrowTicketNotPaidException_WhenStatusIsPending() {
+        UUID ticketId = UUID.randomUUID();
+        String code = "ABCD";
+
+        Ticket ticket = mockTicket();
+        ticket.setValidationCode(code);
+        ticket.setTicketStatus(ETicketStatus.PENDING);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThrows(TicketNotPaidException.class,
+                () -> ticketsService.performCheckIn(ticketId, code));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void generateNewValidationCode_ShouldGenerateCodeAndSave_WhenTicketIsValid() {
+        UUID ticketId = UUID.randomUUID();
+        Ticket ticket = mockTicket();
+        ticket.setTicketId(ticketId);
+        ticket.setTicketStatus(ETicketStatus.PAID);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        String newCode = ticketsService.generateNewValidationCode(ticketId);
+
+        assertNotNull(newCode);
+        assertEquals(4, newCode.length());
+        assertEquals(newCode, ticket.getValidationCode());
+        verify(ticketRepository).save(ticket);
+    }
+
+    @Test
+    void generateNewValidationCode_ShouldThrowTicketNotFoundException_WhenTicketDoesNotExist() {
+        UUID ticketId = UUID.randomUUID();
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+
+        assertThrows(TicketNotFoundException.class,
+                () -> ticketsService.generateNewValidationCode(ticketId));
+
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void generateNewValidationCode_ShouldThrowTicketAlreadyUsedException_WhenTicketIsUsed() {
+        UUID ticketId = UUID.randomUUID();
+        Ticket ticket = mockTicket();
+        ticket.setTicketStatus(ETicketStatus.USED);
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+        assertThrows(TicketAlreadyUsedException.class,
+                () -> ticketsService.generateNewValidationCode(ticketId));
+
+        verify(ticketRepository, never()).save(any());
     }
 
     private Ticket mockTicket() {

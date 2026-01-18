@@ -18,7 +18,6 @@ import com.example.booking.services.intefaces.TicketService;
 import com.example.booking.services.intefaces.UserService;
 import com.example.booking.util.JwtUtils;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
@@ -197,24 +196,45 @@ public class TicketServiceImpl implements TicketService {
 
 
     @Transactional
-    public void performCheckIn(UUID ticketId) {
+    public void performCheckIn(UUID ticketId, String validationCode) {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(TicketNotFoundException::new);
 
+        if (ticket.getValidationCode() == null || !ticket.getValidationCode().equalsIgnoreCase(validationCode)) {
+            throw new InvalidTicketValidationCodeException("Invalid validation code for ticket " + ticket.getTicketId());
+        }
+
         if (ticket.getTicketStatus() == ETicketStatus.USED) {
-            throw new TicketAlreadyUsedException("Ticket already used! Entry denied.");
+            throw new TicketAlreadyUsedException("Ticket already used!");
         }
 
         if (ticket.getTicketStatus() != ETicketStatus.PAID) {
-            throw new TicketNotPaidException("Ticket is not valid for entry (Status: " + ticket.getTicketStatus() + ")");
+            throw new TicketNotPaidException("Ticket is not paid. Status: " + ticket.getTicketStatus());
         }
 
         ticket.setTicketStatus(ETicketStatus.USED);
         ticket.setUsedAt(LocalDateTime.now());
 
         ticketRepository.save(ticket);
-
         log.info("Check-in successful for TicketID: {}", ticketId);
+    }
+
+    public String generateNewValidationCode(UUID ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(TicketNotFoundException::new);
+
+        if (ticket.getTicketStatus() == ETicketStatus.USED) {
+            throw new TicketAlreadyUsedException("Ticket already used. Cannot generate new QR Code.");
+        }
+
+        String newToken = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+
+        ticket.setValidationCode(newToken);
+        ticketRepository.save(ticket);
+
+        log.info("New validation token generated for Ticket {}: {}", ticketId, newToken);
+
+        return newToken;
     }
 
     private static Ticket buildTicket(User user, Event event, TicketCategory ticketCategory) {

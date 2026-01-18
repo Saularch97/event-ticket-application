@@ -60,6 +60,9 @@ public class Ticket {
     @Column(name = "used_at")
     private LocalDateTime usedAt;
 
+    @Column(name = "validation_code")
+    private String validationCode;
+
     public Order getOrder() {
         return order;
     }
@@ -183,6 +186,14 @@ public class Ticket {
 
     public void setUsedAt(LocalDateTime usedAt) {
         this.usedAt = usedAt;
+    }
+
+    public String getValidationCode() {
+        return validationCode;
+    }
+
+    public void setValidationCode(String validationCode) {
+        this.validationCode = validationCode;
     }
 
     public static TicketItemDto toTicketItemDto(Ticket ticket) {

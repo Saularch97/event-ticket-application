@@ -1,8 +1,10 @@
 package com.example.booking.exception;
 
-import jakarta.ws.rs.BadRequestException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-public class TicketNotPaidException extends BadRequestException {
+@ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
+public class TicketNotPaidException extends RuntimeException {
     public TicketNotPaidException(String message) {
         super(message);
     }

@@ -67,7 +67,6 @@ class PaymentCircuitBreakerTest {
     @Test
     @WithMockUser
     void shouldReturn503_WhenPaymentServiceIsDown() throws Exception {
-        // Mock do Wiremock retornando erro 500
         stubFor(WireMock.post(urlEqualTo("/payments/checkout"))
                 .willReturn(aResponse()
                         .withStatus(500)
@@ -94,7 +93,7 @@ class PaymentCircuitBreakerTest {
     void shouldReturn503_WhenPaymentServiceTimesOut() throws Exception {
         stubFor(WireMock.post(urlEqualTo("/payments/checkout"))
                 .willReturn(aResponse()
-                        .withFixedDelay(5000)
+                        .withFixedDelay(11000)
                         .withStatus(200)));
 
         String requestJson = """

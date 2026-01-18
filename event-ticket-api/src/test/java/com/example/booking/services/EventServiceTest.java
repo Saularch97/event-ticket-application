@@ -129,11 +129,8 @@ public class EventServiceTest {
 
     private static final String UPDATE_EVENT_NAME = "Evento Atualizado";
     private static final String UPDATE_EVENT_LOCATION = "Nova Localização";
-    private static final String UPDATE_CAT_NAME_VIP = "Nova VIP";
-    private static final int UPDATE_CAT_TICKETS_PISTA = 200;
     private static final String UPDATE_DUMMY_NAME = "Nome";
     private static final String UPDATE_DUMMY_LOCATION = "Local";
-    private static final double UPDATE_DUMMY_PRICE = 100.0;
 
     private Event event;
     private CreateEventRequest createEventRequest;
@@ -229,7 +226,7 @@ public class EventServiceTest {
 
         when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
-        when(geoService.searchForCityData(event.getEventLocation())).thenReturn(cityDataDto);
+        when(geoService.searchForCityData(event.getEventLocation())).thenReturn(Optional.of(cityDataDto));
         when(eventRepository.save(any(Event.class))).thenReturn(event);
 
         EventItemDto result = eventsService.createEvent(createEventRequest);
@@ -315,7 +312,7 @@ public class EventServiceTest {
 
         when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
-        when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
+        when(geoService.searchForCityData(any())).thenReturn(Optional.of(cityDataDto));
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
             Event e = invocation.getArgument(0);
             e.setTicketCategories(ticketCategories);
@@ -370,7 +367,7 @@ public class EventServiceTest {
 
         when(userService.findUserEntityById(user.getUserId())).thenReturn(user);
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(user.getUserId());
-        when(geoService.searchForCityData(any())).thenReturn(cityDataDto);
+        when(geoService.searchForCityData(any())).thenReturn(Optional.of(cityDataDto));
         when(ticketCategoryService.createTicketCategoriesForEvent(any(), any())).thenReturn(ticketCategories);
         when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> {
             Event e = invocation.getArgument(0);

@@ -1,18 +1,14 @@
 package com.example.booking.controllers;
 
 import com.example.booking.controller.request.event.CreateEventRequest;
+import com.example.booking.controller.request.ticket.CheckInRequest; // Import Adicionado
 import com.example.booking.controller.request.ticket.CreateTicketCategoryRequest;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
-import com.example.booking.domain.entities.Event;
-import com.example.booking.domain.entities.Role;
-import com.example.booking.domain.entities.TicketCategory;
-import com.example.booking.domain.entities.User;
+import com.example.booking.domain.entities.*; // Import genérico para Ticket
 import com.example.booking.domain.enums.ERole;
+import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.messaging.producer.EventRequestProducerImpl;
-import com.example.booking.repositories.EventRepository;
-import com.example.booking.repositories.RoleRepository;
-import com.example.booking.repositories.TicketCategoryRepository;
-import com.example.booking.repositories.UserRepository;
+import com.example.booking.repositories.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -61,6 +57,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private TicketCategoryRepository ticketCategoryRepository;
     @Autowired private EventRepository eventRepository;
+    @Autowired private TicketRepository ticketRepository;
 
     private String jwt;
     private UUID eventId;
@@ -69,7 +66,6 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
-
         Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
                 .orElseThrow(() -> new IllegalStateException("Role ADMIN não encontrada."));
         User adminUser = new User();
@@ -123,16 +119,102 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
         int initialCategoryCount = categoryBefore.getAvailableCategoryTickets();
         int initialEventCount = eventBefore.getAvailableTickets();
 
-        emmitTicketRequest(this.vipCategoryId)
-                .andExpect(status().isCreated());
+        emmitTicketRequest(this.vipCategoryId).andExpect(status().isCreated());
 
         TicketCategory categoryAfter = ticketCategoryRepository.findById(this.vipCategoryId).orElseThrow();
         Event eventAfter = eventRepository.findById(this.eventId).orElseThrow();
 
         assertThat(categoryAfter.getAvailableCategoryTickets(), is(initialCategoryCount - 1));
-
         assertThat(eventAfter.getAvailableTickets(), is(initialEventCount - 1));
     }
+
+
+    @Test
+    void shouldDeleteTicketSuccessfully() throws Exception {
+        MvcResult result = emmitTicketRequest(this.vipCategoryId)
+                .andExpect(status().isCreated())
+                .andReturn();
+        UUID ticketId = getUuidFromMvcResult(result, "ticketId");
+
+        mockMvc.perform(delete(TICKET_URL + "/" + ticketId)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get(USER_TICKETS_URL)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tickets.length()", is(0)));
+    }
+
+    @Test
+    void shouldGetAvailableTicketsForEvent() throws Exception {
+        mockMvc.perform(get(TICKET_URL + "/available/" + this.eventId)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.availableTickets", hasSize(2))) // VIP e Pista
+                .andExpect(jsonPath("$.availableTickets[?(@.categoryName == 'VIP')].remainingTickets", contains(2)))
+                .andExpect(jsonPath("$.availableTickets[?(@.categoryName == 'Pista')].remainingTickets", contains(3)));
+    }
+
+    @Test
+    void shouldGetTicketsByCategoryId() throws Exception {
+        emmitTicketRequest(this.vipCategoryId);
+        emmitTicketRequest(this.pistaCategoryId);
+
+        mockMvc.perform(get(TICKET_URL + "/category/" + this.vipCategoryId)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tickets.length()", is(1)))
+                .andExpect(jsonPath("$.tickets[0].ticketCategoryId", is(this.vipCategoryId.intValue())));
+    }
+
+    @Test
+    void shouldGenerateQrCodeImage() throws Exception {
+        MvcResult result = emmitTicketRequest(this.vipCategoryId).andReturn();
+        UUID ticketId = getUuidFromMvcResult(result, "ticketId");
+
+        mockMvc.perform(get(TICKET_URL + "/" + ticketId + "/qrcode")
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_PNG));
+    }
+
+    @Test
+    void shouldVerifyTicketValidity() throws Exception {
+        MvcResult result = emmitTicketRequest(this.vipCategoryId).andReturn();
+        UUID ticketId = getUuidFromMvcResult(result, "ticketId");
+
+        mockMvc.perform(get(TICKET_URL + "/verify/" + ticketId)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ticketId", is(ticketId.toString())))
+                .andExpect(jsonPath("$.valid", is(false)));
+    }
+
+    @Test
+    void shouldCheckInTicketSuccessfully() throws Exception {
+        MvcResult result = emmitTicketRequest(this.vipCategoryId).andReturn();
+        UUID ticketId = getUuidFromMvcResult(result, "ticketId");
+
+        mockMvc.perform(get(TICKET_URL + "/" + ticketId + "/qrcode")
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt)))
+                .andExpect(status().isOk());
+
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow();
+
+        ticket.setTicketStatus(ETicketStatus.PAID);
+        ticketRepository.save(ticket);
+
+        String validationCode = ticket.getValidationCode();
+        CheckInRequest checkInRequest = new CheckInRequest(validationCode);
+
+        mockMvc.perform(post(TICKET_URL + "/checkin/" + ticketId)
+                        .cookie(new Cookie(JWT_COOKIE_NAME, jwt))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(checkInRequest)))
+                .andExpect(status().isOk());
+    }
+
 
     private String obtainJwt() throws Exception {
         MvcResult result = mockMvc.perform(post(AUTH_SIGNIN_URL)
@@ -157,7 +239,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(eventRequest)))
                 .andExpect(status().isCreated()).andReturn();
-        return getUuidFromMvcResult(result);
+        return getUuidFromMvcResult(result, "eventId");
     }
 
     private ResultActions emmitTicketRequest(Long ticketCategoryId) throws Exception {
@@ -176,9 +258,9 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
                 .orElseThrow(() -> new IllegalStateException("Categoria " + name + " não encontrada."));
     }
 
-    private UUID getUuidFromMvcResult(MvcResult result) throws Exception {
+    private UUID getUuidFromMvcResult(MvcResult result, String fieldName) throws Exception {
         String jsonResponse = result.getResponse().getContentAsString();
         JsonNode root = objectMapper.readTree(jsonResponse);
-        return UUID.fromString(root.get("eventId").asText());
+        return UUID.fromString(root.get(fieldName).asText());
     }
 }
