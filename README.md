@@ -77,6 +77,8 @@ Things to come:
 * [x] Implement structured **logging** in the application
 * [x] Integrate a **payment method** (e.de., Stripe)
   * Use RabittMq for payment
+
+* [] Generate new README with doc of how to use API and new drawing of architeture! Document all features in this doc!
 ---
 // TODO deixar claro no README que o build das apps é com Java 22 e o runtime com Java 24 para aproveitar as melhorias de performance do mesmo
 🧾 Stop Breaking Things. Make Your Java APIs Idempotent.
@@ -127,3 +129,43 @@ stripe listen --forward-to localhost:8083/payments/webhooks
 
 See about .devcontainer for run project
 put links of swagger in readme
+
+
+```mermaid
+graph TD
+    %% Estilos e Definições de Nós
+    classDef database fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef service fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,stroke-dasharray: 5 5;
+    classDef queue fill:#ffebee,stroke:#c62828,stroke-width:2px;
+
+    %% Atores e Entrada
+    Client([👤 Client / Mobile]) -->|HTTPS| Gateway[🌐 API Gateway]
+
+    %% Camada de Serviços
+    subgraph "Backend Cluster"
+        Gateway -->|REST| TicketAPI[🎫 Ticket API]
+        Gateway -.->|REST| RecService
+        
+        %% Ticket API conexões
+        TicketAPI -->|R/W| Redis[(🔴 Cache / Redis)]
+        TicketAPI -->|SQL| Postgres[(🐘 Postgres)]
+        TicketAPI -->|Geocoding| GeoAPI{{🌍 Geolocation API}}
+        
+        %% Mensageria Assíncrona
+        TicketAPI -.->|Publica Evento| RabbitMQ[🐰 RabbitMQ]
+        
+        %% Consumidores
+        RabbitMQ -.->|Consome| PaymentService[💳 Payment Service]
+        RabbitMQ -.->|Consome| RecService[📢 Event Recommendation Service]
+        
+        %% Persistência dos outros serviços
+        RecService -->|NoSQL| Mongo[(🍃 MongoDB)]
+    end
+
+    %% Aplicação de Classes
+    class Redis,Postgres,Mongo database;
+    class TicketAPI,PaymentService,RecService service;
+    class GeoAPI external;
+    class RabbitMQ queue;
+```

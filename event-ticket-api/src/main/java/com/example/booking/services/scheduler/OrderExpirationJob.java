@@ -39,7 +39,7 @@ public class OrderExpirationJob {
             });
 
             orderRepository.save(order);
-            log.info("Pedido {} expirado por falta de pagamento.", order.getOrderId());
+            log.info("Order {} expired", order.getOrderId());
         }
     }
 }
