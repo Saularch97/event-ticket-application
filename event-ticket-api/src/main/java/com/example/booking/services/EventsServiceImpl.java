@@ -141,7 +141,7 @@ public class EventsServiceImpl implements EventsService {
             return new EventNotFoundException();
         });
     }
-    // TODO faz sentido isso???
+
     @Override
     @PreAuthorize("isAuthenticated()")
     public EventsDto listAllAvailableUserEvents(int page, int pageSize) {

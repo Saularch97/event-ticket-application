@@ -184,7 +184,6 @@ public class TicketServiceImpl implements TicketService {
         return tickets;
     }
 
-    // TODO unit test
     @Override
     public Boolean validateTicket(UUID ticketId) {
         return ticketRepository.findById(ticketId)
