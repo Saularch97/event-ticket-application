@@ -6,6 +6,6 @@ import org.springframework.http.HttpStatus;
 public class EventNotFoundException extends NotFoundException {
 
     public EventNotFoundException() {
-        super(HttpStatus.NOT_FOUND, "Event not found");
+        super("Event not found");
     }
 }

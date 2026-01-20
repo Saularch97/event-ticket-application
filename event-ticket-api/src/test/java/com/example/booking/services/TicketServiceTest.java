@@ -120,7 +120,7 @@ class TicketServiceTest {
         TicketItemDto result = ticketsService.emmitTicket(request);
 
         assertNotNull(result);
-        verify(eventService, times(1)).decrementTicket(testEventId);
+        verify(eventService, times(1)).decrementAvailableTickets(testEventId);
         verify(ticketCategoryService, times(1)).reserveOneTicket(testTicketCategoryId);
     }
 
@@ -139,7 +139,7 @@ class TicketServiceTest {
                 () -> ticketsService.emmitTicket(request));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
-        verify(eventService, never()).decrementTicket(any());
+        verify(eventService, never()).decrementAvailableTickets(any());
     }
 
     @Test
@@ -157,7 +157,7 @@ class TicketServiceTest {
                 () -> ticketsService.emmitTicket(request));
 
         verify(ticketRepository, never()).save(any(Ticket.class));
-        verify(eventService, never()).decrementTicket(any());
+        verify(eventService, never()).decrementAvailableTickets(any());
     }
 
     @Test

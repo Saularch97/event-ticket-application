@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 
 public class RoleNotFoundException extends NotFoundException {
     public RoleNotFoundException() {
-        super(HttpStatus.NOT_FOUND, "Role not found!");
+        super("Role not found!");
     }
 }

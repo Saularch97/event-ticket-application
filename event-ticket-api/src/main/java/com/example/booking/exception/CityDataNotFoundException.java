@@ -5,6 +5,6 @@ import org.springframework.http.HttpStatus;
 
 public class CityDataNotFoundException extends NotFoundException {
     public CityDataNotFoundException() {
-        super(HttpStatus.NOT_FOUND, "City data not found!");
+        super("City data not found!");
     }
 }

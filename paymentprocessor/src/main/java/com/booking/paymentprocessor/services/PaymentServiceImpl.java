@@ -69,10 +69,14 @@ public class PaymentServiceImpl implements PaymentService {
                 })
                 .collect(Collectors.toList());
 
+
+        Long expiresAt = (System.currentTimeMillis() / 1000) + (30 * 60);
+
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl + "?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(cancelUrl)
+                .setExpiresAt(expiresAt)
                 .setClientReferenceId(dto.orderId().toString())
                 .setCustomerEmail(dto.userEmail())
                 .addAllLineItem(lineItems)

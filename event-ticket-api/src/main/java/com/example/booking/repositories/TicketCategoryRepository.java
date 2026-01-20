@@ -19,4 +19,8 @@ public interface TicketCategoryRepository extends JpaRepository<TicketCategory, 
     @Query("UPDATE TicketCategory tc SET tc.availableCategoryTickets = tc.availableCategoryTickets - 1 " +
             "WHERE tc.ticketCategoryId = :id AND tc.availableCategoryTickets > 0")
     int decrementQuantity(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE TicketCategory tc SET tc.availableCategoryTickets = tc.availableCategoryTickets + 1 WHERE tc.ticketCategoryId = :id")
+    void incrementQuantity(@Param("id") Long id);
 }

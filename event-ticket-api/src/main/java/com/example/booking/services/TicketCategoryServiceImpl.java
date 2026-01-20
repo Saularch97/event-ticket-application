@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TicketCategoryServiceImpl implements TicketCategoryService {
@@ -59,6 +60,12 @@ public class TicketCategoryServiceImpl implements TicketCategoryService {
         }
 
         return repository.findById(categoryId).orElseThrow(() -> new TicketCategoryNotFoundException(categoryId));
+    }
+
+    @Override
+    @Transactional
+    public void incrementTicketCategory(Long ticketCategoryId) {
+        repository.incrementQuantity(ticketCategoryId);
     }
 
     private TicketCategory createTicketCategory(CreateTicketCategoryRequest request, Event event) {

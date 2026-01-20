@@ -5,7 +5,6 @@ import com.example.booking.controller.request.event.UpdateEventRequest;
 import com.example.booking.dto.EventItemDto;
 import com.example.booking.dto.EventsDto;
 import com.example.booking.domain.entities.Event;
-import jakarta.validation.Valid;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,5 +29,7 @@ public interface EventsService {
 
     void updateEvent(UUID id, UpdateEventRequest request);
 
-    void decrementTicket(UUID eventId);
+    void decrementAvailableTickets(UUID eventId);
+
+    void incrementAvailableTickets(UUID eventId);
 }

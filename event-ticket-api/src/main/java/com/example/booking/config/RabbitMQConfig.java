@@ -18,6 +18,9 @@ public class RabbitMQConfig {
     public static final String DLQ_QUEUE = "booking-dlq";
     public static final String DLQ_EXCHANGE = "booking-dlx";
 
+    public static final String PAYMENT_FAILED_QUEUE = "payment-failed-queue";
+    public static final String PAYMENT_FAILED_RK = "payment.failed";
+
     @Bean
     Queue deadLetterQueue() {
         return QueueBuilder.durable(DLQ_QUEUE).build();
@@ -32,7 +35,6 @@ public class RabbitMQConfig {
     Binding deadLetterBinding() {
         return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange());
     }
-
 
     @Bean
     Queue eventRequestQueue() {
@@ -49,11 +51,10 @@ public class RabbitMQConfig {
 
     @Bean
     Binding eventRequestBinding() {
-        return BindingBuilder
-                .bind(eventRequestQueue())
-                .to(eventRequestExchange())
-                .with(EVENT_RK);
+        return BindingBuilder.bind(eventRequestQueue()).to(eventRequestExchange()).with(EVENT_RK);
     }
+
+    // ... (Seus Beans de Order Paid mantidos) ...
 
     @Bean
     Queue orderPaidQueue() {
@@ -70,9 +71,22 @@ public class RabbitMQConfig {
 
     @Bean
     Binding orderPaidBinding() {
+        return BindingBuilder.bind(orderPaidQueue()).to(orderStatusExchange()).with(ORDER_PAID_RK);
+    }
+
+    @Bean
+    Queue paymentFailedQueue() {
+        return QueueBuilder.durable(PAYMENT_FAILED_QUEUE)
+                .withArgument("x-dead-letter-exchange", DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLQ_QUEUE)
+                .build();
+    }
+
+    @Bean
+    Binding paymentFailedBinding() {
         return BindingBuilder
-                .bind(orderPaidQueue())
+                .bind(paymentFailedQueue())
                 .to(orderStatusExchange())
-                .with(ORDER_PAID_RK);
+                .with(PAYMENT_FAILED_RK);
     }
 }

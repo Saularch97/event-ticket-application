@@ -66,7 +66,7 @@ public class TicketServiceImpl implements TicketService {
 
         var ticketCategory = ticketCategoryService.reserveOneTicket(request.ticketCategoryId());
 
-        eventService.decrementTicket(event.getEventId());
+        eventService.decrementAvailableTickets(event.getEventId());
 
         Ticket ticket = buildTicket(user, event, ticketCategory);
         ticketRepository.save(ticket);
@@ -82,7 +82,8 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @PreAuthorize(
         "hasRole('ADMIN') or " +
-        "@ticketSecurity.isEventManager(#ticketId)"
+        "@ticketSecurity.isEventManager(#ticketId) or "  +
+        "@ticketSecurity.isTicketOwner(#ticketId)"
     )
     public void deleteEmittedTicket(UUID ticketId) {
         log.info("Request to delete ticket with id {}", ticketId);
@@ -95,8 +96,8 @@ public class TicketServiceImpl implements TicketService {
         Objects.requireNonNull(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).evict(ticket.getEvent().getEventId());
         log.debug("Cache '{}' evicted for eventId {}", CacheNames.REMAINING_TICKETS, ticket.getEvent().getEventId());
 
-        ticket.getTicketCategory().incrementTicketCategory();
-        ticket.getEvent().incrementAvailableTickets();
+        ticketCategoryService.incrementTicketCategory(ticket.getTicketCategory().getTicketCategoryId());
+        eventService.incrementAvailableTickets(ticket.getEvent().getEventId());
 
         ticketRepository.deleteById(ticketId);
         log.info("Ticket with id {} deleted successfully", ticketId);

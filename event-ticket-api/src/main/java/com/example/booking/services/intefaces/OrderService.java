@@ -11,4 +11,5 @@ public interface OrderService {
     OrdersResponse getOrdersByUserId(UUID userId, int page, int pageSize);
     void deleteOrder(UUID orderId);
     void updateOrderStatusToPaid(UUID orderId);
+    void cancelOrderAndReleaseTicket(UUID orderId);
 }

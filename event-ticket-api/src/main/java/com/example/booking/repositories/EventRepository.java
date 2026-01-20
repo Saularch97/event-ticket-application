@@ -30,4 +30,8 @@ public interface EventRepository extends JpaRepository<Event, UUID>, CustomEvent
     @Modifying
     @Query("UPDATE Event e SET e.availableTickets = e.availableTickets - 1 WHERE e.eventId = :id AND e.availableTickets > 0")
     int decrementAvailableTickets(@Param("id") UUID id);
+
+    @Modifying
+    @Query("UPDATE Event e SET e.availableTickets = e.availableTickets + 1 WHERE e.id = :eventId")
+    void incrementAvailableTickets(@Param("eventId") UUID eventId);
 }

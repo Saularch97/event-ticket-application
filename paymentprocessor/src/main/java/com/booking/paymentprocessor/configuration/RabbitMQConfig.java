@@ -8,8 +8,12 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     public static final String ORDER_STATUS_EXCHANGE = "order-status-exchange";
+
     public static final String ORDER_PAID_QUEUE = "order-paid-queue";
     public static final String ORDER_PAID_ROUTING_KEY = "order.paid";
+
+    public static final String PAYMENT_FAILED_QUEUE = "payment-failed-queue";
+    public static final String PAYMENT_FAILED_ROUTING_KEY = "payment.failed";
 
     public static final String DLQ_QUEUE = "booking-dlq";
     public static final String DLQ_EXCHANGE = "booking-dlx";
@@ -29,6 +33,26 @@ public class RabbitMQConfig {
 
     @Bean
     public Binding bindingOrderPaid(Queue orderPaidQueue, TopicExchange orderStatusExchange) {
-        return BindingBuilder.bind(orderPaidQueue).to(orderStatusExchange).with(ORDER_PAID_ROUTING_KEY);
+        return BindingBuilder
+                .bind(orderPaidQueue)
+                .to(orderStatusExchange)
+                .with(ORDER_PAID_ROUTING_KEY);
+    }
+
+
+    @Bean
+    public Queue paymentFailedQueue() {
+        return QueueBuilder.durable(PAYMENT_FAILED_QUEUE)
+                .withArgument("x-dead-letter-exchange", DLQ_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", DLQ_QUEUE)
+                .build();
+    }
+
+    @Bean
+    public Binding bindingPaymentFailed(Queue paymentFailedQueue, TopicExchange orderStatusExchange) {
+        return BindingBuilder
+                .bind(paymentFailedQueue)
+                .to(orderStatusExchange)
+                .with(PAYMENT_FAILED_ROUTING_KEY);
     }
 }

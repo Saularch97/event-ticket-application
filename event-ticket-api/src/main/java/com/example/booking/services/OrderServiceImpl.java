@@ -9,6 +9,7 @@ import com.example.booking.controller.response.order.OrdersResponse;
 import com.example.booking.domain.entities.*;
 import com.example.booking.dto.PaymentRequestDto;
 import com.example.booking.dto.PaymentRequestProducerDto;
+import com.example.booking.exception.OrderAlreadyConfirmedException;
 import com.example.booking.exception.OrderNotFoundException;
 import com.example.booking.repositories.OrderRepository;
 import com.example.booking.services.client.PaymentClient;
@@ -58,6 +59,7 @@ public class OrderServiceImpl implements OrderService {
         this.paymentClient = paymentClient;
     }
 
+    @Override
     @PreAuthorize("isAuthenticated()")
     @Transactional
     public OrderItemDto createNewOrder(CreateOrderRequest dto) {
@@ -135,6 +137,7 @@ public class OrderServiceImpl implements OrderService {
         return response;
     }
 
+    @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN') or @orderSecurity.isOrderOwner(#orderId)")
     public void deleteOrder(UUID orderId) {
@@ -153,7 +156,7 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.deleteById(orderId);
         log.info("Order deleted successfully. orderId={}", orderId);
     }
-
+    @Override
     @Transactional
     public void updateOrderStatusToPaid(UUID orderId) {
         Order order = orderRepository.findById(orderId)
@@ -167,6 +170,34 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.save(order);
             log.info("Order status {} updated with success", order.getOrderStatus());
         }
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrderAndReleaseTicket(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(OrderNotFoundException::new);
+
+        if (order.getOrderStatus() == EOrderStatus.CANCELED) {
+            log.warn("Order already cancelled {}", orderId);
+            return;
+        }
+
+        if (order.getOrderStatus() == EOrderStatus.CONFIRMED) {
+            log.error("Is not possible to cancel a already confirmed order {}", orderId);
+            throw new OrderAlreadyConfirmedException("Order already confirmed! Not possible to cancel!");
+        }
+
+        order.setOrderStatus(EOrderStatus.CANCELED);
+        orderRepository.save(order);
+
+        Set<Ticket> tickets = order.getTickets();
+
+        tickets.stream().toList().forEach(ticket -> {
+            ticketService.deleteEmittedTicket(ticket.getTicketId());
+        });
+
+        log.info("Order {} canceled", orderId);
     }
 
     private void restoreStock(Set<Ticket> tickets) {

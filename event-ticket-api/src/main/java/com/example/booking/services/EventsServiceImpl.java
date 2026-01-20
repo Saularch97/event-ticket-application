@@ -207,11 +207,17 @@ public class EventsServiceImpl implements EventsService {
 
     @Transactional
     @Override
-    public void decrementTicket(UUID eventId) {
+    public void decrementAvailableTickets(UUID eventId) {
         int updated = eventRepository.decrementAvailableTickets(eventId);
         if (updated == 0) {
             throw new EventSoldOutException();
         }
+    }
+
+    @Transactional
+    @Override
+    public void incrementAvailableTickets(UUID eventId) {
+         eventRepository.incrementAvailableTickets(eventId);
     }
 
     private void publishEventRecommendation(Event savedEvent, CityDataDto cityData) {
