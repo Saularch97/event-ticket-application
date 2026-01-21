@@ -6,8 +6,6 @@ All service run using [Tilt](https://tilt.dev/) in order to run a local kubernet
 ![Tilt dashboard](./tilt.png)
 
 
-This is the main microservice responsible for managing the ticketing system. The application handles the complete lifecycle of event management, including event creation, user registration, ticket sales, and integration with recommendation and geolocation services.
-
 ## System Architecture Overview
 
 The system is designed using a microservices' architecture. It utilizes asynchronous messaging for decoupling services and RESTful synchronous calls for critical, real-time operations.
@@ -23,7 +21,7 @@ The system is designed using a microservices' architecture. It utilizes asynchro
 * **Payment Service**: Consumes messages regarding ticket reservations and processes payments via Stripe. It ensures data consistency using the **Saga Pattern** (Choreography). Specifically, it handles **expired invoices** (e.g., user abandonment): if a payment session expires, a compensation event is published to release the reserved stock automatically.
 * **Event Recommendation Service**: Listens for new event location data and provides personalized recommendations to users based on proximity.
 * **Geolocation API**: External service used to convert city/address names to latitude and longitude during event registration.
-* **Cache (Redis)**: Implements caching strategies for high-demand data such as available tickets, popular events, and purchase intents (temporary ticket locking during checkout).
+* **Cache (Redis)**: Implements caching strategies for high-demand data such as available tickets, popular events.
 * **Messaging Queue (RabbitMQ)**: Facilitates asynchronous communication between services (e.g., notifying the payment service when a ticket is reserved or when a compensation transaction is required).
 * **Databases**:
   * **PostgreSQL**: Stores relational data including Users, Tickets, and Orders.
@@ -52,18 +50,7 @@ The application prioritizes security by implementing stateless authentication us
 * **HttpOnly Cookies**: Unlike local storage, JWTs are stored in `HttpOnly` cookies. This prevents client-side scripts from accessing the token, significantly mitigating the risk of **XSS (Cross-Site Scripting)** attacks.
 * **Flow**: Upon successful login, the server sets a secure cookie containing the JWT. This cookie is automatically sent by the browser in subsequent requests to secured endpoints.
 
-## Observability & Monitoring
-
 The system includes a comprehensive monitoring stack to ensure reliability and performance. We use **Micrometer** to collect metrics, **Prometheus** for storage, and **Grafana** for visualization.
-
-### Grafana Dashboards
-We monitor JVM performance (Memory, CPU, GC), request latency, and custom business metrics (e.g., tickets sold per minute).
-
-![Grafana Dashboard Overview](./grafana-dashboard-1.png)
-*(Example: System overview showing Request Rate and Error Rate)*
-
-![Grafana JVM Metrics](./grafana-dashboard-2.png)
-*(Example: JVM Memory usage and Garbage Collection activity)*
 
 ## Ticket Validation (QR Code)
 
@@ -76,8 +63,9 @@ To ensure the authenticity of tickets and prevent fraud, the system implements a
 ![QR Code Generation Flow](./qrcode-flow.png)
 *(Example: Ticket with generated QR Code)*
 
+## Observability & Monitoring
+The system includes a comprehensive monitoring stack to ensure reliability and performance. We use Micrometer to collect metrics, Prometheus for storage, and Grafana for visualization.
 
-## Observabilty
 You can acess grafana in http://localhost:3000 then go to [dashboards](http://localhost:3000/dashboards) in order to see JVM measures
 ![Dashboard](./dashboard.png)
 
