@@ -1,5 +1,6 @@
 package com.example.booking.messaging.consumer;
 
+import com.example.booking.config.RabbitMQConfig;
 import com.example.booking.services.intefaces.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ public class PaymentFailureConsumer {
         this.orderService = orderService;
     }
 
-    @RabbitListener(queues = "payment.failed.queue")
+    @RabbitListener(queues = RabbitMQConfig.PAYMENT_FAILED_QUEUE)
     public void handlePaymentFailure(String orderId) {
         try {
             log.warn("Payment failed for order {}. Executing compensation transaction...", orderId);

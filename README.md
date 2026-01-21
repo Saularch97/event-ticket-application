@@ -1,10 +1,16 @@
 # Ticket API - Event Ticketing System
 
+
+All service run using [Tilt](https://tilt.dev/) in order to run a local kubernetes environment.
+
+![Tilt dashboard](./tilt.png)
+
+
 This is the main microservice responsible for managing the ticketing system. The application handles the complete lifecycle of event management, including event creation, user registration, ticket sales, and integration with recommendation and geolocation services.
 
 ## System Architecture Overview
 
-The system is designed using a microservices architecture. It utilizes asynchronous messaging for decoupling services and RESTful synchronous calls for critical, real-time operations.
+The system is designed using a microservices' architecture. It utilizes asynchronous messaging for decoupling services and RESTful synchronous calls for critical, real-time operations.
 
 ### Architecture Diagram
 
@@ -14,11 +20,11 @@ The system is designed using a microservices architecture. It utilizes asynchron
 
 * **API Gateway**: Acts as a unified entry point and reverse proxy. It routes external requests to the appropriate internal microservices based on the request path, abstracting the internal network topology.
 * **Ticket API (Core)**: Handles CRUD operations for events, tickets, and users. It serves as the **Authentication Authority** (Spring Security) and manages the business logic for reservations and event location data.
-* **Payment Service**: Consumes messages regarding ticket reservations and processes payments via Stripe. It ensures data consistency using the Saga pattern (compensation transactions).
+* **Payment Service**: Consumes messages regarding ticket reservations and processes payments via Stripe. It ensures data consistency using the **Saga Pattern** (Choreography). Specifically, it handles **expired invoices** (e.g., user abandonment): if a payment session expires, a compensation event is published to release the reserved stock automatically.
 * **Event Recommendation Service**: Listens for new event location data and provides personalized recommendations to users based on proximity.
 * **Geolocation API**: External service used to convert city/address names to latitude and longitude during event registration.
-* **Cache (Redis)**: Implements caching strategies for high-demand data such as available tickets, popular events, and user session data. #TODO ver se está certo 
-* **Messaging Queue (RabbitMQ)**: Facilitates asynchronous communication between services (e.g., notifying the payment service when a ticket is reserved).
+* **Cache (Redis)**: Implements caching strategies for high-demand data such as available tickets, popular events, and purchase intents (temporary ticket locking during checkout).
+* **Messaging Queue (RabbitMQ)**: Facilitates asynchronous communication between services (e.g., notifying the payment service when a ticket is reserved or when a compensation transaction is required).
 * **Databases**:
   * **PostgreSQL**: Stores relational data including Users, Tickets, and Orders.
   * **MongoDB**: Stores unstructured data optimized for geospatial queries in the Recommendation Service.
@@ -46,8 +52,40 @@ The application prioritizes security by implementing stateless authentication us
 * **HttpOnly Cookies**: Unlike local storage, JWTs are stored in `HttpOnly` cookies. This prevents client-side scripts from accessing the token, significantly mitigating the risk of **XSS (Cross-Site Scripting)** attacks.
 * **Flow**: Upon successful login, the server sets a secure cookie containing the JWT. This cookie is automatically sent by the browser in subsequent requests to secured endpoints.
 
-## Prerequisites
+## Observability & Monitoring
 
+The system includes a comprehensive monitoring stack to ensure reliability and performance. We use **Micrometer** to collect metrics, **Prometheus** for storage, and **Grafana** for visualization.
+
+### Grafana Dashboards
+We monitor JVM performance (Memory, CPU, GC), request latency, and custom business metrics (e.g., tickets sold per minute).
+
+![Grafana Dashboard Overview](./grafana-dashboard-1.png)
+*(Example: System overview showing Request Rate and Error Rate)*
+
+![Grafana JVM Metrics](./grafana-dashboard-2.png)
+*(Example: JVM Memory usage and Garbage Collection activity)*
+
+## Ticket Validation (QR Code)
+
+To ensure the authenticity of tickets and prevent fraud, the system implements a cryptographic validation flow.
+
+1.  **Generation**: When a ticket is purchased, a unique hash is generated containing signed ticket data.
+2.  **Visualization**: This hash is encoded into a QR Code presented to the user.
+3.  **Validation**: Event organizers use a specific endpoint to scan the QR Code, verifying if the ticket is valid and hasn't been used yet.
+
+![QR Code Generation Flow](./qrcode-flow.png)
+*(Example: Ticket with generated QR Code)*
+
+
+## Observabilty
+You can acess grafana in http://localhost:3000 then go to [dashboards](http://localhost:3000/dashboards) in order to see JVM measures
+![Dashboard](./dashboard.png)
+
+The board have informations such as IO, Error rating, duration etc.
+![Grafana](./grafana_pic.png)
+
+
+## Prerequisites
 * **Java 24**: The application runtime is optimized for Java 24 to leverage recent performance improvements.
 * **Java 22**: Used for building the application.
 * **Docker & Docker Compose**: For running infrastructure services.
@@ -56,7 +94,7 @@ The application prioritizes security by implementing stateless authentication us
 
 ## Execution
 
-### Using Tilt (Recommended)
+### Using Tilt
 
 [Tilt](https://tilt.dev/) automates the feedback loop for local Kubernetes development.
 
@@ -73,7 +111,6 @@ To test payments locally, you need to forward Stripe events to your local instan
 
 ```bash
 stripe listen --forward-to localhost:8083/payments/webhooks
-
 ```
 
 ## API Documentation
@@ -112,15 +149,14 @@ Once the application is running, the OpenAPI (Swagger) documentation is availabl
 * [x] Popular events caching (updates hourly).
 * [x] User order lookup caching.
 * [x] Ticket availability caching.
-* [x] Purchase intent caching.
+* [x] Purchase intent caching (concurrency control).
 
 **Microservices & Integrations**
 
 * [x] Recommendation Service based on geolocation radius.
 * [x] Stripe Payment integration.
-* [x] Payment Webhook handling. When payment is confirmed the main service receives the notification via webhook of the confirmation of 
-* [x] Idempotency Key implementation for payments/orders.
-* [x] Saga Pattern (Compensation) for failed payments.
+* [x] Payment Webhook handling. When payment is confirmed, the main service receives the notification via webhook regarding the transaction status.
+* [x] **Saga Pattern (Compensation):** Robust handling of failed payments and **expired invoices**, ensuring reserved tickets are automatically released back to stock.
 * [x] Circuit Breaker implementation (Resilience4j).
 
 **Quality Assurance & Observability**
@@ -134,7 +170,3 @@ Once the application is running, the OpenAPI (Swagger) documentation is availabl
 
 * [ ] Move authentication logic to API Gateway.
 * [ ] Expand test coverage for edge cases in the payment module.
-
-TODO : ADICIONAR SOBRE O GRAFANA! BOTA UNS PRINT
-
-TODO : ADICIONAR FLUXO MOSTRANDO SOBRE QR CODE! BOTA UNS PRINT!
