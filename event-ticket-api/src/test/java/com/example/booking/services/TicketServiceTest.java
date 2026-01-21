@@ -159,7 +159,6 @@ class TicketServiceTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
         verify(eventService, never()).decrementAvailableTickets(any());
     }
-
     @Test
     void deleteEmittedTicket_ShouldDeleteTicketAndUpdateCounts_WhenTicketExists() {
         Ticket ticket = TicketBuilder.aTicket()
@@ -168,16 +167,17 @@ class TicketServiceTest {
                 .withTicketCategory(testCategory)
                 .build();
 
-        testEvent.decrementAvailableTickets();
-
         when(ticketRepository.findTicketWithEvent(ticket.getTicketId())).thenReturn(Optional.of(ticket));
+
         when(cacheManager.getCache(CacheNames.REMAINING_TICKETS)).thenReturn(cache);
 
         ticketsService.deleteEmittedTicket(ticket.getTicketId());
 
         verify(ticketRepository).deleteById(ticket.getTicketId());
         verify(cache).evict(testEvent.getEventId());
-        assertEquals(testEvent.getOriginalAmountOfTickets(), testEvent.getAvailableTickets());
+
+        verify(eventService).incrementAvailableTickets(testEvent.getEventId());
+        verify(ticketCategoryService).incrementTicketCategory(testCategory.getTicketCategoryId());
     }
 
     @Test

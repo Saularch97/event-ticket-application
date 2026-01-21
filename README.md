@@ -60,8 +60,12 @@ To ensure the authenticity of tickets and prevent fraud, the system implements a
 2.  **Visualization**: This hash is encoded into a QR Code presented to the user.
 3.  **Validation**: Event organizers use a specific endpoint to scan the QR Code, verifying if the ticket is valid and hasn't been used yet.
 
-![QR Code Generation Flow](./qrcode-flow.png)
-*(Example: Ticket with generated QR Code)*
+
+## Resilience & Fault Tolerance
+
+- Circuit Breakers – Resilience4j
+- Graceful degradation for external dependencies
+- Retry and timeout policies
 
 ## Observability & Monitoring
 The system includes a comprehensive monitoring stack to ensure reliability and performance. We use Micrometer to collect metrics, Prometheus for storage, and Grafana for visualization.
@@ -72,6 +76,9 @@ You can acess grafana in http://localhost:3000 then go to [dashboards](http://lo
 The board have informations such as IO, Error rating, duration etc.
 ![Grafana](./grafana_pic.png)
 
+## Testing
+The main service has about 110 tests(unit and integration), the other app are tested as well
+![tests](./tests.png)
 
 ## Prerequisites
 * **Java 24**: The application runtime is optimized for Java 24 to leverage recent performance improvements.
@@ -84,14 +91,20 @@ The board have informations such as IO, Error rating, duration etc.
 
 ### Using Tilt
 
-[Tilt](https://tilt.dev/) automates the feedback loop for local Kubernetes development.
+Tilt automates the feedback loop for local Kubernetes development.
 
-1. Ensure you have a local Kubernetes cluster running (e.g., Docker Desktop, Minikube).
-2. Run the command in the root directory:
+1.  **Prerequisites:** Ensure you have a local Kubernetes cluster running.  
+    Recommended options:
+    * [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Easiest, just enable Kubernetes in settings)
+    * [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+    * [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/) (Lightweight, runs in Docker)
+
+2.  Run the command in the root directory:
     ```bash
     tilt up
     ```
-3. Access the Tilt dashboard to monitor logs and service status.
+
+3.  Access the **Tilt dashboard** (press `Space` in the terminal) to monitor logs and service status.
 
 ### Manual Execution & Webhooks
 
@@ -107,6 +120,37 @@ Once the application is running, the OpenAPI (Swagger) documentation is availabl
 
 * **Swagger UI**: `http://localhost:8081/swagger-ui/index.html`
 
+Here is the usage flow section for your README.
+
+### Usage Flow
+
+A complete API collection compatible with **Bruno** can be found in the `EventTicketApiCollection` directory.
+
+**1. User Registration and Authentication**
+First, register a new user in the system. After registration, authenticate to receive the access token required for subsequent requests.
+
+* **Signup:** `POST http://localhost:8081/booking/api/auth/signup`
+* **Signin:** `POST http://localhost:8081/booking/api/auth/signin`
+
+**2. Event and Ticket Management**
+Create a new event and subsequently issue the inventory of tickets available for that event.
+
+* **Create Event:** `POST http://localhost:8081/booking/api/events`
+* **Issue Tickets:** `POST http://localhost:8081/booking/api/tickets`
+
+**3. Ordering and Payment**
+Create an order to purchase tickets. The response will contain a Stripe Checkout URL. Since this is a test environment, you may purchase as many tickets as desired using test credentials.
+
+* **Create Order:** `POST http://localhost:8081/booking/api/orders`
+
+Once the payment is completed via the Stripe URL, a webhook notifies the main service to automatically update the status of both the order and the tickets to confirmed.
+
+**4. Check-in Process**
+The application features a secure check-in system. You can generate a QR code for a specific ticket, which produces a unique 4-letter hash. This hash must be validated against the check-in endpoint to admit the attendee. This process prevents a ticket from being used more than once.
+
+* **Generate QR Code:** `GET http://localhost:8081/booking/api/tickets/{{ticketId}}/qrcode`
+* **Validate Check-in:** `POST http://localhost:8081/booking/api/tickets/checkin/{{ticketId}}`
+
 ## Project Roadmap / Status
 
 ### Implemented Features
@@ -114,7 +158,7 @@ Once the application is running, the OpenAPI (Swagger) documentation is availabl
 **Core & Architecture**
 
 * [x] Implementation of Security Headers.
-* [x] **Spring Security Authentication via HttpOnly Cookies (JWT).**
+* [x] Spring Security Authentication via HttpOnly Cookies (JWT).
 * [x] Database versioning/migrations using Flyway.
 * [x] Usage of UUIDs for entity identifiers.
 * [x] Global Exception Handler implementation.
@@ -144,7 +188,7 @@ Once the application is running, the OpenAPI (Swagger) documentation is availabl
 * [x] Recommendation Service based on geolocation radius.
 * [x] Stripe Payment integration.
 * [x] Payment Webhook handling. When payment is confirmed, the main service receives the notification via webhook regarding the transaction status.
-* [x] **Saga Pattern (Compensation):** Robust handling of failed payments and **expired invoices**, ensuring reserved tickets are automatically released back to stock.
+* [x] Saga Pattern (Compensation): Robust handling of failed payments and **expired invoices**, ensuring reserved tickets are automatically released back to stock.
 * [x] Circuit Breaker implementation (Resilience4j).
 
 **Quality Assurance & Observability**
