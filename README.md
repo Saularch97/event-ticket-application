@@ -133,10 +133,10 @@ First, register a new user in the system. After registration, authenticate to re
 * **Signin:** `POST http://localhost:8081/booking/api/auth/signin`
 
 **2. Event and Ticket Management**
-Create a new event and subsequently issue the inventory of tickets available for that event.
+Create a new event and subsequently emmit tickets for the event.
 
 * **Create Event:** `POST http://localhost:8081/booking/api/events`
-* **Issue Tickets:** `POST http://localhost:8081/booking/api/tickets`
+* **Emmit Tickets:** `POST http://localhost:8081/booking/api/tickets`
 
 **3. Ordering and Payment**
 Create an order to purchase tickets. The response will contain a Stripe Checkout URL. Since this is a test environment, you may purchase as many tickets as desired using test credentials.
