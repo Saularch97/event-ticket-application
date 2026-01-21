@@ -77,7 +77,7 @@ The board have informations such as IO, Error rating, duration etc.
 ![Grafana](./grafana_pic.png)
 
 ## Testing
-The main service has about 110 tests(unit and integration), the other app are tested as well
+The main service has about 110 tests(unit and integration), the other apps are tested as well
 ![tests](./tests.png)
 
 ## Prerequisites
