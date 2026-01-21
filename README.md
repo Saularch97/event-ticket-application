@@ -70,7 +70,7 @@ To ensure the authenticity of tickets and prevent fraud, the system implements a
 ## Observability & Monitoring
 The system includes a comprehensive monitoring stack to ensure reliability and performance. We use Micrometer to collect metrics, Prometheus for storage, and Grafana for visualization.
 
-You can acess grafana in http://localhost:3000 then go to [dashboards](http://localhost:3000/dashboards) in order to see JVM measures
+You can access Grafana at http://localhost:3000 and navigate to the dashboards to view JVM metrics.
 ![Dashboard](./dashboard.png)
 
 The board have informations such as IO, Error rating, duration etc.
