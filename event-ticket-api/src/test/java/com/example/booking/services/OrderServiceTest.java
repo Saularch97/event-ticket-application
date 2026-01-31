@@ -3,7 +3,6 @@ package com.example.booking.services;
 
 import com.example.booking.builders.EventBuilder;
 import com.example.booking.builders.OrderBuilder;
-import com.example.booking.builders.TicketBuilder;
 import com.example.booking.builders.TicketCategoryBuilder;
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.order.CreateOrderRequest;
@@ -32,8 +31,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -102,31 +103,28 @@ class OrderServiceTest {
         UUID eventId = UUID.randomUUID();
         CreateOrderRequest request = new CreateOrderRequest(List.of(ticketId1, ticketId2));
 
-        Event event = EventBuilder.anEvent().withEventId(eventId).withEventName("TestEvent").build();
+        Event event = EventBuilder.anEvent()
+                .withEventId(eventId)
+                .withEventName("TestEvent")
+                .withEventLocation("Test Location")
+                .withEventDate(LocalDateTime.now())
+                .build();
 
         TicketCategory tc1 = TicketCategoryBuilder.aTicketCategory()
                 .withPrice(TICKET_PRICE_1)
+                .withName("Cat1")
                 .build();
 
         TicketCategory tc2 = TicketCategoryBuilder.aTicketCategory()
                 .withPrice(TICKET_PRICE_2)
+                .withName("Cat2")
                 .build();
 
-        Ticket ticket1 = TicketBuilder.aTicket()
-                .withTicketId(ticketId1)
-                .withTicketCategory(tc1)
-                .withEvent(event)
-                .withTicketOwner(user)
-                .withTicketPrice(TICKET_PRICE_1)
-                .build();
+        Ticket ticket1 = Ticket.build(user, event, tc1);
+        ReflectionTestUtils.setField(ticket1, "ticketId", ticketId1);
 
-        Ticket ticket2 = TicketBuilder.aTicket()
-                .withTicketId(ticketId2)
-                .withTicketCategory(tc2)
-                .withEvent(event)
-                .withTicketOwner(user)
-                .withTicketPrice(TICKET_PRICE_2)
-                .build();
+        Ticket ticket2 = Ticket.build(user, event, tc2);
+        ReflectionTestUtils.setField(ticket2, "ticketId", ticketId2);
 
         List<Ticket> tickets = List.of(ticket1, ticket2);
 
@@ -147,7 +145,6 @@ class OrderServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.orderId()).isEqualTo(savedOrder.getOrderId());
         assertThat(result.userid()).isEqualTo(userId);
-
         assertThat(result.orderPrice()).isEqualTo(TOTAL_ORDER_PRICE);
         assertThat(result.tickets()).hasSize(tickets.size());
 
@@ -184,7 +181,6 @@ class OrderServiceTest {
     void createNewOrder_shouldThrowTicketAlreadyHaveAnOrderException() {
         UUID ticketId1 = UUID.randomUUID();
         CreateOrderRequest request = new CreateOrderRequest(List.of(ticketId1));
-
 
         when(jwtUtils.getAuthenticatedUserId()).thenReturn(userId);
         when(userService.findUserEntityById(userId)).thenReturn(user);
@@ -236,17 +232,14 @@ class OrderServiceTest {
         Event event = new Event();
         event.setEventId(eventId);
         event.setEventName("Show de Teste");
+        event.setEventLocation("Stadium");
+        event.setEventDate(LocalDateTime.now());
 
         User ticketOwner = new User();
         ticketOwner.setUserId(ticketOwnerId);
 
-        Ticket ticket = TicketBuilder.aTicket()
-                .withTicketId(ticketId)
-                .withEvent(event)
-                .withTicketCategory(category)
-                .withTicketOwner(ticketOwner)
-                .withTicketPrice(TICKET_PRICE_1)
-                .build();
+        Ticket ticket = Ticket.build(ticketOwner, event, category);
+        ReflectionTestUtils.setField(ticket, "ticketId", ticketId);
 
         Order order = OrderBuilder.anOrder()
                 .withOrderId(orderId)
@@ -255,16 +248,14 @@ class OrderServiceTest {
                 .withTickets(Set.of(ticket))
                 .build();
 
-        ticket.setOrder(order);
+        // Simulate internal association
+        ReflectionTestUtils.setField(ticket, "order", order);
 
         Page<Order> ordersPage = new PageImpl<>(List.of(order), pageRequest, 1);
 
         Cache cacheMock = mock(Cache.class);
-
         when(cacheManager.getCache(CacheNames.ORDERS)).thenReturn(cacheMock);
-
         when(cacheMock.get(cacheKey, OrdersResponse.class)).thenReturn(null);
-
         when(orderRepository.findOrdersByUserIdWithAssociations(userId, pageRequest)).thenReturn(ordersPage);
 
         OrdersResponse result = orderServiceImpl.getOrdersByUserId(userId, page, pageSize);
@@ -277,19 +268,15 @@ class OrderServiceTest {
         assertThat(result.pageSize()).isEqualTo(pageSize);
         assertThat(result.totalElements()).isEqualTo(1L);
 
-        assertThat(result.orders()).hasSize(1);
-
         assertThat(resultOrder.orderId()).isEqualTo(orderId);
         assertThat(resultOrder.orderPrice()).isEqualTo(MOCK_ORDER_PRICE);
 
         assertThat(resultOrder.tickets()).hasSize(1);
-
         assertThat(resultTicket.ticketId()).isEqualTo(ticketId);
         assertThat(resultTicket.eventId()).isEqualTo(eventId);
         assertThat(resultTicket.ticketCategoryId()).isEqualTo(categoryId);
 
         verify(cacheMock).put(cacheKeyCaptor.capture(), ordersResponseCaptor.capture());
-
         assertThat(cacheKeyCaptor.getValue()).isEqualTo(cacheKey);
         assertThat(ordersResponseCaptor.getValue()).usingRecursiveComparison().isEqualTo(result);
 
@@ -305,7 +292,6 @@ class OrderServiceTest {
         when(event.getEventId()).thenReturn(eventId);
 
         TicketCategory ticketCategory = mock(TicketCategory.class);
-        when(ticketCategory.getPrice()).thenReturn(BigDecimal.TEN);
 
         Ticket ticket = mock(Ticket.class);
         when(ticket.getEvent()).thenReturn(event);
@@ -321,6 +307,7 @@ class OrderServiceTest {
 
         verify(ticketCategory).incrementTicketCategory();
         verify(event).incrementAvailableTickets();
+        verify(ticket).removeOrderAssociation();
 
         verify(remainingTicketsCache).evict(eventId);
         verify(ordersCache).clear();
@@ -343,25 +330,26 @@ class OrderServiceTest {
     @Test
     void updateOrderStatusToPaid_shouldUpdateOrderAndTickets_whenStatusIsPending() {
         UUID orderId = UUID.randomUUID();
+        User dummyUser = new User();
 
-        TicketCategory dummyCategory = TicketCategoryBuilder.aTicketCategory()
-                .withPrice(BigDecimal.TEN)
-                .build();
+        Event dummyEvent = new Event();
+        dummyEvent.setEventLocation("Loc");
+        dummyEvent.setEventDate(LocalDateTime.now());
 
-        Ticket ticket1 = TicketBuilder.aTicket()
-                .withTicketCategory(dummyCategory)
-                .build();
-        ticket1.setTicketStatus(ETicketStatus.PENDING);
+        TicketCategory dummyCategory = new TicketCategory();
+        dummyCategory.setName("Cat");
+        dummyCategory.setPrice(BigDecimal.TEN);
 
-        Ticket ticket2 = TicketBuilder.aTicket()
-                .withTicketCategory(dummyCategory)
-                .build();
-        ticket2.setTicketStatus(ETicketStatus.PENDING);
+        Ticket ticket1 = Ticket.build(dummyUser, dummyEvent, dummyCategory);
+        Ticket ticket2 = Ticket.build(dummyUser, dummyEvent, dummyCategory);
 
         Order order = OrderBuilder.anOrder()
                 .withOrderId(orderId)
                 .withTickets(Set.of(ticket1, ticket2))
                 .build();
+
+        ReflectionTestUtils.setField(ticket1, "order", order);
+        ReflectionTestUtils.setField(ticket2, "order", order);
 
         order.setOrderStatus(EOrderStatus.PENDING_PAYMENT);
 

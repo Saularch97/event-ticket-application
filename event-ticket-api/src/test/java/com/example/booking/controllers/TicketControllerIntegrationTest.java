@@ -202,7 +202,7 @@ public class TicketControllerIntegrationTest extends AbstractIntegrationTest {
 
         Ticket ticket = ticketRepository.findById(ticketId).orElseThrow();
 
-        ticket.setTicketStatus(ETicketStatus.PAID);
+        ticket.markAsPaid();
         ticketRepository.save(ticket);
 
         String validationCode = ticket.getValidationCode();

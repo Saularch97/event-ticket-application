@@ -1,7 +1,6 @@
 package com.example.booking.services;
 
 import com.example.booking.builders.EventBuilder;
-import com.example.booking.builders.TicketBuilder;
 import com.example.booking.builders.TicketCategoryBuilder;
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
@@ -25,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.*;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -159,13 +159,10 @@ class TicketServiceTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
         verify(eventService, never()).decrementAvailableTickets(any());
     }
+
     @Test
     void deleteEmittedTicket_ShouldDeleteTicketAndUpdateCounts_WhenTicketExists() {
-        Ticket ticket = TicketBuilder.aTicket()
-                .withTicketId(UUID.randomUUID())
-                .withEvent(testEvent)
-                .withTicketCategory(testCategory)
-                .build();
+        Ticket ticket = Ticket.build(new User(), testEvent, testCategory);
 
         when(ticketRepository.findTicketWithEvent(ticket.getTicketId())).thenReturn(Optional.of(ticket));
 
@@ -280,9 +277,9 @@ class TicketServiceTest {
         String validCode = "ABCD";
 
         Ticket ticket = mockTicket();
-        ticket.setTicketId(ticketId);
-        ticket.setValidationCode(validCode);
-        ticket.setTicketStatus(ETicketStatus.PAID);
+        ReflectionTestUtils.setField(ticket, "ticketId", ticketId);
+        ReflectionTestUtils.setField(ticket, "validationCode", validCode);
+        ReflectionTestUtils.setField(ticket, "ticketStatus", ETicketStatus.PAID);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
@@ -313,7 +310,7 @@ class TicketServiceTest {
         String wrongCode = "WRONG";
 
         Ticket ticket = mockTicket();
-        ticket.setValidationCode(correctCode);
+        ReflectionTestUtils.setField(ticket, "validationCode", correctCode);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
@@ -328,7 +325,7 @@ class TicketServiceTest {
         UUID ticketId = UUID.randomUUID();
 
         Ticket ticket = mockTicket();
-        ticket.setValidationCode(null);
+        ReflectionTestUtils.setField(ticket, "validationCode", null);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
@@ -344,8 +341,8 @@ class TicketServiceTest {
         String code = "ABCD";
 
         Ticket ticket = mockTicket();
-        ticket.setValidationCode(code);
-        ticket.setTicketStatus(ETicketStatus.USED);
+        ReflectionTestUtils.setField(ticket, "validationCode", code);
+        ReflectionTestUtils.setField(ticket, "ticketStatus", ETicketStatus.USED);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
@@ -361,8 +358,8 @@ class TicketServiceTest {
         String code = "ABCD";
 
         Ticket ticket = mockTicket();
-        ticket.setValidationCode(code);
-        ticket.setTicketStatus(ETicketStatus.PENDING);
+        ReflectionTestUtils.setField(ticket, "validationCode", code);
+        ReflectionTestUtils.setField(ticket, "ticketStatus", ETicketStatus.PENDING);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
@@ -376,8 +373,8 @@ class TicketServiceTest {
     void generateNewValidationCode_ShouldGenerateCodeAndSave_WhenTicketIsValid() {
         UUID ticketId = UUID.randomUUID();
         Ticket ticket = mockTicket();
-        ticket.setTicketId(ticketId);
-        ticket.setTicketStatus(ETicketStatus.PAID);
+        ReflectionTestUtils.setField(ticket, "ticketId", ticketId);
+        ReflectionTestUtils.setField(ticket, "ticketStatus", ETicketStatus.PAID);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
         when(ticketRepository.save(any(Ticket.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -405,7 +402,7 @@ class TicketServiceTest {
     void generateNewValidationCode_ShouldThrowTicketAlreadyUsedException_WhenTicketIsUsed() {
         UUID ticketId = UUID.randomUUID();
         Ticket ticket = mockTicket();
-        ticket.setTicketStatus(ETicketStatus.USED);
+        ReflectionTestUtils.setField(ticket, "ticketStatus", ETicketStatus.USED);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
@@ -416,22 +413,40 @@ class TicketServiceTest {
     }
 
     private Ticket mockTicket() {
-        return TicketBuilder.aTicket()
-                .withTicketId(UUID.randomUUID())
-                .withTicketOwner(new User())
-                .withEvent(new Event())
-                .withTicketCategory(new TicketCategory())
-                .build();
+        User user = new User();
+        user.setUserId(UUID.randomUUID());
+
+        TicketCategory category = new TicketCategory();
+        category.setName("Test Category");
+        category.setPrice(BigDecimal.valueOf(100.00));
+
+        Event event = new Event();
+        event.setEventLocation("Test Location");
+        event.setEventDate(LocalDateTime.now());
+
+        Ticket ticket = Ticket.build(user, event, category);
+
+        ReflectionTestUtils.setField(ticket, "ticketId", UUID.randomUUID());
+
+        return ticket;
     }
 
     private Ticket mockTicketWithUser(UUID userId) {
         User user = new User();
         user.setUserId(userId);
 
-        return TicketBuilder.aTicket()
-                .withTicketOwner(user)
-                .withTicketCategory(new TicketCategory())
-                .withEvent(new Event())
-                .build();
+        TicketCategory category = new TicketCategory();
+        category.setName("Test Category");
+        category.setPrice(BigDecimal.valueOf(100.00));
+
+        Event event = new Event();
+        event.setEventLocation("Test Location");
+        event.setEventDate(LocalDateTime.now());
+
+        Ticket ticket = Ticket.build(user, event, category);
+
+        ReflectionTestUtils.setField(ticket, "ticketId", UUID.randomUUID());
+
+        return ticket;
     }
 }

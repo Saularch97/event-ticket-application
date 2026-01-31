@@ -1,16 +1,15 @@
 package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
-import com.example.booking.domain.enums.ETicketStatus;
-import com.example.booking.dto.RemainingTicketCategoryDto;
-import com.example.booking.dto.TicketItemDto;
-import com.example.booking.dto.TicketsDto;
 import com.example.booking.controller.request.ticket.EmmitTicketRequest;
 import com.example.booking.domain.entities.Event;
 import com.example.booking.domain.entities.Ticket;
-import com.example.booking.domain.entities.TicketCategory;
 import com.example.booking.domain.entities.User;
-import com.example.booking.exception.*;
+import com.example.booking.dto.RemainingTicketCategoryDto;
+import com.example.booking.dto.TicketItemDto;
+import com.example.booking.dto.TicketsDto;
+import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
+import com.example.booking.exception.TicketNotFoundException;
 import com.example.booking.repositories.TicketRepository;
 import com.example.booking.services.intefaces.EventsService;
 import com.example.booking.services.intefaces.TicketCategoryService;
@@ -28,7 +27,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,7 +66,7 @@ public class TicketServiceImpl implements TicketService {
 
         eventService.decrementAvailableTickets(event.getEventId());
 
-        Ticket ticket = buildTicket(user, event, ticketCategory);
+        Ticket ticket = Ticket.build(user, event, ticketCategory);
         ticketRepository.save(ticket);
 
         log.info("Ticket emitted with id {} for user '{}', eventId {}, category '{}'", ticket.getTicketId(), userName, event.getEventId(), ticketCategory.getName());
@@ -188,32 +186,16 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Boolean validateTicket(UUID ticketId) {
         return ticketRepository.findById(ticketId)
-                .map(ticket -> {
-                    return ticket.getTicketStatus() == ETicketStatus.PAID;
-                })
+                .map(Ticket::isPaid)
                 .orElse(false);
     }
 
 
     @Transactional
     public void performCheckIn(UUID ticketId, String validationCode) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(TicketNotFoundException::new);
+        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(TicketNotFoundException::new);
 
-        if (ticket.getValidationCode() == null || !ticket.getValidationCode().equalsIgnoreCase(validationCode)) {
-            throw new InvalidTicketValidationCodeException("Invalid validation code for ticket " + ticket.getTicketId());
-        }
-
-        if (ticket.getTicketStatus() == ETicketStatus.USED) {
-            throw new TicketAlreadyUsedException("Ticket already used!");
-        }
-
-        if (ticket.getTicketStatus() != ETicketStatus.PAID) {
-            throw new TicketNotPaidException("Ticket is not paid. Status: " + ticket.getTicketStatus());
-        }
-
-        ticket.setTicketStatus(ETicketStatus.USED);
-        ticket.setUsedAt(LocalDateTime.now());
+        ticket.performCheckIn(validationCode);
 
         ticketRepository.save(ticket);
         log.info("Check-in successful for TicketID: {}", ticketId);
@@ -223,30 +205,11 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(TicketNotFoundException::new);
 
-        if (ticket.getTicketStatus() == ETicketStatus.USED) {
-            throw new TicketAlreadyUsedException("Ticket already used. Cannot generate new QR Code.");
-        }
-
-        String newToken = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
-
-        ticket.setValidationCode(newToken);
+        String newToken = ticket.regenerateValidationCode();
         ticketRepository.save(ticket);
 
         log.info("New validation token generated for Ticket {}: {}", ticketId, newToken);
 
         return newToken;
-    }
-
-    private static Ticket buildTicket(User user, Event event, TicketCategory ticketCategory) {
-        Ticket ticket = new Ticket();
-        ticket.setTicketOwner(user);
-        ticket.setEvent(event);
-        ticket.setTicketCategory(ticketCategory);
-        ticket.setTicketCategoryName(ticketCategory.getName());
-        ticket.setTicketPrice(ticketCategory.getPrice());
-        ticket.setTicketEventLocation(event.getEventLocation());
-        ticket.setTicketEventDate(event.getEventDate().toString());
-        ticket.setTicketStatus(ETicketStatus.PENDING);
-        return ticket;
     }
 }

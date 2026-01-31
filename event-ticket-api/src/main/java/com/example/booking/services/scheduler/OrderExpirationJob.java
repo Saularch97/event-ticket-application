@@ -1,8 +1,8 @@
 package com.example.booking.services.scheduler;
 
 import com.example.booking.domain.entities.Order;
+import com.example.booking.domain.entities.Ticket;
 import com.example.booking.domain.enums.EOrderStatus;
-import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.repositories.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +33,7 @@ public class OrderExpirationJob {
         for (Order order : expiredOrders) {
             order.setOrderStatus(EOrderStatus.CANCELED);
 
-            order.getTickets().forEach(ticket -> {
-                ticket.setTicketStatus(ETicketStatus.EXPIRED);
-                ticket.setOrder(null);
-            });
+            order.getTickets().forEach(Ticket::expire);
 
             orderRepository.save(order);
             log.info("Order {} expired", order.getOrderId());

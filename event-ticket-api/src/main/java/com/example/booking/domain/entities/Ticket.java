@@ -2,6 +2,10 @@ package com.example.booking.domain.entities;
 
 import com.example.booking.domain.enums.ETicketStatus;
 import com.example.booking.dto.TicketItemDto;
+import com.example.booking.exception.InvalidTicketValidationCodeException;
+import com.example.booking.exception.TicketAlreadyHaveAnOrderException;
+import com.example.booking.exception.TicketAlreadyUsedException;
+import com.example.booking.exception.TicketNotPaidException;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -39,7 +43,7 @@ public class Ticket {
     private TicketCategory ticketCategory;
 
     @Column(name = "emitted_at")
-    private LocalDateTime emittedAt = LocalDateTime.now();
+    private LocalDateTime emittedAt;
 
     @Column(name = "ticket_event_location")
     private String ticketEventLocation;
@@ -63,137 +67,90 @@ public class Ticket {
     @Column(name = "validation_code")
     private String validationCode;
 
-    public Order getOrder() {
-        return order;
+    protected Ticket() {
     }
 
-    public void setOrder(Order order) {
+    public static Ticket build(User owner, Event event, TicketCategory category) {
+        if (event == null || category == null) {
+            throw new IllegalArgumentException("Event and category are obligatory to create a ticket!");
+        }
+
+        Ticket ticket = new Ticket();
+
+        ticket.ticketOwner = owner;
+        ticket.event = event;
+        ticket.ticketCategory = category;
+
+        ticket.ticketCategoryName = category.getName();
+        ticket.ticketPrice = category.getPrice();
+        ticket.ticketEventLocation = event.getEventLocation();
+        ticket.ticketEventDate = event.getEventDate().toString();
+        ticket.emittedAt = LocalDateTime.now();
+
+        ticket.ticketStatus = ETicketStatus.PENDING;
+
+        return ticket;
+    }
+
+    public void performCheckIn(String validationCodeInput) {
+        if (this.validationCode == null || !this.validationCode.equalsIgnoreCase(validationCodeInput)) {
+            throw new InvalidTicketValidationCodeException("Invalid validation code for ticket " + this.ticketId);
+        }
+
+        if (this.ticketStatus == ETicketStatus.USED) {
+            throw new TicketAlreadyUsedException("Ticket already used!");
+        }
+
+        if (this.ticketStatus != ETicketStatus.PAID) {
+            throw new TicketNotPaidException("Ticket is not paid. Status: " + this.ticketStatus);
+        }
+
+        this.ticketStatus = ETicketStatus.USED;
+        this.usedAt = LocalDateTime.now();
+    }
+
+    public String regenerateValidationCode() {
+        if (this.ticketStatus == ETicketStatus.USED) {
+            throw new TicketAlreadyUsedException("Ticket already used. Cannot generate new QR Code.");
+        }
+
+        this.validationCode = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+        return this.validationCode;
+    }
+
+    public void reserve(Order order) {
+        if (this.order != null) {
+            throw new TicketAlreadyHaveAnOrderException("This ticket is already reserved/sold.");
+        }
+
+        if (this.ticketStatus == ETicketStatus.USED || this.ticketStatus == ETicketStatus.EXPIRED) {
+            throw new TicketAlreadyUsedException("Cannot reserve a ticket that is used or expired.");
+        }
+
         this.order = order;
+        this.ticketStatus = ETicketStatus.PENDING;
     }
 
-    public Ticket(UUID ticketId,
-                  Event event,
-                  User ticketOwner,
-                  Order order,
-                  TicketCategory ticketCategory,
-                  LocalDateTime emittedAt,
-                  String ticketEventLocation,
-                  String ticket,
-                  String ticketCategoryName,
-                  BigDecimal ticketPrice) {
-        this.ticketId = ticketId;
-        this.event = event;
-        this.ticketOwner = ticketOwner;
-        this.order = order;
-        this.ticketCategory = ticketCategory;
-        this.emittedAt = emittedAt;
-        this.ticketEventLocation = ticketEventLocation;
-        this.ticketEventDate = ticket;
-        this.ticketCategoryName = ticketCategoryName;
-        this.ticketPrice = ticketPrice;
+    public void removeOrderAssociation() {
+        this.order = null;
+        this.ticketStatus = ETicketStatus.PENDING; // Volta a ficar disponível (ou EXPIRED dependendo da regra)
     }
 
-    public Ticket() {
+    public boolean isPaid() {
+        return this.ticketStatus == ETicketStatus.PAID;
     }
 
-    public void setEmittedAtAt(LocalDateTime emittedAt) {
-        this.emittedAt = emittedAt;
+    public void expire() {
+        this.ticketStatus = ETicketStatus.EXPIRED;
+        this.order = null;
     }
 
-    public User getTicketOwner() {
-        return ticketOwner;
+    public void markAsPaid() {
+        this.ticketStatus = ETicketStatus.PAID;
     }
 
-    public void setTicketOwner(User ticketOwner) {
-        this.ticketOwner = ticketOwner;
-    }
-
-    public Event getEvent() {
-        return event;
-    }
-
-    public void setEvent(Event event) {
-        this.event = event;
-    }
-
-    public UUID getTicketId() {
-        return ticketId;
-    }
-
-    public void setTicketId(UUID ticketId) {
-        this.ticketId = ticketId;
-    }
-
-    public LocalDateTime getEmittedAt() {
-        return emittedAt;
-    }
-
-    public void setEmittedAt(LocalDateTime emittedAt) {
-        this.emittedAt = emittedAt;
-    }
-
-    public TicketCategory getTicketCategory() {
-        return ticketCategory;
-    }
-
-    public void setTicketCategory(TicketCategory ticketCategory) {
-        this.ticketCategory = ticketCategory;
-    }
-
-    public BigDecimal getTicketPrice() {
-        return ticketPrice;
-    }
-
-    public void setTicketPrice(BigDecimal ticketPrice) {
-        this.ticketPrice = ticketPrice;
-    }
-
-    public String getTicketCategoryName() {
-        return ticketCategoryName;
-    }
-
-    public void setTicketCategoryName(String ticketCategoryName) {
-        this.ticketCategoryName = ticketCategoryName;
-    }
-
-    public String getTicketEventDate() {
-        return ticketEventDate;
-    }
-
-    public void setTicketEventDate(String ticketEventDate) {
-        this.ticketEventDate = ticketEventDate;
-    }
-
-    public String getTicketEventLocation() {
-        return ticketEventLocation;
-    }
-
-    public void setTicketEventLocation(String ticketEventLocation) {
-        this.ticketEventLocation = ticketEventLocation;
-    }
-
-    public ETicketStatus getTicketStatus() {
-        return ticketStatus;
-    }
-
-    public void setTicketStatus(ETicketStatus ticketStatus) {
-        this.ticketStatus = ticketStatus;
-    }
-
-    public LocalDateTime getUsedAt() {
-        return usedAt;
-    }
-
-    public void setUsedAt(LocalDateTime usedAt) {
-        this.usedAt = usedAt;
-    }
-
-    public String getValidationCode() {
-        return validationCode;
-    }
-
-    public void setValidationCode(String validationCode) {
-        this.validationCode = validationCode;
+    public void markAsPending()  {
+        this.ticketStatus = ETicketStatus.PENDING;
     }
 
     public static TicketItemDto toTicketItemDto(Ticket ticket) {
@@ -204,5 +161,109 @@ public class Ticket {
                 ticket.getTicketCategory().getTicketCategoryId(),
                 ticket.getTicketPrice()
         );
+    }
+
+    public UUID getTicketId() {
+        return ticketId;
+    }
+
+    private void setTicketId(UUID ticketId) {
+        this.ticketId = ticketId;
+    }
+
+    public Event getEvent() {
+        return event;
+    }
+
+    private void setEvent(Event event) {
+        this.event = event;
+    }
+
+    public User getTicketOwner() {
+        return ticketOwner;
+    }
+
+    private void setTicketOwner(User ticketOwner) {
+        this.ticketOwner = ticketOwner;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public TicketCategory getTicketCategory() {
+        return ticketCategory;
+    }
+
+    private void setTicketCategory(TicketCategory ticketCategory) {
+        this.ticketCategory = ticketCategory;
+    }
+
+    public LocalDateTime getEmittedAt() {
+        return emittedAt;
+    }
+
+    private void setEmittedAt(LocalDateTime emittedAt) {
+        this.emittedAt = emittedAt;
+    }
+
+    public String getTicketEventLocation() {
+        return ticketEventLocation;
+    }
+
+    private void setTicketEventLocation(String ticketEventLocation) {
+        this.ticketEventLocation = ticketEventLocation;
+    }
+
+    public String getTicketEventDate() {
+        return ticketEventDate;
+    }
+
+    private void setTicketEventDate(String ticketEventDate) {
+        this.ticketEventDate = ticketEventDate;
+    }
+
+    public String getTicketCategoryName() {
+        return ticketCategoryName;
+    }
+
+    private void setTicketCategoryName(String ticketCategoryName) {
+        this.ticketCategoryName = ticketCategoryName;
+    }
+
+    public BigDecimal getTicketPrice() {
+        return ticketPrice;
+    }
+
+    private void setTicketPrice(BigDecimal ticketPrice) {
+        this.ticketPrice = ticketPrice;
+    }
+
+    public ETicketStatus getTicketStatus() {
+        return ticketStatus;
+    }
+
+    private void setTicketStatus(ETicketStatus ticketStatus) {
+        this.ticketStatus = ticketStatus;
+    }
+
+    public LocalDateTime getUsedAt() {
+        return usedAt;
+    }
+
+    private void setUsedAt(LocalDateTime usedAt) {
+        this.usedAt = usedAt;
+    }
+
+    public String getValidationCode() {
+        return validationCode;
+    }
+
+    private void setValidationCode(String validationCode) {
+        this.validationCode = validationCode;
     }
 }

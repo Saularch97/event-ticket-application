@@ -2,13 +2,13 @@ package com.example.booking.services;
 
 import com.example.booking.config.cache.CacheNames;
 import com.example.booking.controller.request.order.CreateOrderRequest;
-import com.example.booking.domain.enums.EOrderStatus;
-import com.example.booking.domain.enums.ETicketStatus;
-import com.example.booking.dto.OrderItemDto;
 import com.example.booking.controller.response.order.OrdersResponse;
-import com.example.booking.domain.entities.*;
+import com.example.booking.domain.entities.Order;
+import com.example.booking.domain.entities.Ticket;
+import com.example.booking.domain.entities.User;
+import com.example.booking.domain.enums.EOrderStatus;
+import com.example.booking.dto.OrderItemDto;
 import com.example.booking.dto.PaymentRequestDto;
-import com.example.booking.dto.PaymentRequestProducerDto;
 import com.example.booking.exception.OrderAlreadyConfirmedException;
 import com.example.booking.exception.OrderNotFoundException;
 import com.example.booking.repositories.OrderRepository;
@@ -26,9 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import java.text.Normalizer;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -68,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
 
         User user = userService.findUserEntityById(userId);
         List<Ticket> tickets = ticketService.findAndValidateAvailableTickets(dto.ticketIds());
-        tickets.forEach(ticket -> ticket.setTicketStatus(ETicketStatus.PENDING));
+
         var ticketOrder = new Order();
         ticketOrder.setTickets(new HashSet<>(tickets));
         ticketOrder.setUser(user);
@@ -77,7 +75,8 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(ticketOrder);
         log.info("Order created successfully. orderId={}, userId={}, totalPrice={}", savedOrder.getOrderId(), user.getUserId(), ticketOrder.getOrderPrice());
 
-        updateTicketAssociations(tickets, savedOrder);
+        tickets.forEach(ticket -> ticket.reserve(savedOrder));
+
         evictCaches(tickets);
 
         PaymentRequestDto paymentDto = new PaymentRequestDto(
@@ -156,6 +155,7 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.deleteById(orderId);
         log.info("Order deleted successfully. orderId={}", orderId);
     }
+
     @Override
     @Transactional
     public void updateOrderStatusToPaid(UUID orderId) {
@@ -164,9 +164,7 @@ public class OrderServiceImpl implements OrderService {
 
         if (order.getOrderStatus() == EOrderStatus.PENDING_PAYMENT) {
             order.setOrderStatus(EOrderStatus.CONFIRMED);
-            order.getTickets().forEach(ticket -> {
-                ticket.setTicketStatus(ETicketStatus.PAID);
-            });
+            order.getTickets().forEach(Ticket::markAsPaid);
             orderRepository.save(order);
             log.info("Order status {} updated with success", order.getOrderStatus());
         }
@@ -205,12 +203,8 @@ public class OrderServiceImpl implements OrderService {
             ticket.getTicketCategory().incrementTicketCategory();
             ticket.getEvent().incrementAvailableTickets();
 
-            ticket.setOrder(null);
+            ticket.removeOrderAssociation();
         });
-    }
-
-    private void updateTicketAssociations(List<Ticket> tickets, Order savedOrder) {
-        tickets.forEach(ticket -> ticket.setOrder(savedOrder));
     }
 
     private void evictCaches(List<Ticket> tickets) {
